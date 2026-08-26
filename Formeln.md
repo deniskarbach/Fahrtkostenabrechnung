@@ -71,18 +71,18 @@ Import Formularantworten Google Sheets Datei [Formularantworten-Datei]
 
 
 #### M3 - Tagegeld Anteilig ≤8h:
-=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(S3:S>=0)*(S3:S<=8);"X";""))
+=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND(S3:S*60)>=481)*(ROUND((S3:S-Q3:Q-R3:R)*60)<481);"X";""))
 
 
 #### N3 - Tagegeld >8h:
-=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(S3:S>8)*(S3:S<14);"X";""))
+=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND(S3:S*60)>=481)*(ROUND((S3:S-Q3:Q-R3:R)*60)>=481)*(ROUND((S3:S-Q3:Q-R3:R)*60)<840);"X";""))
 
 #### O3 - Tagegeld ≥14h:
-=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(S3:S>=14)*(S3:S<24);"X";""))
+=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND(S3:S*60)>=481)*(ROUND((S3:S-Q3:Q-R3:R)*60)>=840)*(ROUND((S3:S-Q3:Q-R3:R)*60)<1440);"X";""))
 
 
 #### P3 - Tagegeld 24h:
-=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(S3:S>=24);"X";""))
+=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND(S3:S*60)>=481)*(ROUND((S3:S-Q3:Q-R3:R)*60)>=1440);"X";""))
 
 
 #### Q3 - Dauer Aufenthalt Dienststätte (h mit dez):
@@ -311,6 +311,9 @@ Hinweis: IMPORTDATA-Spalte für "Sonstige Infos" ist als Z angenommen, ggf. anpa
 #### E4 - Datum:
 =ARRAYFORMULA(IF(BERECHNUNG!B3:B999="";"";BERECHNUNG!C3:C999))
 
+
+#### E1 - Stand Datum:
+=TODAY()
 
 
 ## Blatt:Druck-Fahrtenbuch
