@@ -67,7 +67,7 @@ Import Formularantworten Google Sheets Datei [Formularantworten-Datei]
 
 
 #### L3 - Reiseweg:
-=BYROW(CHOOSECOLS(IMPORTDATA!J2:O; 1; 3; 4; 5; 6; 2); LAMBDA(zeile; IF(INDEX(zeile; 1)=""; ""; TEXTJOIN(" – "; TRUE; zeile))))
+=BYROW(CHOOSECOLS(IMPORTDATA!J2:O; 1; 3; 4; 5; 6; 2); LAMBDA(zeile; IF(INDEX(zeile; 1)=""; ""; SUBSTITUTE(SUBSTITUTE(TEXTJOIN(" – "; TRUE; zeile); "Wohnort"; "WO"); "Kreisverwaltung"; "KV"))))
 
 
 #### M3 - Tagegeld Anteilig ≤8h:
@@ -165,11 +165,11 @@ Import Formularantworten Google Sheets Datei [Formularantworten-Datei]
 
 #### D7 - Reiseweg:
 =ARRAYFORMULA(IFERROR(FILTER(
-  BERECHNUNG!A3:A
-  &" – ["&"Ges.: "&TEXT(BERECHNUNG!S3:S/24;"[H]:MM")
+  "Nr. "&BERECHNUNG!A3:A
+  &"  –  ("&"Ges.: "&TEXT(BERECHNUNG!S3:S/24;"[H]:MM")
   &" | DSt: "&TEXT(BERECHNUNG!Q3:Q/24;"[H]:MM")
   &" | DO: "&TEXT(BERECHNUNG!R3:R/24;"[H]:MM")
-  &" | Rest: "&TEXT((BERECHNUNG!S3:S-BERECHNUNG!Q3:Q-BERECHNUNG!R3:R)/24;"[H]:MM")&"]";
+  &" | Rest: "&TEXT((BERECHNUNG!S3:S-BERECHNUNG!Q3:Q-BERECHNUNG!R3:R)/24;"[H]:MM")&")";
   BERECHNUNG!C3:C<>"";
   BERECHNUNG!C3:C>=Setup!$C$8;
   BERECHNUNG!C3:C<=Setup!$C$10
@@ -274,3 +274,144 @@ Import Formularantworten Google Sheets Datei [Formularantworten-Datei]
 
 #### C7 - BIC:
 =TEXTJOIN(" "; TRUE; Setup!C41)
+
+
+## Blatt:Vermerke
+
+Daten beginnen ab Zeile 4, zeilengleich zu BERECHNUNG ab Zeile 3 (Offset -1).
+WICHTIG: Grenze einheitlich auf 1000 gesetzt (Google-Sheets-Standardgröße neuer
+Blätter), damit sie in BERECHNUNG, IMPORTDATA und Vermerke garantiert existiert
+(BERECHNUNG 3:999, IMPORTDATA 2:998, Vermerke 4:1000 — je 997 Zeilen). Hat ein
+Blatt WENIGER als 1000 Zeilen, "Bezug nicht vorhanden"-Fehler: Zeilen über
+Rechtsklick ergänzen. Braucht ihr mehr als 997 Reisen/Vermerke: alle drei
+Grenzen (999/998/1000) um denselben Betrag erhöhen, UND vorher in allen drei
+Blättern per Rechtsklick genügend Zeilen anfügen.
+Spalte D wird händisch befüllt und darf deshalb nicht in einer dynamisch
+gefilterten Liste stehen — sonst verrutschen die Einträge.
+Hinweis: IMPORTDATA-Spalte für "Sonstige Infos" ist als Z angenommen, ggf. anpassen.
+
+#### A4 - Laufende Nummer:
+=MAP(BERECHNUNG!B3:B999; BERECHNUNG!C3:C999; IMPORTDATA!Z2:Z998; LAMBDA(zs; dat; txt;
+      IF(OR(dat=""; txt=""); "";
+        COUNTIFS(BERECHNUNG!$C$3:$C$999;">="&DATE(YEAR(dat);1;1); BERECHNUNG!$C$3:$C$999;"<"&dat; IMPORTDATA!$Z$2:$Z$998;"<>")
+      + COUNTIFS(BERECHNUNG!$C$3:$C$999;"="&dat; BERECHNUNG!$B$3:$B$999;"<="&zs; IMPORTDATA!$Z$2:$Z$998;"<>"))))
+
+
+#### B4 - Label:
+=ARRAYFORMULA(IF(A4:A1000="";"";"V"&TEXT(E4:E1000;"YY")&"-"&TEXT(A4:A1000;"00")))
+
+
+#### C4 - Vermerktext (aus Formular):
+=ARRAYFORMULA(IF(BERECHNUNG!B3:B999="";"";IMPORTDATA!Z2:Z998))
+
+
+#### D4 - Ergänzung (händische Eingabe, keine Formel)
+
+
+#### E4 - Datum:
+=ARRAYFORMULA(IF(BERECHNUNG!B3:B999="";"";BERECHNUNG!C3:C999))
+
+
+
+## Blatt:Druck-Fahrtenbuch
+
+#### A4 - Laufende Nummer:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!A3:A;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### B4 - Monat:
+=ARRAYFORMULA(IFERROR(FILTER(
+  IF(BERECHNUNG!C3:C="";"";MONTH(BERECHNUNG!C3:C));
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### C4 - Tag:
+=ARRAYFORMULA(IFERROR(FILTER(
+  IF(BERECHNUNG!C3:C="";"";DAY(BERECHNUNG!C3:C));
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### D4 - Reisebeginn Uhrzeit:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!D3:D;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### E4 - Reiseende Uhrzeit:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!F3:F;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### F4 - Reiseweg:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!L3:L;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### G4 - Kilometerstand Beginn:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!G3:G;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### H4 - Kilometerstand Ende:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!H3:H;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### I4 - Kilometer dienstlich:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!K3:K;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### J4 - Kilometer privat:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!I3:I;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### K4:N4 - händische Eintragung (keine Formel)
+
+
+#### O4 - Vermerk (Label):
+=ARRAYFORMULA(IFERROR(FILTER(
+  Vermerke!B4:B1000;
+  BERECHNUNG!C3:C999<>"";
+  BERECHNUNG!C3:C999>=Setup!$C$8;
+  BERECHNUNG!C3:C999<=Setup!$C$10
+);""))
