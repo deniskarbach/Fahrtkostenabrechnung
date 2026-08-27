@@ -8,6 +8,10 @@ Import Formularantworten Google Sheets Datei [Formularantworten-Datei]
 
 =IF(B80="Ja"; IMPORTRANGE(B74; "Formularantworten 1!A1"); "🔒 Bitte legitimieren")
 
+Bedingte Formatierung - Datumsangabe
+
+=TAGTRUNC(C5)<TAGTRUNC(C3)
+
 
 
 ## Blatt:IMPORTDATA
@@ -279,6 +283,10 @@ Import Formularantworten Google Sheets Datei [Formularantworten-Datei]
 ## Blatt:Vermerke
 
 Daten beginnen ab Zeile 4, zeilengleich zu BERECHNUNG ab Zeile 3 (Offset -1).
+Jede Reise belegt ihre feste Zeile; Reisen ohne "Sonstige Infos" (IMPORTDATA
+Spalte Z) bleiben leer. Die Leerzeilen werden NICHT wegformelt, sondern im
+Blatt ausgeblendet (siehe "Leerzeilen ausblenden" unten) — nur so bleibt die
+händische Spalte D dauerhaft an ihrer Reise verankert.
 WICHTIG: Grenze einheitlich auf 1000 gesetzt (Google-Sheets-Standardgröße neuer
 Blätter), damit sie in BERECHNUNG, IMPORTDATA und Vermerke garantiert existiert
 (BERECHNUNG 3:999, IMPORTDATA 2:998, Vermerke 4:1000 — je 997 Zeilen). Hat ein
@@ -286,9 +294,18 @@ Blatt WENIGER als 1000 Zeilen, "Bezug nicht vorhanden"-Fehler: Zeilen über
 Rechtsklick ergänzen. Braucht ihr mehr als 997 Reisen/Vermerke: alle drei
 Grenzen (999/998/1000) um denselben Betrag erhöhen, UND vorher in allen drei
 Blättern per Rechtsklick genügend Zeilen anfügen.
-Spalte D wird händisch befüllt und darf deshalb nicht in einer dynamisch
-gefilterten Liste stehen — sonst verrutschen die Einträge.
+Spalte D wird händisch befüllt und darf deshalb nicht in einer per Formel
+gefilterten Liste stehen — sonst verrutschen die Einträge, sobald ein Vermerk
+nachgetragen wird.
 Hinweis: IMPORTDATA-Spalte für "Sonstige Infos" ist als Z angenommen, ggf. anpassen.
+
+#### Leerzeilen ausblenden (einmalig einrichten):
+A3:E1000 markieren > Daten > Filter erstellen. Im Filtersymbol von Spalte C:
+"Nach Bedingung filtern" > "Ist nicht leer".
+Diese Bedingung wird je Zelle ausgewertet und braucht keinen Zeilenbezug — sie
+kann daher nicht verrutschen und aktualisiert sich bei neuen Antworten selbst.
+Nicht die Häkchenliste ("Nach Werten filtern") benutzen: die ist eine
+Momentaufnahme und erfasst später einlaufende Vermerke nicht.
 
 #### A4 - Laufende Nummer:
 =MAP(BERECHNUNG!B3:B999; BERECHNUNG!C3:C999; IMPORTDATA!Z2:Z998; LAMBDA(zs; dat; txt;
@@ -302,14 +319,14 @@ Hinweis: IMPORTDATA-Spalte für "Sonstige Infos" ist als Z angenommen, ggf. anpa
 
 
 #### C4 - Vermerktext (aus Formular):
-=ARRAYFORMULA(IF(BERECHNUNG!B3:B999="";"";IMPORTDATA!Z2:Z998))
+=ARRAYFORMULA(IF((BERECHNUNG!B3:B999="")+(IMPORTDATA!Z2:Z998="");"";IMPORTDATA!Z2:Z998))
 
 
 #### D4 - Ergänzung (händische Eingabe, keine Formel)
 
 
 #### E4 - Datum:
-=ARRAYFORMULA(IF(BERECHNUNG!B3:B999="";"";BERECHNUNG!C3:C999))
+=ARRAYFORMULA(IF((BERECHNUNG!B3:B999="")+(IMPORTDATA!Z2:Z998="");"";BERECHNUNG!C3:C999))
 
 
 #### E1 - Stand Datum:
