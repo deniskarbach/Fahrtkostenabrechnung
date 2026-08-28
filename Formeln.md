@@ -20,6 +20,18 @@ Bedingte Formatierung - Datumsangabe
 =IF(Setup!B74=""; "⚠️ Keine URL hinterlegt"; IFERROR(IMPORTRANGE(Setup!B74; "Formularantworten 1!A1:ZZ"); "❌ Fehler beim Import (Zugriff erlaubt?)"))
 
 
+#### Spaltenbelegung Formularantworten (finale Formularversion, A:AC)
+A Zeitstempel · B E-Mail · C Dienstreisedatum · D Ende Dienstreisedatum (opt.) ·
+E Reisebeginn · F km Reisebeginn · G Reiseende · H km Reiseende · I Umweg privat (km) ·
+J Ort Reisebeginn · K Ort Reiseende · L–P Ort 1–5 · Q Tagegeld beantragen? ·
+R Dienststätte-Minuten · S Dienstort-Minuten · T Privater Zeitabzug (Minuten, opt.) ·
+U Weitere Fahrt-/Nebenkosten? · V ÖPNV · W Mitnahme Personen · X Übernachtung ·
+Y Nebenkosten · Z Verpflegung · AA Sonstige Informationen · AB Screenshot · AC Weitere Belege
+
+Jede neue Formularfrage verschiebt alle folgenden Spalten — danach IMPORTDATA-Bezüge in
+BERECHNUNG, Vermerke, Druck-Fahrtenbuch und GoogleMapsExport prüfen.
+
+
 
 ## Blatt:BERECHNUNG
 
@@ -71,22 +83,34 @@ Bedingte Formatierung - Datumsangabe
 
 
 #### L3 - Reiseweg:
-=BYROW(CHOOSECOLS(IMPORTDATA!J2:O; 1; 3; 4; 5; 6; 2); LAMBDA(zeile; IF(INDEX(zeile; 1)=""; ""; SUBSTITUTE(SUBSTITUTE(TEXTJOIN(" – "; TRUE; zeile); "Wohnort"; "WO"); "Kreisverwaltung"; "KV"))))
+Reihenfolge: Ort Reisebeginn (J), Ort 1–5 (L:P), Ort Reiseende (K).
+=BYROW(CHOOSECOLS(IMPORTDATA!J2:P; 1; 3; 4; 5; 6; 7; 2); LAMBDA(zeile; IF(INDEX(zeile; 1)=""; ""; SUBSTITUTE(SUBSTITUTE(TEXTJOIN(" > "; TRUE; zeile); "Wohnort"; "WO"); "Kreisverwaltung"; "KV"))))
+
+
+#### M3:T3 - Tagegeld-Gruppe
+M:P = Staffel-Kreuze, Q:T = die vier Zeitgrößen, aus denen sie sich ergeben.
+Maßgeblich sind nicht die rohen Zeiten, sondern:
+- bereinigte Abwesenheit `S-T` für die 8:01-Schwelle (Anspruch dem Grunde nach)
+- Rest-Zeit `S-T-Q-R` für die Staffelstufe (Herabstufung)
+
+S bleibt bewusst die rohe Spanne Reiseende−Reisebeginn — sie ist der Nachweis
+gegenüber dem Fahrtenbuch und darf nicht stillschweigend gekürzt werden. Der
+private Abzug steht als eigene, prüfbare Größe daneben.
 
 
 #### M3 - Tagegeld Anteilig ≤8h:
-=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND(S3:S*60)>=481)*(ROUND((S3:S-Q3:Q-R3:R)*60)<481);"X";""))
+=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND((S3:S-T3:T)*60)>=481)*(ROUND((S3:S-T3:T-Q3:Q-R3:R)*60)<481);"X";""))
 
 
 #### N3 - Tagegeld >8h:
-=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND(S3:S*60)>=481)*(ROUND((S3:S-Q3:Q-R3:R)*60)>=481)*(ROUND((S3:S-Q3:Q-R3:R)*60)<840);"X";""))
+=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND((S3:S-T3:T)*60)>=481)*(ROUND((S3:S-T3:T-Q3:Q-R3:R)*60)>=481)*(ROUND((S3:S-T3:T-Q3:Q-R3:R)*60)<840);"X";""))
 
 #### O3 - Tagegeld ≥14h:
-=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND(S3:S*60)>=481)*(ROUND((S3:S-Q3:Q-R3:R)*60)>=840)*(ROUND((S3:S-Q3:Q-R3:R)*60)<1440);"X";""))
+=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND((S3:S-T3:T)*60)>=481)*(ROUND((S3:S-T3:T-Q3:Q-R3:R)*60)>=840)*(ROUND((S3:S-T3:T-Q3:Q-R3:R)*60)<1440);"X";""))
 
 
 #### P3 - Tagegeld 24h:
-=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND(S3:S*60)>=481)*(ROUND((S3:S-Q3:Q-R3:R)*60)>=1440);"X";""))
+=ARRAYFORMULA(IF((IMPORTDATA!Q2:Q="Ja")*ISNUMBER(S3:S)*(ROUND((S3:S-T3:T)*60)>=481)*(ROUND((S3:S-T3:T-Q3:Q-R3:R)*60)>=1440);"X";""))
 
 
 #### Q3 - Dauer Aufenthalt Dienststätte (h mit dez):
@@ -101,25 +125,36 @@ Bedingte Formatierung - Datumsangabe
 =ARRAYFORMULA(IF(B3:B="";"";IFERROR(((E3:E+F3:F)-(C3:C+D3:D))*24;"")))
 
 
-#### T3 - Verpflegung:
-=ARRAYFORMULA(IF(B3:B="";"";IFERROR(IMPORTDATA!Y2:Y;"")))
+#### T3 - Privater Zeitabzug (h mit dez):
+Optionales Formularfeld — leer bedeutet "kein Abzug", nicht "unbekannt", daher
+0 statt "": M3:P3 rechnen mit T und würden bei "" #VALUE! liefern.
+
+=ARRAYFORMULA(IF(B3:B="";"";IFERROR(IMPORTDATA!T2:T/60;0)))
 
 
-#### U3 - ÖPNV:
-=ARRAYFORMULA(IF(B3:B="";"";IFERROR(VALUE(REGEXREPLACE(REGEXREPLACE(IMPORTDATA!U2:U;"[^0-9,.-]";"");",";"."));"")))
+#### Plausibilitätsprüfung (bedingte Formatierung auf T3:T)
+Privater Abzug darf die Rest-Zeit nicht negativ machen:
+=UND($T3<>"";$S3-$T3-$Q3-$R3<0)
 
 
-#### V3 - Mitnahme Personenzahl:
-=ARRAYFORMULA(IF(B3:B="";"";IFERROR(VALUE(IMPORTDATA!V2:V);"")))
+#### U3 - Verpflegung:
+=ARRAYFORMULA(IF(B3:B="";"";IFERROR(IMPORTDATA!Z2:Z;"")))
 
 
-#### W3 - Übernachtung:
-=ARRAYFORMULA(IF(B3:B="";"";IFERROR(VALUE(REGEXREPLACE(REGEXREPLACE(IMPORTDATA!W2:W;"[^0-9,.-]";"");",";"."));"")))
+#### V3 - ÖPNV:
+=ARRAYFORMULA(IF(B3:B="";"";IFERROR(VALUE(REGEXREPLACE(REGEXREPLACE(IMPORTDATA!V2:V;"[^0-9,.-]";"");",";"."));"")))
 
 
+#### W3 - Mitnahme Personenzahl:
+=ARRAYFORMULA(IF(B3:B="";"";IFERROR(VALUE(IMPORTDATA!W2:W);"")))
 
-##### X3 - Nebenkosten:
+
+#### X3 - Übernachtung:
 =ARRAYFORMULA(IF(B3:B="";"";IFERROR(VALUE(REGEXREPLACE(REGEXREPLACE(IMPORTDATA!X2:X;"[^0-9,.-]";"");",";"."));"")))
+
+
+#### Y3 - Nebenkosten:
+=ARRAYFORMULA(IF(B3:B="";"";IFERROR(VALUE(REGEXREPLACE(REGEXREPLACE(IMPORTDATA!Y2:Y;"[^0-9,.-]";"");",";"."));"")))
 
 
 
@@ -173,7 +208,8 @@ Bedingte Formatierung - Datumsangabe
   &"  –  ("&"Ges.: "&TEXT(BERECHNUNG!S3:S/24;"[H]:MM")
   &" | DSt: "&TEXT(BERECHNUNG!Q3:Q/24;"[H]:MM")
   &" | DO: "&TEXT(BERECHNUNG!R3:R/24;"[H]:MM")
-  &" | Rest: "&TEXT((BERECHNUNG!S3:S-BERECHNUNG!Q3:Q-BERECHNUNG!R3:R)/24;"[H]:MM")&")";
+  &IF(BERECHNUNG!T3:T>0;" | Priv: "&TEXT(BERECHNUNG!T3:T/24;"[H]:MM");"")
+  &" | Rest: "&TEXT((BERECHNUNG!S3:S-BERECHNUNG!T3:T-BERECHNUNG!Q3:Q-BERECHNUNG!R3:R)/24;"[H]:MM")&")";
   BERECHNUNG!C3:C<>"";
   BERECHNUNG!C3:C>=Setup!$C$8;
   BERECHNUNG!C3:C<=Setup!$C$10
@@ -218,7 +254,7 @@ Bedingte Formatierung - Datumsangabe
 
 #### I7 - Unentgeltliche Verpflegung:
 =ARRAYFORMULA(IFERROR(FILTER(
-  BERECHNUNG!T3:T;
+  BERECHNUNG!U3:U;
   BERECHNUNG!C3:C<>"";
   BERECHNUNG!C3:C>=Setup!$C$8;
   BERECHNUNG!C3:C<=Setup!$C$10
@@ -227,7 +263,7 @@ Bedingte Formatierung - Datumsangabe
 
 #### J7 - Fahrtkosten ÖPNV:
 =ARRAYFORMULA(IFERROR(FILTER(
-  IF(BERECHNUNG!U3:U>0;BERECHNUNG!U3:U;"");
+  IF(BERECHNUNG!V3:V>0;BERECHNUNG!V3:V;"");
   BERECHNUNG!C3:C<>"";
   BERECHNUNG!C3:C>=Setup!$C$8;
   BERECHNUNG!C3:C<=Setup!$C$10
@@ -245,7 +281,7 @@ Bedingte Formatierung - Datumsangabe
 
 #### L7 - Mitnahme von Personen:
 =ARRAYFORMULA(IFERROR(FILTER(
-  IF(BERECHNUNG!V3:V>0;BERECHNUNG!V3:V;"");
+  IF(BERECHNUNG!W3:W>0;BERECHNUNG!W3:W;"");
   BERECHNUNG!C3:C<>"";
   BERECHNUNG!C3:C>=Setup!$C$8;
   BERECHNUNG!C3:C<=Setup!$C$10
@@ -254,7 +290,7 @@ Bedingte Formatierung - Datumsangabe
 
 #### M7 - Übernachtungskosten:
 =ARRAYFORMULA(IFERROR(FILTER(
-  IF(BERECHNUNG!W3:W>0;BERECHNUNG!W3:W;"");
+  IF(BERECHNUNG!X3:X>0;BERECHNUNG!X3:X;"");
   BERECHNUNG!C3:C<>"";
   BERECHNUNG!C3:C>=Setup!$C$8;
   BERECHNUNG!C3:C<=Setup!$C$10
@@ -263,7 +299,7 @@ Bedingte Formatierung - Datumsangabe
 
 #### N7 - Nebenkosten:
 =ARRAYFORMULA(IFERROR(FILTER(
-  IF(BERECHNUNG!X3:X>0;BERECHNUNG!X3:X;"");
+  IF(BERECHNUNG!Y3:Y>0;BERECHNUNG!Y3:Y;"");
   BERECHNUNG!C3:C<>"";
   BERECHNUNG!C3:C>=Setup!$C$8;
   BERECHNUNG!C3:C<=Setup!$C$10
@@ -282,55 +318,79 @@ Bedingte Formatierung - Datumsangabe
 
 ## Blatt:Vermerke
 
-Daten beginnen ab Zeile 4, zeilengleich zu BERECHNUNG ab Zeile 3 (Offset -1).
-Jede Reise belegt ihre feste Zeile; Reisen ohne "Sonstige Infos" (IMPORTDATA
-Spalte Z) bleiben leer. Die Leerzeilen werden NICHT wegformelt, sondern im
-Blatt ausgeblendet (siehe "Leerzeilen ausblenden" unten) — nur so bleibt die
-händische Spalte D dauerhaft an ihrer Reise verankert.
-WICHTIG: Grenze einheitlich auf 1000 gesetzt (Google-Sheets-Standardgröße neuer
-Blätter), damit sie in BERECHNUNG, IMPORTDATA und Vermerke garantiert existiert
-(BERECHNUNG 3:999, IMPORTDATA 2:998, Vermerke 4:1000 — je 997 Zeilen). Hat ein
-Blatt WENIGER als 1000 Zeilen, "Bezug nicht vorhanden"-Fehler: Zeilen über
-Rechtsklick ergänzen. Braucht ihr mehr als 997 Reisen/Vermerke: alle drei
-Grenzen (999/998/1000) um denselben Betrag erhöhen, UND vorher in allen drei
-Blättern per Rechtsklick genügend Zeilen anfügen.
-Spalte D wird händisch befüllt und darf deshalb nicht in einer per Formel
-gefilterten Liste stehen — sonst verrutschen die Einträge, sobald ein Vermerk
-nachgetragen wird.
-Hinweis: IMPORTDATA-Spalte für "Sonstige Infos" ist als Z angenommen, ggf. anpassen.
+Daten beginnen ab Zeile 6, Spalten: A Lfd. Nr., B Label, C Vermerktext, F Datum.
+Die Liste ist lückenlos: A/C/F filtern per FILTER auf Reisen mit ausgefülltem
+"Sonstige Informationen" (IMPORTDATA Spalte AA), Reisen ohne Vermerk erzeugen
+keine Leerzeile. In Vermerke wird direkt gearbeitet und gedruckt — kein
+Blattfilter, kein separates Ansichtsblatt.
+Kein Blattfilter ("Daten > Filter erstellen") auf diesem Blatt: Filter werten
+ihre Bedingung nur bei manueller Interaktion neu aus, nicht wenn eine Zelle sich
+durch Formel-Neuberechnung (IMPORTRANGE) ändert — neu eintreffende Vermerke
+blieben sonst versteckt. Ein evtl. vorhandener Filter ist zu entfernen.
+WICHTIG: Quellgrenze einheitlich 1000 (Google-Sheets-Standardgröße neuer
+Blätter), damit die Zeile in BERECHNUNG und IMPORTDATA garantiert existiert:
+BERECHNUNG 3:999 und IMPORTDATA 2:998 — je 997 Zeilen. Hat ein Blatt WENIGER als
+1000 Zeilen, "Bezug nicht vorhanden"-Fehler: Zeilen über Rechtsklick ergänzen.
+Vermerke selbst startet erst auf Zeile 6 und hat bis Zeile 1000 nur 995
+Ausgabezeilen. Erst wenn tatsächlich mehr als 995 Reisen einen Vermerk tragen,
+läuft das FILTER-Ergebnis über das Blattende und liefert #REF — dann Vermerke um
+die fehlenden Zeilen verlängern. Braucht ihr mehr als 997 Reisen: die Grenzen
+999/998 um denselben Betrag erhöhen, in Vermerke die 1000er-Bezüge mitziehen,
+UND vorher in allen drei Blättern per Rechtsklick genügend Zeilen anfügen.
+In Vermerke wird NICHT händisch geschrieben — jede Spalte ist Formelergebnis.
+Detailbeschreibungen sowie alle Änderungen und Ergänzungen werden ausschließlich
+an der Quelle gepflegt (Formularantwort, Feld "Sonstige Infos") und laufen von
+dort über C mit ein. Nur so bleibt die gefilterte Liste zuordnungssicher: eine
+händische Spalte hinge an der Zeilenposition und würde verrutschen, sobald ein
+Vermerk nachgetragen wird.
+Hinweis: IMPORTDATA-Spalte für "Sonstige Informationen" ist AA (finale Formularversion).
 
-#### Leerzeilen ausblenden (einmalig einrichten):
-A3:E1000 markieren > Daten > Filter erstellen. Im Filtersymbol von Spalte C:
-"Nach Bedingung filtern" > "Ist nicht leer".
-Diese Bedingung wird je Zelle ausgewertet und braucht keinen Zeilenbezug — sie
-kann daher nicht verrutschen und aktualisiert sich bei neuen Antworten selbst.
-Nicht die Häkchenliste ("Nach Werten filtern") benutzen: die ist eine
-Momentaufnahme und erfasst später einlaufende Vermerke nicht.
-
-#### A4 - Laufende Nummer:
-=MAP(BERECHNUNG!B3:B999; BERECHNUNG!C3:C999; IMPORTDATA!Z2:Z998; LAMBDA(zs; dat; txt;
+#### A6 - Laufende Nummer:
+=ARRAYFORMULA(IFERROR(FILTER(
+  MAP(BERECHNUNG!B3:B999; BERECHNUNG!C3:C999; IMPORTDATA!AA2:AA998; LAMBDA(zs; dat; txt;
       IF(OR(dat=""; txt=""); "";
-        COUNTIFS(BERECHNUNG!$C$3:$C$999;">="&DATE(YEAR(dat);1;1); BERECHNUNG!$C$3:$C$999;"<"&dat; IMPORTDATA!$Z$2:$Z$998;"<>")
-      + COUNTIFS(BERECHNUNG!$C$3:$C$999;"="&dat; BERECHNUNG!$B$3:$B$999;"<="&zs; IMPORTDATA!$Z$2:$Z$998;"<>"))))
+        COUNTIFS(BERECHNUNG!$C$3:$C$999;">="&DATE(YEAR(dat);1;1); BERECHNUNG!$C$3:$C$999;"<"&dat; IMPORTDATA!$AA$2:$AA$998;"<>")
+      + COUNTIFS(BERECHNUNG!$C$3:$C$999;"="&dat; BERECHNUNG!$B$3:$B$999;"<="&zs; IMPORTDATA!$AA$2:$AA$998;"<>"))));
+  IMPORTDATA!AA2:AA998<>"";
+  BERECHNUNG!C3:C999<>""
+);""))
 
 
-#### B4 - Label:
-=ARRAYFORMULA(IF(A4:A1000="";"";"V"&TEXT(E4:E1000;"YY")&"-"&TEXT(A4:A1000;"00")))
+#### B6 - Label:
+Beide Quellspalten prüfen, nicht nur A: bei leerem Datum liefert TEXT(;"YY") die
+Serienzahl 0 = 30.12.1899 und damit stillschweigend "V99". Lieber kein Label als
+ein falsches Jahr.
+WICHTIG: A, B, C und F müssen auf derselben Zeile starten und dieselbe Endzeile
+haben, sonst paart B eine Nummer mit dem Datum einer anderen Reise. Startzeile
+hier durchgängig 6 — wird sie geändert, in allen vier Formeln gleichzeitig.
+
+=ARRAYFORMULA(IF((A6:A1000="")+(F6:F1000="");"";"V"&TEXT(F6:F1000;"YY")&"-"&TEXT(A6:A1000;"00")))
 
 
-#### C4 - Vermerktext (aus Formular):
-=ARRAYFORMULA(IF((BERECHNUNG!B3:B999="")+(IMPORTDATA!Z2:Z998="");"";IMPORTDATA!Z2:Z998))
+#### C6 - Vermerktext (aus Formular):
+=ARRAYFORMULA(IFERROR(FILTER(
+  IMPORTDATA!AA2:AA998;
+  IMPORTDATA!AA2:AA998<>"";
+  BERECHNUNG!C3:C999<>""
+);""))
 
 
-#### D4 - Ergänzung (händische Eingabe, keine Formel)
+#### D:E - Ergänzung: entfällt, keine Formel
+Ergänzungen werden an der Quelle im Formularfeld "Sonstige Informationen"
+gepflegt und erscheinen über C. Werden D/E gelöscht, rückt das Datum nach vorn —
+dann in B6 beide F-Bezüge auf die neue Spalte ändern.
 
 
-#### E4 - Datum:
-=ARRAYFORMULA(IF((BERECHNUNG!B3:B999="")+(IMPORTDATA!Z2:Z998="");"";BERECHNUNG!C3:C999))
+#### F6 - Datum:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!C3:C999;
+  IMPORTDATA!AA2:AA998<>"";
+  BERECHNUNG!C3:C999<>""
+);""))
 
 
 #### E1 - Stand Datum:
-=TODAY()
+=TEXTJOIN(" - ";TRUE;TEXT(Setup!$C$8;"DD.MM.YYYY");TEXT(Setup!$C$10;"DD.MM.YYYY"))
 
 
 ## Blatt:Druck-Fahrtenbuch
@@ -429,9 +489,151 @@ Momentaufnahme und erfasst später einlaufende Vermerke nicht.
 
 
 #### O4 - Vermerk (Label):
+Baut das Label selbst aus BERECHNUNG/IMPORTDATA (identische Logik wie
+Vermerke!A4/B4), statt es aus Vermerke nachzuschlagen — Vermerke ist gefiltert
+und daher nicht mehr zeilengleich zu BERECHNUNG, ein Bezug darauf wäre wieder
+positionsabhängig. Reisen ohne Vermerk bleiben leer.
+
 =ARRAYFORMULA(IFERROR(FILTER(
-  Vermerke!B4:B1000;
+  MAP(BERECHNUNG!B3:B999; BERECHNUNG!C3:C999; IMPORTDATA!AA2:AA998; LAMBDA(zs; dat; txt;
+      IF(OR(dat=""; txt=""); "";
+        "V"&TEXT(dat;"YY")&"-"&TEXT(
+          COUNTIFS(BERECHNUNG!$C$3:$C$999;">="&DATE(YEAR(dat);1;1); BERECHNUNG!$C$3:$C$999;"<"&dat; IMPORTDATA!$AA$2:$AA$998;"<>")
+        + COUNTIFS(BERECHNUNG!$C$3:$C$999;"="&dat; BERECHNUNG!$B$3:$B$999;"<="&zs; IMPORTDATA!$AA$2:$AA$998;"<>")
+        ;"00"))));
   BERECHNUNG!C3:C999<>"";
   BERECHNUNG!C3:C999>=Setup!$C$8;
   BERECHNUNG!C3:C999<=Setup!$C$10
 );""))
+
+
+## Blatt:Orte
+
+Stammdaten der Reiseziele, Daten beginnen ab Zeile 6. Spalte A = Nr., Spalte B
+= Kürzel (identisch zum Formularwert, außer WO/KV — siehe unten), Spalte C:D
+= vollständiger Name der Einrichtung, Spalte E:M = vollständige Adresse
+(Straße Hausnummer, PLZ Ort — je nach Zusammenführung über mehrere Zellen
+verteilt oder in E zusammengefasst).
+
+WO (Wohnort) und KV (Kreisverwaltung) stehen NICHT in diesem Blatt, sondern
+in Setup (C26/C28/C30/C32 bzw. C48/C50/C52/C54) — dieselbe Quelle wie
+ReisekostenabrechnungS1 E3/J3. Das Formular liefert bei Start/Ziel den
+Langtext "Wohnort"/"Kreisverwaltung", bei Wegpunkten das Kürzel "WO"/"KV";
+GoogleMapsExport!G3 gleicht das per SUBSTITUTE an, wie bereits BERECHNUNG!L3.
+
+
+## Blatt:GoogleMapsExport
+
+Daten ab Zeile 3, wie BERECHNUNG. Fasst Lfd. Nummer, Datum, Reiseweg, Zeiten,
+dienstliche Kilometer und einen fertigen Google-Maps-Routenlink pro Reise im
+Abrechnungszeitraum zusammen — ersetzt das manuelle Eintippen jedes Ortes in
+Maps durch einen Klick. Liefert weiterhin nur die Route, die Tacho-km bzw.
+Formularangaben widerspiegelt; Maps zeigt bei ≥3 Orten (Wegpunkte) ohnehin
+keine Alternativrouten mehr an, unabhängig von Link oder Handeingabe.
+
+WICHTIG (gilt für jedes FILTER im Dokument): Datenbereich und Bedingung müssen
+exakt gleich viele Zeilen haben, sonst liefert FILTER einen Fehler und die
+umschließende IFERROR macht daraus eine leere Zelle — die Spalte bleibt still
+leer statt sichtbar kaputt. Offenes `A3:A` reicht bis Blattende (998 Zeilen),
+`C3:C999` hat 997. Deshalb: offene Bereiche nur mit offenen Bedingungen
+kombinieren (A3:A ↔ C3:C), begrenzte nur mit begrenzten. A3–F3 filtern offene
+BERECHNUNG-Spalten und nutzen daher C3:C; G3 baut sein Array aus
+IMPORTDATA!J2:P998 (997 Zeilen) und braucht dort C3:C999.
+
+#### J1 - Abrechnungszeitraum:
+=TEXTJOIN(" - ";TRUE;TEXT(Setup!$C$8;"DD.MM.YYYY");TEXT(Setup!$C$10;"DD.MM.YYYY"))
+
+
+#### A3 - Laufende Nummer:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!A3:A;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### B3 - Datum:
+=ARRAYFORMULA(IFERROR(FILTER(
+  TEXT(BERECHNUNG!C3:C;"DD.MM.YYYY");
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### C3 - Wegstrecke:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!L3:L;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### D3 - Beginn:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!D3:D;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### E3 - Ende:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!F3:F;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### F3 - Kilometer dienstlich:
+=ARRAYFORMULA(IFERROR(FILTER(
+  BERECHNUNG!K3:K;
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+
+
+#### G3 - Routenlink:
+Löst Formular-Kürzel gegen Orte!B (Wegpunkte) bzw. Setup (Start/Ziel WO/KV)
+zu vollständigen Adressen auf und baut daraus einen anklickbaren
+Google-Maps-Link. Nicht gefundene Kürzel bleiben als Rohtext im Link stehen
+(sichtbar falsch statt still falsch, siehe Prüfzelle unten).
+
+=ARRAYFORMULA(IFERROR(FILTER(
+  BYROW(CHOOSECOLS(IMPORTDATA!J2:P998; 1;3;4;5;6;7;2); LAMBDA(zeile;
+    LET(
+      codes; IFERROR(FILTER(zeile; zeile<>""); {""});
+      adr;   MAP(codes; LAMBDA(k;
+               LET(kk; TRIM(SUBSTITUTE(SUBSTITUTE(k;"Wohnort";"WO");"Kreisverwaltung";"KV"));
+                 IF(kk=""; "";
+                   IF(kk="WO"; TEXTJOIN(" ";TRUE;Setup!$C$26;Setup!$C$28)&", "&TEXTJOIN(" ";TRUE;Setup!$C$30;Setup!$C$32);
+                   IF(kk="KV"; TEXTJOIN(" ";TRUE;Setup!$C$48;Setup!$C$50)&", "&TEXTJOIN(" ";TRUE;Setup!$C$52;Setup!$C$54);
+                     LET(z; XMATCH(kk; Orte!$B$6:$B$200);
+                       IF(ISNA(z); kk;
+                          TEXTJOIN(" "; TRUE; CHOOSEROWS(Orte!$E$6:$M$200; z))))))))));
+      n;     COUNTA(adr);
+      IF(n<2; "";
+        HYPERLINK(
+          "https://www.google.com/maps/dir/?api=1&origin="&ENCODEURL(INDEX(adr;1))
+          &"&destination="&ENCODEURL(INDEX(adr;n))
+          &IF(n>2; "&waypoints="&ENCODEURL(TEXTJOIN("|";TRUE;
+               FILTER(adr; (SEQUENCE(1;n)>1)*(SEQUENCE(1;n)<n)))); "");
+          "Route"
+        )
+      )
+    )
+  ));
+  BERECHNUNG!C3:C999<>"";
+  BERECHNUNG!C3:C999>=Setup!$C$8;
+  BERECHNUNG!C3:C999<=Setup!$C$10
+);""))
+
+Prüfzelle bei rohem Kürzel im Link statt Adresse:
+=XMATCH("<Kürzel>"; Orte!B6:B200)
+#N/A → Kürzel in Orte!B weicht vom Formularwert ab (Groß-/Kleinschreibung,
+Leerzeichen, Tippfehler).
