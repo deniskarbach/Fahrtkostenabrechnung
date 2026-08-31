@@ -3,6 +3,20 @@
 Anleitung zum Ausfüllen und Abrechnen einer Dienstreise. 
 Technische Details zu den einzelnen Formeln: siehe [Formeln.md](Formeln.md).
 
+## Gliederung
+
+1. [Der Prozess auf einen Blick](#der-prozess-auf-einen-blick)
+2. [Ablauf](#ablauf)
+3. [Die Blätter im Überblick](#die-blätter-im-überblick)
+4. [Formular ausfüllen](#formular-ausfüllen)
+5. [Setup-Blatt](#setup-blatt)
+6. [Prüfen vor dem Drucken & Einreichung](#prüfen-vor-dem-drucken--einreichung)
+7. [Drucken](#drucken)
+8. ["Einkleben" und Unterschreiben](#einkleben-und-unterschreiben)
+9. [Wenn sich das Formular ändert](#wenn-sich-das-formular-ändert)
+
+---
+
 ## Der Prozess auf einen Blick
 
 Von der Formulareingabe bis zur unterschriftsreifen Abrechnung sind nur drei
@@ -24,12 +38,16 @@ eigene Handgriffe nötig — alles dazwischen übernimmt die Tabelle automatisch
 | Vermerke/Besonderheiten separat dokumentieren | automatisch aus „Sonstige Informationen" gesammelt |
 | Reisenummerierung von Hand pflegen | automatisch fortlaufend je Kalenderjahr vergeben |
 
+---
+
 ## Ablauf
 
 1. **Google-Formular:Dienstreise** – jeweils eine Dienstreise pro Formulareingabe ausfüllen.
 2. **Blatt:Setup** – einmalig Stammdaten und Freigabe erteilen, Zur Abrechnung Abrechnungszeitraum eingeben (max. 2 Monate), blaue Platzhalter nutzen.
 3. **Automatisierung** – Dienstreisen erscheinen automatisch in den Blättern: S1, Fahrtenbuch-Druck, Vermerke, GoogleMapsExport sowie in den geschützen Blättern IMPORTDATA und BERECHNUNG.
 4. **Ausdruck** – S1 & S2, Fahrtenbuch-Druck sowie Orte und ggf. Vermerke drucken. 
+
+---
 
 ## Die Blätter im Überblick
 
@@ -44,16 +62,20 @@ Nur Formular und Setup werden von Hand gepflegt. Alle anderen Blätter sind rein
 
 Ausgegeben in S1/S2, Druck-Fahrtenbuch, Vermerke und GoogleMapsExport.
 
-| Blatt | Wozu es da ist | Was hier zu tun ist |
-|---|---|---|
-| Setup | Zentrale Konfiguration: Verknüpfung zur Formularantworten-Datei, Freigabe-Schalter, Stammdaten der Person, Abrechnungszeitraum | Einmalig einrichten (Personendaten, URL, Freigabe), **Wichtig:** pro Abrechnung den exakten Zeitraum setzen |
-| IMPORTDATA | Rohübernahme der Formularantworten aus der externen Google-Form-Datei, unverändert — Zwischenspeicher, damit BERECHNUNG nicht direkt auf die fremde Datei zugreift | Nichts — automatischer Rohimport der Formularantworten |
-| BERECHNUNG | Kernblatt: bereitet jede Reise auf (Zeiten, Kilometer, Tagegeld-Staffel), eine Zeile je Reise — Grundlage für alle Ausgabeblätter | Nichts - automatische Berechnung der importierten Werte aus IMPORTDATA |
-| S1 / S2 | Amtliches Formular zur Erstattung, wird unterschrieben eingereicht | Nichts — ausdrucken und unterschreiben |
-| Vermerke | Sammelt besondere Anmerkungen zu Reisen (Feld „Sonstige Informationen") als Nachweis/für Rückfragen | Nichts — bei Bedarf ausdrucken. Händisch nach Ausdruck ggf. Detailbeschreibung |
-| Druck-Fahrtenbuch | Vollständige, druckfähige Auflistung aller Reisen des Zeitraums für die Fahrtenbuch-Nachweispflicht | Nichts - ausdrucken und händisch in der Spalte Unterschrift unterschreiben |
-| Orte | Adress-Stammdaten der Reiseziele — Grundlage für den Google-Maps-Routenlink | Pflegen: neue Reiseziele mit vollständiger Adresse ergänzen. **Wichtig:** Sollten diese Adressen dauerhaft als Auswahl im Formular nutzbar sein, müssen diese ebenfalls ins Formular aufgenommen werden. |
-| GoogleMapsExport | Erzeugt klickbare Google-Maps-Routenlinks je Reise, um die gefahrene Strecke nachzuvollziehen und zu prüfen | Nichts — Routenlink bei Bedarf nutzen |
+| | Blatt | Wozu es da ist | Was hier zu tun ist |
+|---|---|---|---|
+| ✍️ | Setup | Zentrale Konfiguration: Verknüpfung zur Formularantworten-Datei, Freigabe-Schalter, Stammdaten der Person, Abrechnungszeitraum | **Einrichten & pflegen.** Einmalig Personendaten/URL/Freigabe, **pro Abrechnung** den exakten Zeitraum setzen |
+| ✅ | IMPORTDATA | Rohübernahme der Formularantworten aus der externen Google-Form-Datei, unverändert — Zwischenspeicher, damit BERECHNUNG nicht direkt auf die fremde Datei zugreift | **Nichts.** Automatischer Rohimport der Formularantworten |
+| ✅ | BERECHNUNG | Kernblatt: bereitet jede Reise auf (Zeiten, Kilometer, Tagegeld-Staffel), eine Zeile je Reise — Grundlage für alle Ausgabeblätter | **Nichts.** Automatische Berechnung der importierten Werte aus IMPORTDATA |
+| 🖨️ | S1 / S2 | Amtliches Formular zur Erstattung, wird unterschrieben eingereicht | **Drucken & unterschreiben.** Sonst nichts zu tun |
+| 🖨️ | Vermerke | Sammelt besondere Anmerkungen zu Reisen (Feld „Sonstige Informationen") als Nachweis/für Rückfragen | **Bei Bedarf drucken.** Danach ggf. Detailbeschreibung von Hand ergänzen |
+| 🖨️ | Druck-Fahrtenbuch | Vollständige, druckfähige Auflistung aller Reisen des Zeitraums für die Fahrtenbuch-Nachweispflicht | **Drucken & unterschreiben.** Unterschrift von Hand in der Spalte Unterschrift |
+| ✍️ | Orte | Adress-Stammdaten der Reiseziele — Grundlage für den Google-Maps-Routenlink | **Pflegen.** Neue Reiseziele mit vollständiger Adresse ergänzen — sollen sie dauerhaft im Formular auswählbar sein, zusätzlich dort eintragen |
+| ✅ | GoogleMapsExport | Erzeugt klickbare Google-Maps-Routenlinks je Reise, um die gefahrene Strecke nachzuvollziehen und zu prüfen | **Nichts.** Routenlink bei Bedarf nutzen |
+
+✍️ von Hand pflegen · ✅ läuft automatisch · 🖨️ ausdrucken/unterschreiben
+
+---
 
 ## Formular ausfüllen
 
@@ -96,6 +118,8 @@ Das Formular gliedert sich in fünf Abschnitte, zwei davon mit bedingten Detailf
 - Sonstige Informationen (erscheinen automatisch im Blatt Vermerke)
 - Screenshot, weitere Belege
 
+---
+
 ## Setup-Blatt
 
 - **Freigabe** (Feld B80 = „Ja") muss gesetzt sein, sonst bleiben die Daten gesperrt
@@ -110,11 +134,15 @@ Das Formular gliedert sich in fünf Abschnitte, zwei davon mit bedingten Detailf
   <figcaption>Blatt „Setup" (zum Vergrößern anklicken)</figcaption>
 </figure>
 
+---
+
 ## Prüfen vor dem Drucken & Einreichung
 
 - **Wichtig:** Änderungen an Dienstreiseinformationen können ausschließlich in der Quelle (Formularantworten) getätigt werden, in den einzelnen Blättern nicht.
 - Anzeige und Ausgabe der Daten im Abrechnungszeitraum korrekt?
 
+
+---
 
 ## Drucken
 
@@ -123,9 +151,13 @@ Das Formular gliedert sich in fünf Abschnitte, zwei davon mit bedingten Detailf
 - **Druck-Fahrtenbuch** – vollständiges Fahrtenbuch des Zeitraums
 - **Orte** – vollständige Liste der bekannten Orte im Fahrtenbuch
 
+---
+
 ## "Einkleben" und Unterschreiben
 - **Druck-Fahrtenbuch** ausdrucken bei 100%. Anschließend ausschneiden und ins Fahrtenbuch einkleben. **Wichtig:**Unterschrift händisch in das entsprechende Feld nach einkleben.
 - Weitere Dateien wie üblich bei Einreichung behandeln.
+
+---
 
 ## Wenn sich das Formular ändert
 
