@@ -23,18 +23,21 @@ Nur Formular und Setup werden von Hand gepflegt. Alle anderen Blätter sind rein
 
 Ausgegeben in S1/S2, Druck-Fahrtenbuch, Vermerke und GoogleMapsExport.
 
-| Blatt | Was hier zu tun ist |
-|---|---|
-| Setup | Einmalig einrichten (Personendaten, URL, Freigabe), **Wichtig:** pro Abrechnung den exakten Zeitraum setzen |
-| IMPORTDATA | Nichts — automatischer Rohimport der Formularantworten |
-| BERECHNUNG | Nichts - automatische Berechnung der importierten Werte aus IMPORTDATA |
-| S1 / S2 | Nichts — ausdrucken und unterschreiben |
-| Vermerke | Nichts — bei Bedarf ausdrucken. Händisch nach Ausdruck ggf. Detailbeschreibung |
-| Druck-Fahrtenbuch | Nichts - ausdrucken und händisch in der Spalte Unterschrift unterschreiben |
-| Orte | Pflegen: neue Reiseziele mit vollständiger Adresse ergänzen. **Wichtig:** Sollten diese Adressen dauerhaft als Auswahl im Formular nutzbar sein, müssen diese ebenenfalls ins Formular aufgenommen werden. |
-| GoogleMapsExport | Nichts — Routenlink bei Bedarf nutzen |
+| Blatt | Wozu es da ist | Was hier zu tun ist |
+|---|---|---|
+| Setup | Zentrale Konfiguration: Verknüpfung zur Formularantworten-Datei, Freigabe-Schalter, Stammdaten der Person, Abrechnungszeitraum | Einmalig einrichten (Personendaten, URL, Freigabe), **Wichtig:** pro Abrechnung den exakten Zeitraum setzen |
+| IMPORTDATA | Rohübernahme der Formularantworten aus der externen Google-Form-Datei, unverändert — Zwischenspeicher, damit BERECHNUNG nicht direkt auf die fremde Datei zugreift | Nichts — automatischer Rohimport der Formularantworten |
+| BERECHNUNG | Kernblatt: bereitet jede Reise auf (Zeiten, Kilometer, Tagegeld-Staffel), eine Zeile je Reise — Grundlage für alle Ausgabeblätter | Nichts - automatische Berechnung der importierten Werte aus IMPORTDATA |
+| S1 / S2 | Amtliches Formular zur Erstattung, wird unterschrieben eingereicht | Nichts — ausdrucken und unterschreiben |
+| Vermerke | Sammelt besondere Anmerkungen zu Reisen (Feld „Sonstige Informationen") als Nachweis/für Rückfragen | Nichts — bei Bedarf ausdrucken. Händisch nach Ausdruck ggf. Detailbeschreibung |
+| Druck-Fahrtenbuch | Vollständige, druckfähige Auflistung aller Reisen des Zeitraums für die Fahrtenbuch-Nachweispflicht | Nichts - ausdrucken und händisch in der Spalte Unterschrift unterschreiben |
+| Orte | Adress-Stammdaten der Reiseziele — Grundlage für den Google-Maps-Routenlink | Pflegen: neue Reiseziele mit vollständiger Adresse ergänzen. **Wichtig:** Sollten diese Adressen dauerhaft als Auswahl im Formular nutzbar sein, müssen diese ebenfalls ins Formular aufgenommen werden. |
+| GoogleMapsExport | Erzeugt klickbare Google-Maps-Routenlinks je Reise, um die gefahrene Strecke nachzuvollziehen und zu prüfen | Nichts — Routenlink bei Bedarf nutzen |
 
 ## Formular ausfüllen
+
+Ausfüllbar am PC oder auf dem Handy. Voraussetzung ist ein Google-Konto —
+darüber wird die Dienstreise erfasst und in der Tabelle berechnet.
 
 Das Formular gliedert sich in fünf Abschnitte, zwei davon mit bedingten Detailfragen.
 
