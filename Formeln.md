@@ -1,6 +1,7 @@
-# Projektidee
-Das Fahrtkostenformular soll Dienstreisen automatisiert erfassen und abrechnen: Google-Forms-Antworten laufen per IMPORTRANGE in die Tabelle ein und werden im Blatt BERECHNUNG so aufbereitet, dass die Formularblätter S1, Fahrtenbuch-Druck, Vermerke nur noch fertige Werte anzeigen müssen.
+# Formeln
 
+Die nachfolgend aufgeführten Formeln dienen der Nachvollziehbarkeit und
+Transparenz der Berechnung sowie der Prüfung der zugrunde liegenden Ergebnisse.
 
 ## Gliederung dieses Dokuments
 
