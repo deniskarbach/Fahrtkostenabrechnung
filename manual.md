@@ -49,7 +49,7 @@ Optional:
   Google Sheets bestätigen
 - **Abrechnungszeitraum** (C8–C10) bestimmt, welche Reisen in S1/S2 landen
 
-![Setup-Blatt](img/screenshot_setup.png)
+<img src="img/screenshot_setup.png" alt="Setup-Blatt" width="480">
 
 ## Prüfen vor dem Drucken
 
