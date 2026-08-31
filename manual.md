@@ -3,6 +3,27 @@
 Anleitung zum Ausfüllen und Abrechnen einer Dienstreise. 
 Technische Details zu den einzelnen Formeln: siehe [Formeln.md](Formeln.md).
 
+## Der Prozess auf einen Blick
+
+Von der Formulareingabe bis zur unterschriftsreifen Abrechnung sind nur drei
+eigene Handgriffe nötig — alles dazwischen übernimmt die Tabelle automatisch:
+
+1. **Formular ausfüllen** (pro Reise)
+2. **Setup: Zeitraum setzen** (pro Abrechnung)
+3. **Ausdrucken und unterschreiben**
+
+**Was die Tabelle automatisch übernimmt, statt es von Hand zu tun:**
+
+| Ohne dieses Tool | Mit dieser Tabelle |
+|---|---|
+| Kilometer manuell berechnen und plausibilisieren | automatisch berechnet |
+| Tagegeld-Staffel per Hand anhand der Abwesenheitszeiten ermitteln | automatisch anhand der Zeitschwellen berechnet |
+| Amtliches Formular S1/S2 von Hand ausfüllen | automatisch aus dem Abrechnungszeitraum befüllt |
+| Fahrtenbuch manuell führen | automatisch als Druck-Fahrtenbuch erstellt |
+| Route in Google Maps von Hand eintippen | fertiger Routenlink je Reise |
+| Vermerke/Besonderheiten separat dokumentieren | automatisch aus „Sonstige Informationen" gesammelt |
+| Reisenummerierung von Hand pflegen | automatisch fortlaufend je Kalenderjahr vergeben |
+
 ## Ablauf
 
 1. **Google-Formular:Dienstreise** – jeweils eine Dienstreise pro Formulareingabe ausfüllen.
@@ -35,6 +56,13 @@ Ausgegeben in S1/S2, Druck-Fahrtenbuch, Vermerke und GoogleMapsExport.
 | GoogleMapsExport | Erzeugt klickbare Google-Maps-Routenlinks je Reise, um die gefahrene Strecke nachzuvollziehen und zu prüfen | Nichts — Routenlink bei Bedarf nutzen |
 
 ## Formular ausfüllen
+
+<figure>
+  <a href="img/screenshot_formular.png" target="_blank" rel="noopener">
+    <img src="img/screenshot_formular.png" alt="Formular Dienstreise (zum Vergrößern anklicken)" style="width:480px;height:300px;object-fit:cover;object-position:top;border:1px solid #ddd;">
+  </a>
+  <figcaption>Formular „Dienstreise" – Startseite (zum Vergrößern anklicken)</figcaption>
+</figure>
 
 Ausfüllbar am PC oder auf dem Handy. Voraussetzung ist ein Google-Konto —
 darüber wird die Dienstreise erfasst und in der Tabelle berechnet.
@@ -75,9 +103,12 @@ Das Formular gliedert sich in fünf Abschnitte, zwei davon mit bedingten Detailf
   Google Sheets bestätigen
 - **Abrechnungszeitraum** (C8–C10) bestimmt, welche Reisen in S1, Fahrtenbuch-Druck ausgegeben werden.
 
-<a href="img/screenshot_setup.png" target="_blank" rel="noopener">
-  <img src="img/screenshot_setup.png" alt="Setup-Blatt (zum Vergrößern anklicken)" style="width:480px;height:300px;object-fit:cover;object-position:top;border:1px solid #ddd;">
-</a>
+<figure>
+  <a href="img/screenshot_setup.png" target="_blank" rel="noopener">
+    <img src="img/screenshot_setup.png" alt="Setup-Blatt (zum Vergrößern anklicken)" style="width:480px;height:300px;object-fit:cover;object-position:top;border:1px solid #ddd;">
+  </a>
+  <figcaption>Blatt „Setup" (zum Vergrößern anklicken)</figcaption>
+</figure>
 
 ## Prüfen vor dem Drucken & Einreichung
 
@@ -101,34 +132,3 @@ Das Formular gliedert sich in fünf Abschnitte, zwei davon mit bedingten Detailf
 Neue Formularfragen verschieben alle folgenden Spalten. Danach die Bezüge in
 BERECHNUNG, Vermerke, Druck-Fahrtenbuch und GoogleMapsExport prüfen – siehe
 [Anhang](formeln/anhang.md).
-
-## Wichtiger rechtlicher Hinweis und Haftungsausschluss
-
-**1. Keine Rechtsberatung, keine Gewähr für Richtigkeit**
-
-Diese Software wurde nach bestem Wissen und Gewissen entwickelt, um bei der
-Berechnung und Zusammenstellung von Reisekostenabrechnungen zu unterstützen.
-Es handelt sich hierbei ausdrücklich um eine unverbindliche Hilfestellung. Die
-Berechnungen basieren auf komplexen Formeln, die Fehler enthalten können.
-
-**2. Alleinige Verantwortung des Nutzers**
-
-Die Nutzung dieses Tools erfolgt auf eigene Gefahr. Der Nutzer bzw. die
-Nutzerin ist allein dafür verantwortlich, alle Ergebnisse vor der Einreichung
-bei der zuständigen Stelle manuell zu überprüfen. Der Autor/Entwickler
-übernimmt keine Verantwortung für:
-
-- abgelehnte Reisekostenabrechnungen,
-- falsch berechnete Beträge (zu hohe oder zu niedrige Auszahlungen),
-- Rückforderungen seitens der abrechnenden Stelle,
-- versäumte Fristen aufgrund technischer Fehler,
-- sonstige Schäden oder Nachteile.
-
-**3. Keine Markenrechte**
-
-Die Nutzung von Namen oder Logos in diesem Tool impliziert keine offizielle
-Herausgeberschaft durch die jeweilige Institution, sofern dies nicht
-ausdrücklich anders ausgewiesen ist.
-
-Mit der Nutzung dieses Tools erkennen Sie diesen Haftungsausschluss
-vollumfänglich an.
