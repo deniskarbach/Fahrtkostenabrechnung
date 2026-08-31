@@ -10,6 +10,22 @@ den einzelnen Formeln: siehe [Formeln.md](Formeln.md).
 3. **Kontrolle** – Reise erscheint automatisch in BERECHNUNG
 4. **Ausdruck** – S1/S2 sowie ggf. Vermerke und Druck-Fahrtenbuch drucken
 
+## Die Blätter im Überblick
+
+Nur Formular und Setup werden von Hand gepflegt. Alle anderen Blätter sind
+reine Formelergebnisse — dort wird nichts eingetragen.
+
+| Blatt | Was hier zu tun ist |
+|---|---|
+| Setup | Einmalig einrichten (URL, Freigabe), pro Abrechnung den Zeitraum setzen |
+| IMPORTDATA | Nichts — automatischer Rohimport der Formularantworten |
+| BERECHNUNG | Nichts, aber rot markierte Zeilen kontrollieren (unplausible Kilometer/Zeiten) |
+| S1 / S2 | Nichts — ausdrucken und unterschreiben |
+| Vermerke | Nichts — bei Bedarf ausdrucken |
+| Druck-Fahrtenbuch | Nichts — bei Bedarf ausdrucken |
+| Orte | Pflegen: neue Reiseziele mit vollständiger Adresse ergänzen |
+| GoogleMapsExport | Nichts — Routenlink bei Bedarf nutzen |
+
 ## Formular ausfüllen
 
 Pflichtangaben je Reise:
@@ -32,6 +48,8 @@ Optional:
 - **URL** der Formularantworten-Datei einmalig hinterlegen, ersten Import in
   Google Sheets bestätigen
 - **Abrechnungszeitraum** (C8–C10) bestimmt, welche Reisen in S1/S2 landen
+
+![Setup-Blatt](img/screenshot_setup.png)
 
 ## Prüfen vor dem Drucken
 
