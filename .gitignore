@@ -1,0 +1,12 @@
+# Vorlagen und Ausdrucke bleiben lokal — dieses Repo ist öffentlich.
+*.xlsx
+*.pdf
+
+# Zugangsdaten
+.env
+
+# Python
+__pycache__/
+
+# macOS
+.DS_Store
