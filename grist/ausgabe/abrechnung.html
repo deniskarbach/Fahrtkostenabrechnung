@@ -16,6 +16,7 @@
 :root {
   --h-datenzeile: 6.35mm;   /* 18 pt aus der Vorlage                       */
   --rahmen: 0.4pt solid #000;
+  --rahmen-breit: 1.4pt solid #000;   /* "medium" aus der Vorlage, ca. doppelte Stärke */
 
   /* ---- Stellschrauben ---- */
   --schrift:        7.6pt;    /* Daten                                       */
@@ -102,8 +103,16 @@ table { width: 180mm; border-collapse: collapse; table-layout: fixed; }
 .s2 .hoehe2 { height: 6.09mm; }     /* Zeile 2 der Vorlage  */
 .s2 .hoehe42 { height: 7.14mm; }    /* Zeile 42 der Vorlage */
 .s2 .linie { border-bottom: var(--rahmen); }
+.s2 .trenn { border-bottom: var(--rahmen); }   /* Trennlinie über volle Breite */
 .s2 .klein { font-size: var(--schrift-einheit); }
 .s2 .oben { vertical-align: top; }
+
+/* Oberer Block (Erklärung + Bankverbindung): dünner Rahmen oben/links/rechts,
+   unten schließt die Unterschriftslinie (.linie in der letzten Zeile) ab. */
+.s2.rahmen-oben { border-left: var(--rahmen); border-right: var(--rahmen); border-top: var(--rahmen); }
+
+/* Unterer Block (Verfügung): umlaufender, breiter Rahmen wie in der Vorlage. */
+.s2.rahmen-breit { border: var(--rahmen-breit); }
 
 .kostenrechnung { width: 180mm; border-collapse: collapse; table-layout: fixed; margin-top: 4mm; }
 .kostenrechnung td { height: 4.5mm; border: var(--rahmen); padding: 0 var(--polster-x);
@@ -191,7 +200,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
 <!-- ================================ Blatt 2 (S2) ================================ -->
 <div class="blatt">
 
-  <table class="s2">
+  <table class="s2 rahmen-oben">
     <colgroup>
       <col style="width:12.84%"><col style="width:16.95%"><col style="width:12.84%">
       <col style="width:12.84%"><col style="width:13.69%"><col style="width:16.95%">
@@ -211,12 +220,12 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     <tr><td colspan="7"></td></tr>
     <tr><td>BIC:</td><td></td><td class="linie" colspan="3" id="k-bic"></td>
         <td colspan="2"></td></tr>
-    <tr><td colspan="7"></td></tr>
+    <tr><td class="trenn" colspan="7"></td></tr>
 
     <tr><td colspan="4"></td><td colspan="3">Sachlich richtig:</td></tr>
     <tr><td colspan="7"></td></tr>
 
-    <tr><td class="linie"></td><td class="linie"></td><td colspan="2"></td>
+    <tr><td class="linie"></td><td class="linie"></td><td class="linie" colspan="2"></td>
         <td class="linie" colspan="3"></td></tr>
     <tr><td class="klein">(Datum)</td>
         <td class="klein">(Unterschrift, Dienstbezeichnung)</td>
@@ -254,7 +263,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     <tr><td></td><td class="betrag">Auszuzahlen:</td><td></td><td></td></tr>
   </table>
 
-  <table class="s2" style="margin-top:6mm">
+  <table class="s2 rahmen-breit" style="margin-top:6mm">
     <colgroup>
       <col style="width:12.84%"><col style="width:16.95%"><col style="width:12.84%">
       <col style="width:12.84%"><col style="width:13.69%"><col style="width:16.95%">
