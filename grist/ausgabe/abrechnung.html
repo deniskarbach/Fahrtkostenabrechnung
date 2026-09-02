@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<title>S1 – standardisierte Ausgabe</title>
+<title>Reisekostenabrechnung – S1 und S2</title>
 <style>
 /* ---------------------------------------------------------------
    Raster aus der Vorlage übernommen:
@@ -94,9 +94,29 @@ table { width: 180mm; border-collapse: collapse; table-layout: fixed; }
 .uebertrag td { font-weight: bold; height: var(--h-datenzeile); }
 .uebertrag .beschriftung { text-align: right; }
 
+/* ---------- Blatt 2 (S2), Raster aus der Vorlage ----------
+   7 Spalten A–G, Zeilenraster durchgehend 12,75 pt = 4,50 mm. */
+
+.s2 { width: 180mm; border-collapse: collapse; table-layout: fixed; }
+.s2 td { height: 4.5mm; padding: 0 var(--polster-x); vertical-align: bottom; }
+.s2 .hoehe2 { height: 6.09mm; }     /* Zeile 2 der Vorlage  */
+.s2 .hoehe42 { height: 7.14mm; }    /* Zeile 42 der Vorlage */
+.s2 .linie { border-bottom: var(--rahmen); }
+.s2 .klein { font-size: var(--schrift-einheit); }
+.s2 .oben { vertical-align: top; }
+
+.kostenrechnung { width: 180mm; border-collapse: collapse; table-layout: fixed; margin-top: 4mm; }
+.kostenrechnung td { height: 4.5mm; border: var(--rahmen); padding: 0 var(--polster-x);
+                     vertical-align: bottom; }
+.kostenrechnung .ueberschrift { text-align: center; font-weight: bold; height: 5.5mm;
+                                vertical-align: middle; }
+.kostenrechnung .betrag { text-align: right; font-variant-numeric: tabular-nums; }
+.kostenrechnung .ohne { border: none; }
+
 @media print {
   body { background: #fff; }
-  .blatt { width: auto; margin: 0; padding: 0; box-shadow: none; }
+  .blatt { width: auto; margin: 0; padding: 0; box-shadow: none; break-after: page; }
+  .blatt:last-child { break-after: auto; }
   thead { display: table-header-group; }
   tr { break-inside: avoid; }
 }
@@ -168,13 +188,111 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
   </table>
 </div>
 
+<!-- ================================ Blatt 2 (S2) ================================ -->
+<div class="blatt">
+
+  <table class="s2">
+    <colgroup>
+      <col style="width:12.84%"><col style="width:16.95%"><col style="width:12.84%">
+      <col style="width:12.84%"><col style="width:13.69%"><col style="width:16.95%">
+      <col style="width:13.87%">
+    </colgroup>
+
+    <tr><td class="oben hoehe2" colspan="7">Ich versichere pflichtgemäß, dass mir die
+        umseitig genannten Auslagen im Rahmen der Dienstreise(n) entstanden sind.</td></tr>
+    <tr><td colspan="7"></td></tr>
+
+    <tr><td colspan="5">Bitte überweisen sie den Betrag auf folgendes Konto:</td>
+        <td colspan="2"></td></tr>
+    <tr><td colspan="7"></td></tr>
+
+    <tr><td>IBAN:</td><td></td><td class="linie" colspan="3" id="k-iban"></td>
+        <td colspan="2"></td></tr>
+    <tr><td colspan="7"></td></tr>
+    <tr><td>BIC:</td><td></td><td class="linie" colspan="3" id="k-bic"></td>
+        <td colspan="2"></td></tr>
+    <tr><td colspan="7"></td></tr>
+
+    <tr><td colspan="4"></td><td colspan="3">Sachlich richtig:</td></tr>
+    <tr><td colspan="7"></td></tr>
+
+    <tr><td class="linie"></td><td class="linie"></td><td colspan="2"></td>
+        <td class="linie" colspan="3"></td></tr>
+    <tr><td class="klein">(Datum)</td>
+        <td class="klein">(Unterschrift, Dienstbezeichnung)</td>
+        <td colspan="2"></td>
+        <td class="klein" colspan="3">(Unterschrift, Dienstbezeichnung)</td></tr>
+  </table>
+
+  <table class="kostenrechnung">
+    <colgroup>
+      <col style="width:29.79%"><col style="width:39.37%">
+      <col style="width:16.95%"><col style="width:13.87%">
+    </colgroup>
+
+    <tr><td class="ueberschrift" colspan="4">KOSTENRECHNUNG (nicht vom Antragsteller auszufüllen)</td></tr>
+    <tr><td class="ohne"></td><td class="ohne"></td>
+        <td class="betrag">Im Einzelnen</td><td class="betrag">Insgesamt</td></tr>
+    <tr><td class="ohne"></td><td class="ohne"></td>
+        <td class="betrag">EUR</td><td class="betrag">EUR</td></tr>
+
+    <tr><td>I. Tagegeld</td><td>Tage mit mehr als 8 Stunden</td><td></td><td></td></tr>
+    <tr><td></td><td>Tage mit mindestens 14 Stunden</td><td></td><td></td></tr>
+    <tr><td></td><td>Tage mit 24 Stunden</td><td></td><td></td></tr>
+    <tr><td></td><td>Verpflegungsmehraufwand</td><td></td><td></td></tr>
+
+    <tr><td>II. Übernachtungskosten</td><td>lt. beigefügtem Beleg</td><td></td><td></td></tr>
+
+    <tr><td>III. Fahrtkosten</td><td>ÖPNV lt. Beleg</td><td></td><td></td></tr>
+    <tr><td></td><td>km je&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cent</td><td></td><td></td></tr>
+    <tr><td rowspan="3"></td><td>Mitnahme von</td><td rowspan="3"></td><td rowspan="3"></td></tr>
+    <tr><td>Personen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;km</td></tr>
+    <tr><td>Gepäck&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;km</td></tr>
+
+    <tr><td>IV. Nebenkosten</td><td>lt. Beleg</td><td></td><td></td></tr>
+    <tr><td></td><td class="betrag">Reisekosten gesamt:</td><td></td><td></td></tr>
+    <tr><td></td><td class="betrag">Auszuzahlen:</td><td></td><td></td></tr>
+  </table>
+
+  <table class="s2" style="margin-top:6mm">
+    <colgroup>
+      <col style="width:12.84%"><col style="width:16.95%"><col style="width:12.84%">
+      <col style="width:12.84%"><col style="width:13.69%"><col style="width:16.95%">
+      <col style="width:13.87%">
+    </colgroup>
+
+    <!-- Behördenspezifische Angaben bewusst als Platzhalter: Abteilung, Sitz,
+         Buchungsstelle und Behördenname trägt jede Stelle in ihrer eigenen
+         Kopie ein. Dieses Repository bleibt frei davon. -->
+    <tr><td colspan="2">Abteilung: __________</td><td></td>
+        <td colspan="4">_______________, _______________</td></tr>
+    <tr><td colspan="7"></td></tr>
+    <tr><td colspan="2">Verfügung:</td><td colspan="5"></td></tr>
+    <tr><td colspan="7">1. KK anweisen, _____________ € bei: _____________________</td></tr>
+    <tr><td colspan="2"></td><td colspan="4">Anordnungs-Nr.:</td><td></td></tr>
+    <tr><td colspan="2"></td><td colspan="4">Beleg-Nr.:</td><td></td></tr>
+    <tr><td colspan="4">Buchungsjahr 20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;zu zahlen.</td>
+        <td colspan="3"></td></tr>
+    <tr><td colspan="7"></td></tr>
+    <tr><td class="hoehe42 oben" colspan="6">2. Sachlich und rechnerisch richtig festgestellt
+        auf ______________&nbsp;€</td><td></td></tr>
+    <tr><td colspan="7"></td></tr>
+    <tr><td>3. z. d. A.</td><td></td><td colspan="5"></td></tr>
+    <tr><td colspan="2"></td><td colspan="5">_____________________________</td></tr>
+    <tr><td colspan="2"></td><td colspan="5">Im Auftrag:</td></tr>
+    <tr><td colspan="3"></td><td colspan="4">_____________________________</td></tr>
+  </table>
+</div>
+
 <script>
 /* Erfundene Beispieldaten. Werden nur benutzt, wenn die Datei direkt im
    Browser geöffnet wird — für Layoutarbeit ohne Grist. */
 const beispielKopf = {
   antragsteller: "Musterfrau Erika, Referat 42",
   wohnort:       "Beispielweg 7, 00000 Musterstadt",
-  dienstort:     "Verwaltungsstraße 1, 00000 Musterstadt"
+  dienstort:     "Verwaltungsstraße 1, 00000 Musterstadt",
+  iban:          "DE00 0000 0000 0000 0000 00",
+  bic:           "MUSTERBIC000"
 };
 
 const beispielReisen = [
@@ -212,6 +330,8 @@ function rendern(kopf, reisen) {
 document.getElementById("k-antragsteller").textContent = kopf.antragsteller;
 document.getElementById("k-wohnort").textContent       = kopf.wohnort;
 document.getElementById("k-dienstort").textContent     = kopf.dienstort;
+document.getElementById("k-iban").textContent          = kopf.iban || "";
+document.getElementById("k-bic").textContent           = kopf.bic || "";
 
 const tb = document.getElementById("daten");
 tb.innerHTML = "";
@@ -290,6 +410,8 @@ async function ausGrist() {
                     e.Organisationseinheit].filter(Boolean).join(", "),
     wohnort:   anschrift(e.Wohnort_Strasse, e.Wohnort_PLZ, e.Wohnort_Ort),
     dienstort: anschrift(e.Dienstort_Strasse, e.Dienstort_PLZ, e.Dienstort_Ort),
+    iban:      e.IBAN || "",
+    bic:       e.BIC || "",
   }, reisen);
 }
 
