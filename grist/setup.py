@@ -13,7 +13,7 @@ Alternativ ohne Datei, direkt in der Shell:
 Laeuft vollstaendig lokal, nur Standardbibliothek. Bestehende Spalten werden
 uebersprungen, das Skript kann also gefahrlos erneut laufen.
 """
-import json, os, sys, urllib.request, urllib.error, pathlib
+import json, os, sys, urllib.request, urllib.error, urllib.parse, pathlib
 
 # Zugangsdaten kommen NIE in diese Datei. Entweder aus der Umgebung oder aus
 # grist/.env — beides liegt ausserhalb der Versionierung (siehe .gitignore).
@@ -48,6 +48,11 @@ def api(method, pfad, daten=None):
         sys.exit(f"\nKeine Verbindung zu {URL} — {e.reason}")
 
 
+def sql(frage):
+    return [z["fields"] for z in
+            api("GET", "/sql?q=" + urllib.parse.quote(frage))["records"]]
+
+
 def spalte(sid, label, typ="Any", formel=None, optionen=None):
     f = {"label": label, "type": typ, "isFormula": formel is not None,
          "formula": formel or ""}
@@ -64,7 +69,7 @@ ZWISCHENZIELE = 5
 
 ORT_SLOTS = ["Ort_Beginn"] + [f"Ort_{i}" for i in range(1, ZWISCHENZIELE + 1)] + ["Ort_Ende"]
 ORT_LABEL = {"Ort_Beginn": "Ort Reisebeginn", "Ort_Ende": "Ort Reiseende",
-             **{f"Ort_{i}": f"Zwischenort {i}" for i in range(1, ZWISCHENZIELE + 1)}}
+             **{f"Ort_{i}": f"Ort {i}" for i in range(1, ZWISCHENZIELE + 1)}}
 
 # Jeder Stopp ist ein Paar: Auswahl aus 'Orte' fuer die Stammorte, Freitext
 # fuer die Einmalziele. Ist die Auswahl gesetzt, gewinnt sie — stillschweigend.
@@ -169,7 +174,7 @@ def ort_spalten():
     """Je Stopp zwei Felder: Auswahlliste und Freitext, im Formular nebeneinander."""
     for sid in ORT_SLOTS:
         yield spalte(sid, ORT_LABEL[sid], "Ref:Orte")
-        yield spalte(f"{sid}_Text", f"{ORT_LABEL[sid]} – oder frei eintragen", "Text")
+        yield spalte(f"{sid}_Text", f"{ORT_LABEL[sid]} (Freitext)", "Text")
 
 
 REISEN = [
@@ -180,6 +185,7 @@ REISEN = [
     spalte("Ende",              "Reiseende (HH:MM)", "Text"),
     spalte("KM_Beginn",         "Kilometerstand Beginn", "Int"),
     spalte("KM_Ende",           "Kilometerstand Ende", "Int"),
+    spalte("Tacho_Fotos",       "Tachofotos (Beginn und Ende)", "Attachments"),
     spalte("Umweg_privat",      "Privater Umweg (km)", "Int"),
     *ort_spalten(),
     spalte("Tagegeld_beantragt","Tagegeld beantragen?", "Bool"),
@@ -217,11 +223,109 @@ def anlegen(tabelle, spalten):
         api("POST", "/tables", {"tables": [{"id": tabelle, "columns": spalten}]})
         print(f"  Tabelle {tabelle} angelegt ({len(spalten)} Spalten)")
         return
-    da = {c["id"] for c in api("GET", f"/tables/{tabelle}/columns")["columns"]}
+    da = {c["id"]: (c.get("fields") or {})
+          for c in api("GET", f"/tables/{tabelle}/columns")["columns"]}
     fehlend = [s for s in spalten if s["id"] not in da]
     if fehlend:
         api("POST", f"/tables/{tabelle}/columns", {"columns": fehlend})
-    print(f"  Tabelle {tabelle}: {len(fehlend)} Spalten ergänzt, {len(spalten)-len(fehlend)} vorhanden")
+    # Nur Labels bestehender Spalten nachziehen. colId unverändert mitschicken,
+    # damit Grist den Formelbezug ($Ort_1_Text …) nicht aus dem neuen Label
+    # ableitet. Formeln und Typ bleiben unangetastet — eine im Editor geänderte
+    # Formel soll ein erneuter Lauf nicht stillschweigend zurücksetzen.
+    umbenannt = [{"id": s["id"], "fields": {"colId": s["id"], "label": s["fields"]["label"]}}
+                 for s in spalten
+                 if da.get(s["id"], {}).get("label") not in (None, s["fields"]["label"])]
+    if umbenannt:
+        api("PATCH", f"/tables/{tabelle}/columns", {"columns": umbenannt})
+    print(f"  Tabelle {tabelle}: {len(fehlend)} ergänzt, {len(umbenannt)} umbenannt, "
+          f"{len(spalten) - len(fehlend)} vorhanden")
+
+
+def reihenfolge_ordnen():
+    """Setzt jede Ort-Freitext-Spalte direkt hinter ihre Auswahlspalte — in der
+    Tabelle selbst, in der Rohdatenansicht, im Record-Card-Popup und in
+    Tabellen-Widgets. Nötig nur, wenn die _Text-Spalten nachträglich angelegt
+    wurden (sie landen dann am Ende). Formular-Sections bleiben unberührt,
+    dort ordnet formular.py die Paare über Columns-Zeilen."""
+    tid = sql('select id from _grist_Tables where tableId = "Reisen"')[0]["id"]
+    aktionen = []
+
+    spos = {c["colId"]: c["parentPos"] for c in
+            sql(f"select colId, parentPos from _grist_Tables_column where parentId = {tid}")}
+    sid = {c["colId"]: c["id"] for c in
+           sql(f"select id, colId from _grist_Tables_column where parentId = {tid}")}
+    aktionen += [["UpdateRecord", "_grist_Tables_column", sid[f"{s}_Text"],
+                  {"parentPos": spos[s] + 0.5}]
+                 for s in ORT_SLOTS
+                 if f"{s}_Text" in sid and spos.get(f"{s}_Text") != spos[s] + 0.5]
+
+    for sek in sql(f"select id from _grist_Views_section "
+                   f"where tableRef = {tid} and parentKey <> 'form'"):
+        felder = sql(f"select f.id, f.parentPos, c.colId from _grist_Views_section_field f "
+                     f"join _grist_Tables_column c on c.id = f.colRef "
+                     f"where f.parentId = {sek['id']}")
+        pos = {x["colId"]: x["parentPos"] for x in felder}
+        fid = {x["colId"]: x["id"] for x in felder}
+        aktionen += [["UpdateRecord", "_grist_Views_section_field", fid[f"{s}_Text"],
+                      {"parentPos": pos[s] + 0.5}]
+                     for s in ORT_SLOTS
+                     if f"{s}_Text" in fid and pos.get(f"{s}_Text") != pos[s] + 0.5]
+
+    if aktionen:
+        api("POST", "/apply", aktionen)
+    print(f"  Reihenfolge: {len(aktionen)} Spalten/Felder einsortiert")
+
+
+def formeln_angleichen(tabelle, spalten):
+    """Bringt die reinen Rechenspalten (isFormula) auf den Stand hier im Code.
+    Anders als Label und Formular-Layout werden diese Spalten nicht im Editor
+    getunt — ein erneuter Lauf darf sie also gefahrlos zurücksetzen. Fängt u. a.
+    ab, dass ein Snapshot-Restore Reiseweg/Maps_Link auf eine ältere Fassung
+    zieht, die die (Freitext)-Felder ignoriert."""
+    live = {c["id"]: (c.get("fields") or {}).get("formula", "")
+            for c in api("GET", f"/tables/{tabelle}/columns")["columns"]}
+    patch = [{"id": s["id"], "fields": {"formula": s["fields"]["formula"]}}
+             for s in spalten
+             if s["fields"]["isFormula"] and s["id"] in live
+             and live[s["id"]].strip() != s["fields"]["formula"].strip()]
+    if patch:
+        api("PATCH", f"/tables/{tabelle}/columns", {"columns": patch})
+    print(f"  Formeln {tabelle}: {len(patch)} angeglichen")
+
+
+def zeitraum_widget():
+    """Karten-Widget 'Abrechnungszeitraum' auf der Ausdruck-Seite: nur die zwei
+    Datumsfelder aus Einstellungen, über dem Druck-Widget. Die Fachkraft setzt
+    den Zeitraum damit dort, wo gedruckt wird, statt in der Stammdaten-Zeile.
+    Idempotent: ist das Widget da, passiert nichts."""
+    seite = sql("select id from _grist_Views where name = 'Ausdruck'")
+    et = sql("select id from _grist_Tables where tableId = 'Einstellungen'")
+    if not (seite and et):
+        print("  Zeitraum-Widget: Seite 'Ausdruck' oder Tabelle fehlt — übersprungen")
+        return
+    vid, et = seite[0]["id"], et[0]["id"]
+
+    if sql(f"select id from _grist_Views_section "
+           f"where parentId = {vid} and tableRef = {et} and parentKey <> 'custom'"):
+        print("  Zeitraum-Widget: vorhanden")
+        return
+
+    sec = api("POST", "/apply",
+              [["CreateViewSection", et, vid, "single", None, None]])["retValues"][0]["sectionRef"]
+    weg = [f["id"] for f in sql(
+        f"select f.id from _grist_Views_section_field f "
+        f"join _grist_Tables_column c on c.id = f.colRef "
+        f"where f.parentId = {sec} and c.colId not in ('Zeitraum_von', 'Zeitraum_bis')")]
+    andere = [k["leaf"] for k in json.loads(
+        sql(f"select layoutSpec from _grist_Views where id = {vid}")[0]["layoutSpec"]
+    )["children"] if k.get("leaf") != sec]
+    layout = {"children": [{"leaf": sec}] + [{"leaf": x} for x in andere], "collapsed": []}
+    api("POST", "/apply", [
+        ["BulkRemoveRecord", "_grist_Views_section_field", weg],
+        ["UpdateRecord", "_grist_Views_section", sec, {"title": "Abrechnungszeitraum"}],
+        ["UpdateRecord", "_grist_Views", vid, {"layoutSpec": json.dumps(layout)}],
+    ])
+    print(f"  Zeitraum-Widget: angelegt (Section {sec})")
 
 
 def selbsttest():
@@ -266,10 +370,14 @@ if __name__ == "__main__":
     print(f"Dokument {DOC} auf {URL}")
     for name, spalten in (("Orte", ORTE), ("Einstellungen", EINSTELLUNGEN), ("Reisen", REISEN)):
         anlegen(name, spalten)      # Orte zuerst — Reisen verweist darauf
+        formeln_angleichen(name, spalten)
+    reihenfolge_ordnen()
 
     if not api("GET", "/tables/Einstellungen/records")["records"]:
         api("POST", "/tables/Einstellungen/records", {"records": [{"fields": {}}]})
         print("  Einstellungen: leere Zeile angelegt")
+
+    zeitraum_widget()      # braucht die Ausdruck-Seite — sonst übersprungen
 
     print(f"""
 Fertig. Rest in der Oberfläche:
