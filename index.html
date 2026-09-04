@@ -12,6 +12,10 @@
     window.$docsify = {
       name: 'Fahrtkostenabrechnung',
       loadSidebar: true,
+      // Unterordner sollen dieselbe Sidebar nutzen wie die Wurzel
+      alias: {
+        '/.*/_sidebar.md': '/_sidebar.md'
+      },
       subMaxLevel: 0,
       auto2top: true,
       search: {

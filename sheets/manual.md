@@ -1,7 +1,7 @@
 # Handbuch
 
 Anleitung zum Ausfüllen und Abrechnen einer Dienstreise. 
-Technische Details zu den einzelnen Formeln: siehe [Formeln.md](Formeln.md).
+Technische Details zu den einzelnen Formeln: siehe [Formeln.md](formeln/README.md).
 
 ## Gliederung
 
@@ -32,7 +32,7 @@ eigene Handgriffe nötig — alles dazwischen übernimmt die Tabelle automatisch
 |---|---|
 | Kilometer manuell berechnen und plausibilisieren | automatisch berechnet |
 | Tagegeld-Staffel per Hand anhand der Abwesenheitszeiten ermitteln | automatisch anhand der Zeitschwellen berechnet |
-| Amtliches Formular S1/S2 von Hand ausfüllen | automatisch aus dem Abrechnungszeitraum befüllt |
+| Standardisierte Ausgabe S1/S2 von Hand ausfüllen | automatisch aus dem Abrechnungszeitraum befüllt |
 | Fahrtenbuch manuell führen | automatisch als Druck-Fahrtenbuch erstellt |
 | Route in Google Maps von Hand eintippen | fertiger Routenlink je Reise |
 | Vermerke/Besonderheiten separat dokumentieren | automatisch aus „Sonstige Informationen" gesammelt |
@@ -67,7 +67,7 @@ Ausgegeben in S1/S2, Druck-Fahrtenbuch, Vermerke und GoogleMapsExport.
 | ✍️ | Setup | Zentrale Konfiguration: Verknüpfung zur Formularantworten-Datei, Freigabe-Schalter, Stammdaten der Person, Abrechnungszeitraum | **Einrichten & pflegen.** Einmalig Personendaten/URL/Freigabe, **pro Abrechnung** den exakten Zeitraum setzen |
 | ✅ | IMPORTDATA | Rohübernahme der Formularantworten aus der externen Google-Form-Datei, unverändert — Zwischenspeicher, damit BERECHNUNG nicht direkt auf die fremde Datei zugreift | **Nichts.** Automatischer Rohimport der Formularantworten |
 | ✅ | BERECHNUNG | Kernblatt: bereitet jede Reise auf (Zeiten, Kilometer, Tagegeld-Staffel), eine Zeile je Reise — Grundlage für alle Ausgabeblätter | **Nichts.** Automatische Berechnung der importierten Werte aus IMPORTDATA |
-| 🖨️ | S1 / S2 | Amtliches Formular zur Erstattung, wird unterschrieben eingereicht | **Drucken & unterschreiben.** Sonst nichts zu tun |
+| 🖨️ | S1 / S2 | Standardisierte Ausgabe zur Erstattung, wird unterschrieben eingereicht | **Drucken & unterschreiben.** Sonst nichts zu tun |
 | 🖨️ | Vermerke | Sammelt besondere Anmerkungen zu Reisen (Feld „Sonstige Informationen") als Nachweis/für Rückfragen | **Bei Bedarf drucken.** Danach ggf. Detailbeschreibung von Hand ergänzen |
 | 🖨️ | Druck-Fahrtenbuch | Vollständige, druckfähige Auflistung aller Reisen des Zeitraums für die Fahrtenbuch-Nachweispflicht | **Drucken & unterschreiben.** Unterschrift von Hand in der Spalte Unterschrift |
 | ✍️ | Orte | Adress-Stammdaten der Reiseziele — Grundlage für den Google-Maps-Routenlink | **Pflegen.** Neue Reiseziele mit vollständiger Adresse ergänzen — sollen sie dauerhaft im Formular auswählbar sein, zusätzlich dort eintragen |
@@ -80,8 +80,8 @@ Ausgegeben in S1/S2, Druck-Fahrtenbuch, Vermerke und GoogleMapsExport.
 ## Formular ausfüllen
 
 <figure>
-  <a href="img/screenshot_formular.png" target="_blank" rel="noopener">
-    <img src="img/screenshot_formular.png" alt="Formular Dienstreise (zum Vergrößern anklicken)" style="width:480px;height:300px;object-fit:cover;object-position:top;border:1px solid #ddd;">
+  <a href="../img/screenshot_formular.png" target="_blank" rel="noopener">
+    <img src="../img/screenshot_formular.png" alt="Formular Dienstreise (zum Vergrößern anklicken)" style="width:480px;height:300px;object-fit:cover;object-position:top;border:1px solid #ddd;">
   </a>
   <figcaption>Formular „Dienstreise" – Startseite (zum Vergrößern anklicken)</figcaption>
 </figure>
@@ -128,8 +128,8 @@ Das Formular gliedert sich in fünf Abschnitte, zwei davon mit bedingten Detailf
 - **Abrechnungszeitraum** (C8–C10) bestimmt, welche Reisen in S1, Fahrtenbuch-Druck ausgegeben werden.
 
 <figure>
-  <a href="img/screenshot_setup.png" target="_blank" rel="noopener">
-    <img src="img/screenshot_setup.png" alt="Setup-Blatt (zum Vergrößern anklicken)" style="width:480px;height:300px;object-fit:cover;object-position:top;border:1px solid #ddd;">
+  <a href="../img/screenshot_setup.png" target="_blank" rel="noopener">
+    <img src="../img/screenshot_setup.png" alt="Setup-Blatt (zum Vergrößern anklicken)" style="width:480px;height:300px;object-fit:cover;object-position:top;border:1px solid #ddd;">
   </a>
   <figcaption>Blatt „Setup" (zum Vergrößern anklicken)</figcaption>
 </figure>
@@ -146,7 +146,7 @@ Das Formular gliedert sich in fünf Abschnitte, zwei davon mit bedingten Detailf
 
 ## Drucken
 
-- **S1/S2** – amtliches Formular, automatisch befüllt aus dem Abrechnungszeitraum
+- **S1/S2** – standardisierte Ausgabe, automatisch befüllt aus dem Abrechnungszeitraum
 - **Vermerke** – nur Reisen mit ausgefülltem Feld „Sonstige Informationen"
 - **Druck-Fahrtenbuch** – vollständiges Fahrtenbuch des Zeitraums
 - **Orte** – vollständige Liste der bekannten Orte im Fahrtenbuch

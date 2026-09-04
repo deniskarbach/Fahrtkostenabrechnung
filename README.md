@@ -1,19 +1,19 @@
 # Fahrtkostenabrechnung
 
-- **[Handbuch](manual.md)** – wie man das Formular ausfüllt und die Abrechnung erstellt
-- **[Formeln](Formeln.md)** – technische Doku aller Blätter und Formeln
+Dienstreisen erfassen, berechnen und standardisiert ausgeben.
 
-## Projektidee
+Zwei eigenständige Umsetzungen, jede für sich dokumentiert:
 
-Das Fahrtkostenformular soll Dienstreisen automatisiert erfassen und abrechnen: Google-Forms-Antworten laufen per IMPORTRANGE in die Tabelle ein und werden im Blatt BERECHNUNG so aufbereitet, dass die Formularblätter S1, Fahrtenbuch-Druck, Vermerke nur noch fertige Werte anzeigen müssen.
+- **[Google Sheets](sheets/manual.md)** — Handbuch und Formeldokumentation
+- **[Grist](grist/README.md)** — Handbuch
 
-## Datenfluss
+## Idee
 
-```
-Google-Formular → Setup → IMPORTDATA → BERECHNUNG → S1/S2 · Vermerke · Druck-Fahrtenbuch
-```
-
-Details siehe [Formeln.md](Formeln.md#datenfluss).
+Eine Dienstreise wird einmal erfasst — am Handy, direkt nach der Fahrt. Alles
+Weitere läuft automatisch: Kilometer werden um private Umwege bereinigt, die
+Tagegeld-Staffel aus den Abwesenheitszeiten ermittelt, die laufende Nummer je
+Kalenderjahr vergeben, der Reiseweg als Text gesetzt und ein Routenlink
+erzeugt. Am PC wird der Abrechnungszeitraum gewählt und gedruckt.
 
 ## Wichtiger rechtlicher Hinweis und Haftungsausschluss
 

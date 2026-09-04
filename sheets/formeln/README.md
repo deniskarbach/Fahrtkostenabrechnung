@@ -9,7 +9,7 @@ Transparenz der Berechnung sowie der Prüfung der zugrunde liegenden Ergebnisse.
 2. **Erklärschema** – wie die Formel-Erklärungen aufgebaut sind
 3. **Wiederkehrende Muster** – fünf Bausteine, die in fast jeder Formel stecken
 4. **[Blätter](#blätter)** – je ein eigenes Dokument, in Datenfluss-Reihenfolge: Kurzzweck des Blatts, dann jede Zelle einzeln
-5. **[Anhang](formeln/anhang.md)** – Tagegeld-Staffel, Wartung bei Formularänderung
+5. **[Anhang](anhang.md)** – Tagegeld-Staffel, Wartung bei Formularänderung
 
 
 ## Datenfluss
@@ -119,13 +119,13 @@ Zeile unbemerkt aus der Abrechnung zu nehmen.
 
 Je ein eigenes Dokument, in Datenfluss-Reihenfolge:
 
-1. [Setup](formeln/setup.md)
-2. [IMPORTDATA](formeln/importdata.md)
-3. [BERECHNUNG](formeln/berechnung.md)
-4. [S1 – Reisekostenabrechnung](formeln/s1.md)
-5. [S2 – Reisekostenabrechnung](formeln/s2.md)
-6. [Vermerke](formeln/vermerke.md)
-7. [Druck-Fahrtenbuch](formeln/druck-fahrtenbuch.md)
-8. [Orte](formeln/orte.md)
-9. [GoogleMapsExport](formeln/googlemapsexport.md)
-10. [Anhang](formeln/anhang.md)
+1. [Setup](setup.md)
+2. [IMPORTDATA](importdata.md)
+3. [BERECHNUNG](berechnung.md)
+4. [S1 – Reisekostenabrechnung](s1.md)
+5. [S2 – Reisekostenabrechnung](s2.md)
+6. [Vermerke](vermerke.md)
+7. [Druck-Fahrtenbuch](druck-fahrtenbuch.md)
+8. [Orte](orte.md)
+9. [GoogleMapsExport](googlemapsexport.md)
+10. [Anhang](anhang.md)

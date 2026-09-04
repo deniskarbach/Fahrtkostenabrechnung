@@ -4,6 +4,12 @@ Alle nennenswerten Änderungen an diesem Projekt.
 
 ## [Unreleased]
 
+## 2026-09-01
+- Repo in zwei eigenständige Bereiche getrennt: `sheets/` und `grist/`
+- `.gitignore` für `*.xlsx` und `*.pdf` — Vorlagen und Ausdrucke bleiben lokal, das Repo ist öffentlich
+- Grist-Handbuch angelegt: Ablauf und Bausteine
+- Prototyp `grist/ausgabe/s1.html`: S1-Raster als druckbare Seite, Beispieldaten erfunden
+
 ## 2026-08-31
 - Docsify-Dokumentation aufgesetzt (`index.html`, `README.md`, `_sidebar.md`, `manual.md`)
 
