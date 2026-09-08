@@ -411,38 +411,44 @@ def zeitraum_widget():
     print(f"  Zeitraum-Widget: angelegt (Section {sec})")
 
 
-# Reihenfolge = Reihenfolge auf der Ausdruck-Seite.
+# Reihenfolge = Reihenfolge auf der Ausdruck-Seite. S1/S2, Vermerke, Dienstorte
+# und Fahrtenbuch stecken zusammen in einer Datei (ausdruck.html) -- ein
+# Widget statt vier, ein Grist-Fetch statt vier. Die Schnittversion bleibt
+# eigenständig, sie ist kein Bestandteil der Standardausgabe.
 AUSGABE_WIDGETS = [
-    ("S1 / S2",                     "abrechnung.html"),
-    ("Vermerke",                    "vermerke.html"),
-    ("Dienstorte",                  "dienstorte.html"),
-    ("Fahrtenbuch",                 "fahrtenbuch.html"),
-    ("Fahrtenbuch (Schnittversion)","fahrtenbuch-schnitt.html"),
+    ("Ausdruck",                     "ausdruck.html"),
+    ("Fahrtenbuch (Schnittversion)", "fahrtenbuch-schnitt.html"),
 ]
 AUSGABE_BASIS_URL = "https://deniskarbach.github.io/Fahrtkostenabrechnung/grist/ausgabe/"
 
 
 def ausgabe_widgets():
-    """Legt für jede Datei in AUSGABE_WIDGETS ein Custom-Widget auf der
-    Ausdruck-Seite an, sofern noch keins mit dieser URL existiert. Idempotent
-    anhand der URL, nicht des Titels -- ein im Editor umbenanntes Widget wird
-    also nicht doppelt angelegt."""
+    """Gleicht die Custom-Widgets auf der Ausdruck-Seite mit AUSGABE_WIDGETS ab:
+    fehlende URLs werden angelegt, vorhandene Widgets mit einer URL, die nicht
+    mehr in AUSGABE_WIDGETS steht (z. B. nach einem Zusammenlegen wie hier),
+    werden entfernt. Abgleich anhand der URL, nicht des Titels -- ein im
+    Editor umbenanntes Widget bleibt unangetastet, solange die URL passt."""
     seite = sql("select id from _grist_Views where name = 'Ausdruck'")
     et = sql("select id from _grist_Tables where tableId = 'Einstellungen'")
     if not (seite and et):
         print("  Ausgabe-Widgets: Seite 'Ausdruck' oder Tabelle fehlt — übersprungen")
         return
     vid, et = seite[0]["id"], et[0]["id"]
+    ziel_urls = {AUSGABE_BASIS_URL + datei for _, datei in AUSGABE_WIDGETS}
 
-    vorhanden = set()
-    for row in sql(f"select options from _grist_Views_section "
+    vorhanden = {}   # url -> section id
+    for row in sql(f"select id, options from _grist_Views_section "
                    f"where parentId = {vid} and parentKey = 'custom'"):
         try:
             cv = json.loads(json.loads(row["options"] or "{}").get("customView") or "{}")
             if cv.get("url"):
-                vorhanden.add(cv["url"])
+                vorhanden[cv["url"]] = row["id"]
         except (ValueError, TypeError):
             pass
+
+    veraltet = [sec for url, sec in vorhanden.items() if url not in ziel_urls]
+    if veraltet:
+        api("POST", "/apply", [["RemoveRecord", "_grist_Views_section", sec] for sec in veraltet])
 
     angelegt = 0
     for titel, datei in AUSGABE_WIDGETS:
@@ -458,7 +464,8 @@ def ausgabe_widgets():
         api("POST", "/apply", [["UpdateRecord", "_grist_Views_section", sec,
                                 {"title": titel, "options": json.dumps(options)}]])
         angelegt += 1
-    print(f"  Ausgabe-Widgets: {angelegt} angelegt, {len(AUSGABE_WIDGETS) - angelegt} vorhanden")
+    print(f"  Ausgabe-Widgets: {angelegt} angelegt, {len(veraltet)} entfernt, "
+          f"{len(AUSGABE_WIDGETS) - angelegt} vorhanden")
 
 
 def selbsttest():

@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Reisekostenabrechnung – Ausdruck</title>
+<style>
+/* ---------------------------------------------------------------
+   Zusammenführung von S1/S2, Vermerke, Dienstorte und Fahrtenbuch in
+   EIN Custom-Widget -- vorher vier separate Widgets auf der Ausdruck-
+   Seite (vier eigene Grist-Fetches, vier iframes). Jedes Dokument bleibt
+   inhaltlich exakt wie in seiner eigenständigen Datei, nur unter einem
+   Namensraum .dok-XXX gekapselt, damit gleichnamige Klassen (.kopf,
+   .raster, .titel …) und CSS-Variablen (--schrift, --rahmen …) sich
+   zwischen den vier Dokumenten nicht überschreiben.
+
+   Gemischte Ausrichtung (S1/S2/Vermerke/Dienstorte hoch, Fahrtenbuch
+   quer) geht in einem einzigen Druckjob nur über benannte @page-Regeln
+   -- die "page"-Eigenschaft weist jedem Blatt seine Seite zu.
+
+   Fahrtenbuch-Schnittversion bleibt bewusst ein eigenes Widget: kein
+   Bestandteil der Standardausgabe, nur für den Sonderfall "ausschneiden".
+   --------------------------------------------------------------- */
+@page            { size: A4 portrait;  margin: 15mm; }              /* S1/S2 */
+@page vermerke   { size: A4 portrait;  margin: 19.05mm 17.78mm; }
+@page dienstorte { size: A4 portrait;  margin: 19.05mm 17.78mm; }
+@page fahrtenbuch{ size: A4 landscape; margin: 10mm; }
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000;
+  background: #f0f0f0;
+}
+
+/* ============================================================ S1 / S2 */
+
+.dok-s1s2 {
+  --h-datenzeile: 6.35mm;
+  --rahmen: 0.4pt solid #000;
+  --rahmen-breit: 1.4pt solid #000;
+  --schrift:        7.6pt;
+  --schrift-kopf:   6.4pt;
+  --schrift-gruppe: 6.6pt;
+  --schrift-einheit:6.4pt;
+  --schrift-weg:    4.2pt;
+  --schrift-weg-daten: 6.6pt;
+  --polster-x:      1mm;
+  --hoch-polster:   2.2mm;
+}
+
+.dok-s1s2 .blatt { page: auto; width: 210mm; margin: 10mm auto; padding: 15mm;
+                   background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25);
+                   font-size: var(--schrift); }
+
+.dok-s1s2 table { width: 180mm; border-collapse: collapse; table-layout: fixed; }
+
+.dok-s1s2 .kopf td { border: var(--rahmen); padding: 0 var(--polster-x); vertical-align: bottom; }
+.dok-s1s2 .kopf .titel  { height: 15.88mm; font-size: 13pt; font-weight: bold; letter-spacing: .02em; vertical-align: middle; }
+.dok-s1s2 .kopf .label  { height: 5.56mm; }
+.dok-s1s2 .kopf .wert   { height: 13.23mm; vertical-align: middle; }
+
+.dok-s1s2 .raster th, .dok-s1s2 .raster td { border: var(--rahmen); padding: 0 var(--polster-x); overflow: hidden; }
+
+.dok-s1s2 .raster thead .g1 { height: 7.94mm;  vertical-align: bottom; text-align: center; font-weight: normal;
+                    font-size: var(--schrift-gruppe); white-space: normal; hyphens: auto; line-height: 1.1; }
+.dok-s1s2 .raster thead .g2 { height: 34.40mm; vertical-align: bottom; padding: 0; }
+.dok-s1s2 .raster thead .g3 { height: 3.97mm;  vertical-align: bottom; text-align: center; font-weight: normal; font-size: var(--schrift-einheit); }
+
+.dok-s1s2 .hoch {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: normal;
+  text-align: left;
+  margin: 0 auto;
+  height: calc(34.40mm - 2 * var(--hoch-polster));
+  padding: var(--hoch-polster) 0;
+  font-weight: normal;
+  font-size: var(--schrift-kopf);
+  line-height: 1.2;
+}
+
+.dok-s1s2 .raster .spanne { vertical-align: middle; text-align: left; }
+.dok-s1s2 .kopf td.fett,
+.dok-s1s2 .raster thead th.fett,
+.dok-s1s2 .fett { font-weight: bold; }
+.dok-s1s2 .weg-titel  { display: block; font-weight: bold; font-size: var(--schrift-gruppe); margin-bottom: .6mm; }
+.dok-s1s2 .weg-zusatz { display: block; font-size: var(--schrift-weg); white-space: pre-line; }
+.dok-s1s2 .raster .weg    { vertical-align: top; text-align: left; font-size: var(--schrift-weg); line-height: 1.15; white-space: pre-line; padding-top: .8mm; }
+
+.dok-s1s2 .raster tbody td { height: var(--h-datenzeile); vertical-align: middle; }
+.dok-s1s2 .raster tbody td:nth-child(4) { font-size: var(--schrift-weg-daten); line-height: 1.15;
+                                padding-top: .4mm; padding-bottom: .4mm; }
+.dok-s1s2 .z-mitte { text-align: center; }
+.dok-s1s2 .z-rechts { text-align: right; font-variant-numeric: tabular-nums; }
+.dok-s1s2 .uebertrag td { font-weight: bold; height: var(--h-datenzeile); }
+.dok-s1s2 .uebertrag .beschriftung { text-align: right; }
+
+.dok-s1s2 .s2 { width: 180mm; border-collapse: collapse; table-layout: fixed; }
+.dok-s1s2 .s2 td { height: 4.5mm; padding: 0 var(--polster-x); vertical-align: bottom; }
+.dok-s1s2 .s2 .hoehe2 { height: 6.09mm; }
+.dok-s1s2 .s2 .hoehe42 { height: 7.14mm; }
+.dok-s1s2 .s2 .linie { border-bottom: var(--rahmen); }
+.dok-s1s2 .s2 .trenn { border-bottom: var(--rahmen); }
+.dok-s1s2 .s2 .trenn-v { border-right: var(--rahmen); }
+.dok-s1s2 .s2 .klein { font-size: var(--schrift-einheit); }
+.dok-s1s2 .s2 .oben { vertical-align: top; }
+
+.dok-s1s2 .s2.rahmen-oben { border-left: var(--rahmen); border-right: var(--rahmen); border-top: var(--rahmen); }
+.dok-s1s2 .s2.rahmen-breit { border: var(--rahmen-breit); }
+
+.dok-s1s2 .kostenrechnung { width: 180mm; border-collapse: collapse; table-layout: fixed; margin-top: 4mm; }
+.dok-s1s2 .kostenrechnung td { height: 4.5mm; border: var(--rahmen); padding: 0 var(--polster-x);
+                     vertical-align: bottom; }
+.dok-s1s2 .kostenrechnung .ueberschrift { text-align: center; font-weight: bold; height: 5.5mm;
+                                vertical-align: middle; }
+.dok-s1s2 .kostenrechnung .betrag { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ============================================================ Vermerke */
+
+.dok-vermerke {
+  --rahmen: 0.4pt solid #000;
+  --schrift: 8.5pt;
+  --schrift-kopf: 12pt;
+  --schrift-titel: 11pt;
+  --schrift-kopfspalten: 9pt;
+  --polster-x: 1mm;
+}
+
+.dok-vermerke .blatt { page: vermerke; width: 210mm; margin: 10mm auto; padding: 19.05mm 17.78mm;
+                        background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25);
+                        font-size: var(--schrift); }
+
+.dok-vermerke table { width: 174.44mm; border-collapse: collapse; table-layout: fixed; }
+
+.dok-vermerke .kopf td { border: var(--rahmen); padding: 0 var(--polster-x); vertical-align: top; }
+.dok-vermerke .kopf .titel  { height: 15.88mm; font-size: var(--schrift-titel); font-weight: bold; vertical-align: middle; }
+.dok-vermerke .kopf .stand  { font-size: var(--schrift-kopf); font-weight: bold; text-align: right; vertical-align: bottom; }
+.dok-vermerke .kopf .label  { height: 5.56mm; font-size: var(--schrift-kopf); font-weight: bold; vertical-align: bottom; }
+.dok-vermerke .kopf .wert   { height: 12.43mm; font-size: var(--schrift-kopf); font-weight: bold; }
+.dok-vermerke .kopf .banner { height: 12.43mm; font-size: var(--schrift-kopf); vertical-align: middle; }
+
+.dok-vermerke .raster th, .dok-vermerke .raster td { border: var(--rahmen); padding: .6mm var(--polster-x); overflow: hidden; }
+.dok-vermerke .raster th { height: 9.41mm; font-size: var(--schrift-kopfspalten); font-weight: bold;
+             vertical-align: top; text-align: left; white-space: normal; line-height: 1.15; }
+.dok-vermerke .raster th.mitte { text-align: center; }
+.dok-vermerke .raster td { height: 5.56mm; vertical-align: top; }
+.dok-vermerke .raster .mitte { text-align: center; }
+
+/* ============================================================ Dienstorte */
+
+.dok-dienstorte {
+  --rahmen: 0.4pt solid #000;
+  --schrift: 8.5pt;
+  --schrift-kopf: 12pt;
+  --schrift-titel: 11pt;
+  --schrift-kopfspalten: 9pt;
+  --polster-x: 1mm;
+}
+
+.dok-dienstorte .blatt { page: dienstorte; width: 210mm; margin: 10mm auto; padding: 19.05mm 17.78mm;
+                          background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25);
+                          font-size: var(--schrift); }
+
+.dok-dienstorte table { width: 174.44mm; border-collapse: collapse; table-layout: fixed; }
+
+.dok-dienstorte .kopf td { border: var(--rahmen); padding: 0 var(--polster-x); vertical-align: top; }
+.dok-dienstorte .kopf .titel { height: 15.88mm; font-size: var(--schrift-titel); font-weight: bold; vertical-align: middle; }
+.dok-dienstorte .kopf .stand { font-size: var(--schrift-kopf); font-weight: bold; text-align: right; vertical-align: bottom; }
+.dok-dienstorte .kopf .label { height: 5.56mm; font-size: var(--schrift-kopf); font-weight: bold; vertical-align: bottom; }
+.dok-dienstorte .kopf .wert  { height: 18.79mm; font-size: var(--schrift-kopf); font-weight: bold; }
+
+.dok-dienstorte .raster th, .dok-dienstorte .raster td { border: var(--rahmen); padding: .6mm var(--polster-x); overflow: hidden; }
+.dok-dienstorte .raster th { height: 5.56mm; font-size: var(--schrift-kopfspalten); font-weight: bold;
+             vertical-align: bottom; text-align: left; }
+.dok-dienstorte .raster th.mitte { text-align: center; }
+.dok-dienstorte .raster td { height: 5.56mm; vertical-align: middle; }
+.dok-dienstorte .raster .mitte { text-align: center; }
+
+/* ============================================================ Fahrtenbuch */
+
+.dok-fahrtenbuch {
+  --rahmen: 0.4pt solid #000;
+  --schrift: 8pt;
+  --schrift-kopf: 7pt;
+  --h-daten: 6.35mm;
+  --polster-x: 0.8mm;
+}
+
+.dok-fahrtenbuch .blatt { page: fahrtenbuch; width: 297mm; margin: 10mm auto; padding: 10mm;
+                           background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25);
+                           font-size: var(--schrift); }
+
+.dok-fahrtenbuch table { width: 277mm; border-collapse: collapse; table-layout: fixed; }
+.dok-fahrtenbuch th, .dok-fahrtenbuch td { border: var(--rahmen); padding: .4mm var(--polster-x); overflow: hidden; }
+
+.dok-fahrtenbuch thead th { font-weight: bold; font-size: var(--schrift-kopf); text-align: center;
+           vertical-align: middle; white-space: pre-line; line-height: 1.1;
+           overflow-wrap: anywhere; }
+.dok-fahrtenbuch thead .h1 { height: 6.35mm; }
+.dok-fahrtenbuch thead .h2 { height: 6.09mm; }
+.dok-fahrtenbuch thead .h3 { height: 3.97mm; }
+.dok-fahrtenbuch thead .weg { text-align: left; }
+.dok-fahrtenbuch thead .klein { font-size: 5.6pt; }
+
+.dok-fahrtenbuch tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
+.dok-fahrtenbuch tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
+
+/* ============================================================ Druck allgemein */
+
+@media print {
+  body { background: #fff; }
+  /* Jedes Blatt erzwingt einen Seitenumbruch danach -- auch das letzte,
+     eine leere Schlussseite ist der Preis für vier unabhängige Dokumente
+     in einem Druckjob ohne fragile :last-child-Logik über Namensräume
+     hinweg. !important nötig, da die Bildschirm-Regeln oben je Dokument
+     spezifischer sind (zwei Klassen statt einer). */
+  .blatt { width: auto !important; margin: 0 !important; padding: 0 !important;
+           box-shadow: none !important; break-after: page; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ================================ S1 / S2 ================================ -->
+<div class="dok-s1s2">
+<div class="blatt">
+
+  <table class="kopf">
+    <colgroup>
+      <col style="width:20mm"><col style="width:11mm"><col style="width:11mm"><col style="width:50mm">
+      <col style="width:5mm"><col style="width:5mm"><col style="width:5mm"><col style="width:5mm">
+      <col style="width:11mm">
+      <col style="width:12mm"><col style="width:10mm"><col style="width:8mm"><col style="width:12mm">
+      <col style="width:15mm">
+    </colgroup>
+    <tr><td class="titel" colspan="4">REISEKOSTENRECHNUNG</td>
+        <td class="titel fett" colspan="10" style="font-size:var(--schrift);vertical-align:bottom">Eingangsdatum:</td></tr>
+    <tr><td class="label fett" colspan="4">Antragssteller/in:</td>
+        <td class="label fett" colspan="6">Wohnort:</td>
+        <td class="label fett" colspan="4">Dienstort:</td></tr>
+    <tr><td class="wert" colspan="4" id="k-s1-antragsteller"></td>
+        <td class="wert" colspan="6" id="k-s1-wohnort"></td>
+        <td class="wert" colspan="4" id="k-s1-dienstort"></td></tr>
+  </table>
+
+  <table class="raster">
+    <colgroup>
+      <col style="width:20mm"><col style="width:11mm"><col style="width:11mm"><col style="width:50mm">
+      <col style="width:5mm"><col style="width:5mm"><col style="width:5mm"><col style="width:5mm">
+      <col style="width:11mm">
+      <col style="width:12mm"><col style="width:10mm"><col style="width:8mm"><col style="width:12mm">
+      <col style="width:15mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="g1 spanne fett" rowspan="2">Reisedatum</th>
+        <th class="g1 fett" colspan="2" rowspan="2">Beginn / Ende<br>(Uhrzeit)</th>
+        <th class="g1 weg" rowspan="2"><span class="weg-titel">Reiseweg</span><span class="weg-zusatz">bei Führung eines Fahrtenbuches lediglich die lfd. Nummer
+
+Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstgeschäftes</span></th>
+        <th class="g1 fett" colspan="4">Tagegeld für</th>
+        <th class="g1"></th>
+        <th class="g1 fett" colspan="3">Fahrtkosten</th>
+        <th class="g1"></th>
+        <th class="g1 fett">Nebenkosten</th>
+      </tr>
+      <tr>
+        <th class="g2"><div class="hoch">Tagegeld Anteilig</div></th>
+        <th class="g2"><div class="hoch">mehr als 8 Stunden</div></th>
+        <th class="g2"><div class="hoch">mindestens 14 Stunden</div></th>
+        <th class="g2"><div class="hoch">24 Stunden</div></th>
+        <th class="g2"><div class="hoch">Unentgeltliche Verpflegung (Frühstück, Mittag, Abend)</div></th>
+        <th class="g2"><div class="hoch">ÖPNV</div></th>
+        <th class="g2"><div class="hoch">Wegstrecke</div></th>
+        <th class="g2"><div class="hoch">Mitnahme von Personen (Anzahl)</div></th>
+        <th class="g2"><div class="hoch">Übernachtungskosten</div></th>
+        <th class="g2"><div class="hoch">z.B. Parkgebühren</div></th>
+      </tr>
+      <tr>
+        <th class="g3"></th><th class="g3">Beginn</th><th class="g3">Ende</th><th class="g3"></th>
+        <th class="g3" colspan="4">bitte ankreuzen</th>
+        <th class="g3">Ja/Nein</th>
+        <th class="g3">EUR</th><th class="g3">km</th><th class="g3">km</th><th class="g3">EUR</th>
+        <th class="g3">EUR</th>
+      </tr>
+    </thead>
+    <tbody id="daten-s1"></tbody>
+  </table>
+</div>
+
+<div class="blatt">
+
+  <table class="s2 rahmen-oben">
+    <colgroup>
+      <col style="width:12.84%"><col style="width:16.95%"><col style="width:12.84%">
+      <col style="width:12.84%"><col style="width:13.69%"><col style="width:16.95%">
+      <col style="width:13.87%">
+    </colgroup>
+
+    <tr><td class="oben hoehe2" colspan="7">Ich versichere pflichtgemäß, dass mir die
+        umseitig genannten Auslagen im Rahmen der Dienstreise(n) entstanden sind.</td></tr>
+    <tr><td colspan="7"></td></tr>
+
+    <tr><td colspan="5">Bitte überweisen sie den Betrag auf folgendes Konto:</td>
+        <td colspan="2"></td></tr>
+    <tr><td colspan="7"></td></tr>
+
+    <tr><td>IBAN:</td><td></td><td class="linie" colspan="3" id="k-s1-iban"></td>
+        <td colspan="2"></td></tr>
+    <tr><td colspan="7"></td></tr>
+    <tr><td>BIC:</td><td></td><td class="linie" colspan="3" id="k-s1-bic"></td>
+        <td colspan="2"></td></tr>
+    <tr><td class="trenn" colspan="7"></td></tr>
+
+    <tr><td class="trenn-v" colspan="4"></td><td colspan="3">Sachlich richtig:</td></tr>
+    <tr><td class="trenn-v" colspan="4"></td><td colspan="3"></td></tr>
+
+    <tr><td class="linie"></td><td class="linie"></td><td class="linie trenn-v" colspan="2"></td>
+        <td class="linie" colspan="3"></td></tr>
+    <tr><td class="klein">(Datum)</td>
+        <td class="klein">(Unterschrift, Dienstbezeichnung)</td>
+        <td class="trenn-v" colspan="2"></td>
+        <td class="klein" colspan="3">(Unterschrift, Dienstbezeichnung)</td></tr>
+  </table>
+
+  <table class="kostenrechnung">
+    <colgroup>
+      <col style="width:29.79%"><col style="width:39.37%">
+      <col style="width:16.95%"><col style="width:13.87%">
+    </colgroup>
+
+    <tr><td class="ueberschrift" colspan="4">KOSTENRECHNUNG (nicht vom Antragsteller auszufüllen)</td></tr>
+    <tr><td></td><td></td>
+        <td class="betrag">Im Einzelnen</td><td class="betrag">Insgesamt</td></tr>
+    <tr><td></td><td></td>
+        <td class="betrag">EUR</td><td class="betrag">EUR</td></tr>
+
+    <tr><td>I. Tagegeld</td><td>Tage mit mehr als 8 Stunden</td><td></td><td></td></tr>
+    <tr><td></td><td>Tage mit mindestens 14 Stunden</td><td></td><td></td></tr>
+    <tr><td></td><td>Tage mit 24 Stunden</td><td></td><td></td></tr>
+    <tr><td></td><td>Verpflegungsmehraufwand</td><td></td><td></td></tr>
+
+    <tr><td>II. Übernachtungskosten</td><td>lt. beigefügtem Beleg</td><td></td><td></td></tr>
+
+    <tr><td>III. Fahrtkosten</td><td>ÖPNV lt. Beleg</td><td></td><td></td></tr>
+    <tr><td></td><td>km je&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cent</td><td></td><td></td></tr>
+    <tr><td rowspan="3"></td><td>Mitnahme von</td><td rowspan="3"></td><td rowspan="3"></td></tr>
+    <tr><td>Personen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;km</td></tr>
+    <tr><td>Gepäck&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;km</td></tr>
+
+    <tr><td>IV. Nebenkosten</td><td>lt. Beleg</td><td></td><td></td></tr>
+    <tr><td></td><td class="betrag">Reisekosten gesamt:</td><td></td><td></td></tr>
+    <tr><td></td><td class="betrag">Auszuzahlen:</td><td></td><td></td></tr>
+  </table>
+
+  <table class="s2 rahmen-breit" style="margin-top:6mm">
+    <colgroup>
+      <col style="width:12.84%"><col style="width:16.95%"><col style="width:12.84%">
+      <col style="width:12.84%"><col style="width:13.69%"><col style="width:16.95%">
+      <col style="width:13.87%">
+    </colgroup>
+
+    <!-- Behördenspezifische Angaben bewusst als Platzhalter: Abteilung, Sitz,
+         Buchungsstelle und Behördenname trägt jede Stelle in ihrer eigenen
+         Kopie ein. Dieses Repository bleibt frei davon. -->
+    <tr><td colspan="2">Abteilung: __________</td><td></td>
+        <td colspan="4">_______________, _______________</td></tr>
+    <tr><td colspan="7"></td></tr>
+    <tr><td colspan="2">Verfügung:</td><td colspan="5"></td></tr>
+    <tr><td colspan="7">1. KK anweisen, _____________ € bei: _____________________</td></tr>
+    <tr><td colspan="2"></td><td colspan="4">Anordnungs-Nr.:</td><td></td></tr>
+    <tr><td colspan="2"></td><td colspan="4">Beleg-Nr.:</td><td></td></tr>
+    <tr><td colspan="4">Buchungsjahr 20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;zu zahlen.</td>
+        <td colspan="3"></td></tr>
+    <tr><td colspan="7"></td></tr>
+    <tr><td class="hoehe42 oben" colspan="6">2. Sachlich und rechnerisch richtig festgestellt
+        auf ______________&nbsp;€</td><td></td></tr>
+    <tr><td colspan="7"></td></tr>
+    <tr><td>3. z. d. A.</td><td></td><td colspan="5"></td></tr>
+    <tr><td colspan="2"></td><td colspan="5">_____________________________</td></tr>
+    <tr><td colspan="2"></td><td colspan="5">Im Auftrag:</td></tr>
+    <tr><td colspan="3"></td><td colspan="4">_____________________________</td></tr>
+  </table>
+</div>
+</div>
+
+<!-- ================================ Vermerke ================================ -->
+<div class="dok-vermerke">
+<div class="blatt">
+
+  <table class="kopf">
+    <colgroup>
+      <col style="width:9.97mm"><col style="width:16.02mm"><col style="width:50.01mm">
+      <col style="width:40.23mm"><col style="width:40.23mm"><col style="width:17.99mm">
+    </colgroup>
+    <tr><td class="titel" colspan="3">REISEKOSTENRECHNUNG</td>
+        <td class="stand" colspan="3" id="k-verm-stand"></td></tr>
+    <tr><td class="label" colspan="3">Antragssteller/in:</td>
+        <td class="label">Wohnort:</td>
+        <td class="label" colspan="2">Dienstort:</td></tr>
+    <tr><td class="wert" colspan="3" id="k-verm-antragsteller"></td>
+        <td class="wert" id="k-verm-wohnort"></td>
+        <td class="wert" colspan="2" id="k-verm-dienstort"></td></tr>
+    <tr><td class="banner" colspan="6">Zusatzinformationen und Hinweise auf Grund von Straßensperrungen, Umleitungen etc.</td></tr>
+  </table>
+
+  <table class="raster">
+    <colgroup>
+      <col style="width:9.97mm"><col style="width:16.02mm"><col style="width:50.01mm">
+      <col style="width:80.46mm"><col style="width:17.99mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Lfd. Nr.</th>
+        <th>Label</th>
+        <th>Information / Hinweistext</th>
+        <th>Detailbeschreibung</th>
+        <th class="mitte">Datum Start</th>
+      </tr>
+    </thead>
+    <tbody id="daten-verm"></tbody>
+  </table>
+</div>
+</div>
+
+<!-- ================================ Dienstorte ================================ -->
+<div class="dok-dienstorte">
+<div class="blatt">
+
+  <table class="kopf">
+    <colgroup>
+      <col style="width:6.00mm"><col style="width:22.53mm"><col style="width:43.39mm">
+      <col style="width:46.89mm"><col style="width:55.63mm">
+    </colgroup>
+    <tr><td class="titel" colspan="3">REISEKOSTENRECHNUNG</td>
+        <td class="stand" colspan="2" id="k-dien-stand"></td></tr>
+    <tr><td class="label" colspan="3">Antragssteller/in:</td>
+        <td class="label">Wohnort:</td>
+        <td class="label">Dienstort:</td></tr>
+    <tr><td class="wert" colspan="3" id="k-dien-antragsteller"></td>
+        <td class="wert" id="k-dien-wohnort"></td>
+        <td class="wert" id="k-dien-dienstort"></td></tr>
+  </table>
+
+  <table class="raster">
+    <colgroup>
+      <col style="width:6.00mm"><col style="width:22.53mm"><col style="width:43.39mm">
+      <col style="width:46.89mm"><col style="width:55.63mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="mitte">Nr.</th>
+        <th>Kürzel</th>
+        <th>Kita, Einrichtung, Ort etc.</th>
+        <th colspan="2">Adresse</th>
+      </tr>
+    </thead>
+    <tbody id="daten-dien"></tbody>
+  </table>
+</div>
+</div>
+
+<!-- ================================ Fahrtenbuch ================================ -->
+<div class="dok-fahrtenbuch">
+<div class="blatt">
+
+  <table>
+    <colgroup>
+      <col style="width:6.90mm"><col style="width:17.86mm"><col style="width:17.86mm">
+      <col style="width:13.61mm"><col style="width:17.86mm"><col style="width:72.99mm">
+      <col style="width:15.55mm"><col style="width:13.61mm"><col style="width:9.54mm">
+      <col style="width:17.86mm"><col style="width:22.26mm"><col style="width:6.90mm">
+      <col style="width:8.48mm"><col style="width:17.86mm"><col style="width:17.86mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="h1" rowspan="2">Lfd Nr.</th>
+        <th class="h1" rowspan="2">Monat</th>
+        <th class="h1" rowspan="2">Tag</th>
+        <th class="h1" colspan="2">Dauer der Reise</th>
+        <th class="h1 weg" rowspan="2">Reiseweg (Umwege sind zu begründen)&#10;&#10;&#10;Kurze Angabe des Reisezweckes</th>
+        <th class="h1" colspan="2">Stand des Kilometerzählers bei</th>
+        <th class="h1" colspan="2">Zurückgelegte Kilometer</th>
+        <th class="h1" colspan="3">Mitgenommende Bedienstete</th>
+        <th class="h1" rowspan="2">Unterschrift d. Fahrerin/Fahrers</th>
+        <th class="h1" rowspan="2">Vermerke</th>
+      </tr>
+      <tr>
+        <th class="h2">von</th>
+        <th class="h2">bis</th>
+        <th class="h2">Beginn&#10;der Reise</th>
+        <th class="h2">Ende&#10;der Reise</th>
+        <th class="h2">dienstlich</th>
+        <th class="h2">außer-&#10;dienstlich</th>
+        <th class="h2">Name, Amtsbezeichnung</th>
+        <th class="h2">Kilo-&#10;meter</th>
+        <th class="h2 klein">Vergütungsbetrag</th>
+      </tr>
+      <tr>
+        <th class="h3">1</th><th class="h3">2</th><th class="h3">3</th><th class="h3">4</th>
+        <th class="h3">5</th><th class="h3">6</th><th class="h3">7</th><th class="h3">8</th>
+        <th class="h3">9</th><th class="h3">10</th><th class="h3">11</th><th class="h3">12</th>
+        <th class="h3">13</th><th class="h3">14</th><th class="h3">15</th>
+      </tr>
+    </thead>
+    <tbody id="daten-fb"></tbody>
+  </table>
+</div>
+</div>
+
+<script>
+/* Erfundene Beispieldaten. Werden nur benutzt, wenn die Datei direkt im
+   Browser geöffnet wird — für Layoutarbeit ohne Grist. */
+const beispielKopfS1 = {
+  antragsteller: "Musterfrau Erika, Referat 42",
+  wohnort:       "Beispielweg 7, 00000 Musterstadt",
+  dienstort:     "Verwaltungsstraße 1, 00000 Musterstadt",
+  iban:          "DE00 0000 0000 0000 0000 00",
+  bic:           "MUSTERBIC000"
+};
+
+const beispielReisen = [
+  { datum:"03.02.2026", von:"07:15", bis:"16:40", weg:"Nr. 1 – WO > KV > Beispieldorf > WO",
+    stufe:">8h",  verpflegung:"Nein", oepnv:0,     km:87,  mitnahme:0, uebernachtung:0, neben:0 },
+  { datum:"05.02.2026", von:"08:00", bis:"12:10", weg:"Nr. 2 – WO > KV > WO",
+    stufe:"",     verpflegung:"Nein", oepnv:0,     km:24,  mitnahme:0, uebernachtung:0, neben:3.50 },
+  { datum:"11.02.2026 - 12.02.2026", von:"06:30", bis:"18:05", weg:"Nr. 3 – WO > Fortbildungsort > WO",
+    stufe:"24h",  verpflegung:"Ja",   oepnv:42.80, km:0,   mitnahme:0, uebernachtung:89.00, neben:6.00 },
+  { datum:"19.02.2026", von:"09:00", bis:"17:55", weg:"Nr. 4 – WO > KV > Musterhausen > KV > WO",
+    stufe:">8h",  verpflegung:"Nein", oepnv:0,     km:112, mitnahme:2, uebernachtung:0, neben:0 },
+  { datum:"26.02.2026", von:"10:20", bis:"15:00", weg:"Nr. 5 – WO > Beispieldorf > WO",
+    stufe:"anteilig", verpflegung:"Nein", oepnv:0, km:53,  mitnahme:0, uebernachtung:0, neben:0 },
+  { datum:"02.03.2026", von:"07:45", bis:"14:20", weg:"Nr. 6 – WO > KV > Beispieldorf > KV > WO",
+    stufe:">8h",  verpflegung:"Nein", oepnv:0,     km:64,  mitnahme:1, uebernachtung:0, neben:0 },
+  { datum:"04.03.2026", von:"08:30", bis:"11:45", weg:"Nr. 7 – WO > Musterhausen > WO",
+    stufe:"",     verpflegung:"Nein", oepnv:8.40,  km:0,   mitnahme:0, uebernachtung:0, neben:0 },
+  { datum:"09.03.2026", von:"06:50", bis:"17:30", weg:"Nr. 8 – WO > KV > Fortbildungsort > WO",
+    stufe:">=14h",verpflegung:"Ja",   oepnv:0,     km:143, mitnahme:0, uebernachtung:0, neben:12.50 },
+  { datum:"13.03.2026", von:"09:15", bis:"13:00", weg:"Nr. 9 – WO > Beispieldorf > WO",
+    stufe:"anteilig", verpflegung:"Nein", oepnv:0, km:38,  mitnahme:0, uebernachtung:0, neben:0 },
+  { datum:"18.03.2026", von:"07:00", bis:"18:45", weg:"Nr. 10 – WO > KV > Musterhausen > Beispieldorf > WO",
+    stufe:">=14h",verpflegung:"Nein", oepnv:0,     km:176, mitnahme:3, uebernachtung:0, neben:4.20 },
+  { datum:"24.03.2026", von:"10:00", bis:"15:30", weg:"Nr. 11 – WO > KV > WO",
+    stufe:">8h",  verpflegung:"Nein", oepnv:0,     km:29,  mitnahme:0, uebernachtung:0, neben:0 },
+  { datum:"30.03.2026", von:"08:10", bis:"16:55", weg:"Nr. 12 – WO > Fortbildungsort > WO",
+    stufe:">8h",  verpflegung:"Ja",   oepnv:21.60, km:0,   mitnahme:0, uebernachtung:0, neben:0 }
+];
+
+const beispielKopfVermerke = {
+  stand: "01.01.2026 - 31.03.2026",
+  antragsteller: "Musterfrau Erika, Referat 42",
+  wohnort:       "Beispielweg 7, 00000 Musterstadt",
+  dienstort:     "Verwaltungsstraße 1, 00000 Musterstadt",
+};
+const beispielVermerke = [
+  { nr:"01", label:"V26-01", text:"Umleitung wegen Straßensperrung B42, dadurch ca. 8 km Umweg.", datum:"03.02.2026" },
+  { nr:"02", label:"V26-02", text:"Zweiter PKW genutzt, da Mitnahme von zwei Kolleginnen nötig war.", datum:"19.02.2026" },
+];
+
+const beispielKopfDienstorte = {
+  stand: "01.01.2026 - 31.03.2026",
+  antragsteller: "Musterfrau Erika, Referat 42",
+  wohnort:   "Beispielweg 7, 00000 Musterstadt",
+  dienstort: "Verwaltungsstraße 1, 00000 Musterstadt",
+};
+const beispielDienstorte = [
+  { kuerzel:"KV",  name:"Kreisverwaltung", adresse:"Verwaltungsstraße 1, 00000 Musterstadt" },
+  { kuerzel:"",    name:"Café Mokka",      adresse:"Bahnhofstr. 7, 00000 Musterstadt" },
+  { kuerzel:"KITA",name:"Kita Sonnenschein", adresse:"Lindenweg 3, 00000 Musterstadt" },
+];
+
+const beispielFahrten = [
+  { nr:1, monat:"02", tag:"03", von:"07:15", bis:"16:40", weg:"Nr. 1 – WO > KV > Beispieldorf > WO",
+    kmBeginn:12000, kmEnde:12087, kmDienstlich:87, kmPrivat:0, vermerk:"" },
+  { nr:2, monat:"02", tag:"05", von:"08:00", bis:"12:10", weg:"Nr. 2 – WO > KV > WO",
+    kmBeginn:12087, kmEnde:12111, kmDienstlich:24, kmPrivat:0, vermerk:"V26-01" },
+];
+
+/* ---------------------------------------------------------- Hilfsfunktionen */
+
+/* Grist liefert Datumswerte als Sekunden seit 1970, UTC-Mitternacht. */
+const tag = s => s == null ? "" : new Date(s * 1000).toLocaleDateString("de-DE",
+  { day:"2-digit", month:"2-digit", year:"numeric", timeZone:"UTC" });
+
+/* fetchTable liefert spaltenweise — hier in Zeilen umgedreht. */
+const zeilen = t => t.id.map((_, i) =>
+  Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
+
+const anschrift = (strasse, plz, ort) =>
+  [strasse, [plz, ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+
+const eur = n => n > 0 ? n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}) : "";
+const zahl = n => n > 0 ? String(n) : "";
+const kreuz = (stufe, s) => stufe === s ? "X" : "";
+
+const zweistellig = n => n == null ? "" : String(n).padStart(2, "0");
+const monatTag = s => {
+  if (s == null) return { monat: "", tag: "" };
+  const d = new Date(s * 1000);
+  return { monat: zweistellig(d.getUTCMonth() + 1), tag: zweistellig(d.getUTCDate()) };
+};
+
+/* ---------------------------------------------------------- Render: S1/S2 */
+
+function renderS1S2(kopf, reisen) {
+document.getElementById("k-s1-antragsteller").textContent = kopf.antragsteller;
+document.getElementById("k-s1-wohnort").textContent       = kopf.wohnort;
+document.getElementById("k-s1-dienstort").textContent     = kopf.dienstort;
+document.getElementById("k-s1-iban").textContent          = kopf.iban || "";
+document.getElementById("k-s1-bic").textContent           = kopf.bic || "";
+
+const tb = document.getElementById("daten-s1");
+tb.innerHTML = "";
+const summe = { oepnv:0, km:0, mitnahme:0, uebernachtung:0, neben:0 };
+
+for (const r of reisen) {
+  for (const k in summe) summe[k] += r[k];
+  tb.insertAdjacentHTML("beforeend", `<tr>
+    <td>${r.datum}</td>
+    <td class="z-mitte">${r.von}</td>
+    <td class="z-mitte">${r.bis}</td>
+    <td>${r.weg}</td>
+    <td class="z-mitte">${kreuz(r.stufe,"anteilig")}</td>
+    <td class="z-mitte">${kreuz(r.stufe,">8h")  }</td>
+    <td class="z-mitte">${kreuz(r.stufe,">=14h")}</td>
+    <td class="z-mitte">${kreuz(r.stufe,"24h")  }</td>
+    <td class="z-mitte">${r.verpflegung}</td>
+    <td class="z-rechts">${eur(r.oepnv)}</td>
+    <td class="z-rechts">${zahl(r.km)}</td>
+    <td class="z-rechts">${zahl(r.mitnahme)}</td>
+    <td class="z-rechts">${eur(r.uebernachtung)}</td>
+    <td class="z-rechts">${eur(r.neben)}</td></tr>`);
+}
+
+tb.insertAdjacentHTML("beforeend", `<tr class="uebertrag">
+  <td class="beschriftung" colspan="4">Übertrag:</td>
+  <td colspan="5"></td>
+  <td class="z-rechts">${eur(summe.oepnv)}</td>
+  <td class="z-rechts">${zahl(summe.km)}</td>
+  <td class="z-rechts">${zahl(summe.mitnahme)}</td>
+  <td class="z-rechts">${eur(summe.uebernachtung)}</td>
+  <td class="z-rechts">${eur(summe.neben)}</td></tr>`);
+}
+
+/* ---------------------------------------------------------- Render: Vermerke */
+
+function renderVermerke(kopf, vermerke) {
+document.getElementById("k-verm-stand").textContent         = kopf.stand;
+document.getElementById("k-verm-antragsteller").textContent = kopf.antragsteller;
+document.getElementById("k-verm-wohnort").textContent       = kopf.wohnort;
+document.getElementById("k-verm-dienstort").textContent     = kopf.dienstort;
+
+const tb = document.getElementById("daten-verm");
+tb.innerHTML = "";
+for (const v of vermerke) {
+  tb.insertAdjacentHTML("beforeend", `<tr>
+    <td class="mitte">${v.nr}</td>
+    <td>${v.label}</td>
+    <td>${v.text}</td>
+    <td></td>
+    <td class="mitte">${v.datum}</td></tr>`);
+}
+}
+
+/* ---------------------------------------------------------- Render: Dienstorte */
+
+function renderDienstorte(kopf, orte) {
+document.getElementById("k-dien-stand").textContent         = kopf.stand;
+document.getElementById("k-dien-antragsteller").textContent = kopf.antragsteller;
+document.getElementById("k-dien-wohnort").textContent       = kopf.wohnort;
+document.getElementById("k-dien-dienstort").textContent     = kopf.dienstort;
+
+const tb = document.getElementById("daten-dien");
+tb.innerHTML = "";
+orte.forEach((o, i) => {
+  tb.insertAdjacentHTML("beforeend", `<tr>
+    <td class="mitte">${i + 1}</td>
+    <td>${o.kuerzel}</td>
+    <td>${o.name}</td>
+    <td colspan="2">${o.adresse}</td></tr>`);
+});
+}
+
+/* ---------------------------------------------------------- Render: Fahrtenbuch */
+
+function renderFahrtenbuch(fahrten) {
+const tb = document.getElementById("daten-fb");
+tb.innerHTML = "";
+for (const f of fahrten) {
+  tb.insertAdjacentHTML("beforeend", `<tr>
+    <td>${f.nr ?? ""}</td>
+    <td>${f.monat}</td>
+    <td>${f.tag}</td>
+    <td>${f.von}</td>
+    <td>${f.bis}</td>
+    <td class="weg">${f.weg}</td>
+    <td>${f.kmBeginn ?? ""}</td>
+    <td>${f.kmEnde ?? ""}</td>
+    <td>${f.kmDienstlich ?? ""}</td>
+    <td>${f.kmPrivat ?? ""}</td>
+    <td></td><td></td><td></td><td></td>
+    <td>${f.vermerk}</td></tr>`);
+}
+}
+
+/* ---------------------------------------------------------- Grist-Anbindung */
+
+const ORT_SLOTS = ["Ort_Beginn", "Ort_1", "Ort_2", "Ort_3", "Ort_4", "Ort_5", "Ort_Ende"];
+
+async function ausGrist() {
+  const [e] = zeilen(await grist.docApi.fetchTable("Einstellungen"));
+  const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
+  const imZeitraum = d => d != null && (von == null || d >= von) && (bis == null || d <= bis);
+
+  const orteNachId = Object.fromEntries(
+    zeilen(await grist.docApi.fetchTable("Orte")).map(o => [o.id, o]));
+
+  const reisen = zeilen(await grist.docApi.fetchTable("Reisen"))
+    .filter(r => imZeitraum(r.Datum))
+    .sort((a, b) => a.Datum - b.Datum);
+
+  const stand = [tag(von), tag(bis)].filter(Boolean).join(" - ");
+  const kopfAdresse = {
+    antragsteller: [[e.Name, e.Vorname].filter(Boolean).join(" "),
+                    e.Organisationseinheit].filter(Boolean).join(", "),
+    wohnort:   anschrift(e.Wohnort_Strasse, e.Wohnort_PLZ, e.Wohnort_Ort),
+    dienstort: anschrift(e.Dienstort_Strasse, e.Dienstort_PLZ, e.Dienstort_Ort),
+  };
+
+  renderS1S2({ ...kopfAdresse, iban: e.IBAN || "", bic: e.BIC || "" },
+    reisen.map(r => ({
+      datum: r.Datum_bis && r.Datum_bis !== r.Datum
+             ? `${tag(r.Datum)} - ${tag(r.Datum_bis)}` : tag(r.Datum),
+      von:   r.Beginn || "",
+      bis:   r.Ende || "",
+      weg:   [r.Lfd_Nr ? `Nr. ${r.Lfd_Nr}` : "", r.Reiseweg].filter(Boolean).join(" – "),
+      stufe: r.Tagegeld_Stufe || "",
+      verpflegung:   r.Verpflegung || "Nein",
+      oepnv:         r.OePNV || 0,
+      km:            r.KM_dienstlich || 0,
+      mitnahme:      r.Mitnahme_Personen || 0,
+      uebernachtung: r.Uebernachtung || 0,
+      neben:         r.Nebenkosten || 0,
+    })));
+
+  renderVermerke({ stand, ...kopfAdresse },
+    reisen.filter(r => r.Vermerk).map(r => ({
+      nr:    (r.Vermerk_Label || "").split("-")[1] || "",
+      label: r.Vermerk_Label || "",
+      text:  r.Vermerk,
+      datum: tag(r.Datum),
+    })));
+
+  const ausOrte = [];
+  for (const r of reisen) {
+    for (const slot of ORT_SLOTS) {
+      const id = r[slot];
+      if (id) {
+        const o = orteNachId[id];
+        if (o) ausOrte.push({ datum: r.Datum, kuerzel: o.Kuerzel || "", name: o.Name || "", adresse: o.Adresse || "" });
+      }
+    }
+  }
+  const ausAdressen = zeilen(await grist.docApi.fetchTable("Adressen"))
+    .filter(a => imZeitraum(a.Datum))
+    .map(a => ({ datum: a.Datum, kuerzel: "", name: a.Label || "", adresse: a.Adresse || "" }));
+  renderDienstorte({ stand, ...kopfAdresse },
+    [...ausOrte, ...ausAdressen].sort((a, b) => a.datum - b.datum));
+
+  renderFahrtenbuch(reisen.map(r => ({
+      nr:   r.Lfd_Nr,
+      ...monatTag(r.Datum),
+      von:  r.Beginn || "",
+      bis:  r.Ende || "",
+      weg:  r.Reiseweg || "",
+      kmBeginn:     r.KM_Beginn,
+      kmEnde:       r.KM_Ende,
+      kmDienstlich: r.KM_dienstlich,
+      kmPrivat:     r.Umweg_privat || 0,
+      vermerk:      r.Vermerk_Label || "",
+    })));
+}
+
+if (window.self === window.top) {
+  renderS1S2(beispielKopfS1, beispielReisen);
+  renderVermerke(beispielKopfVermerke, beispielVermerke);
+  renderDienstorte(beispielKopfDienstorte, beispielDienstorte);
+  renderFahrtenbuch(beispielFahrten);
+} else {
+  /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
+     Adresse — so steht der Hostname der Instanz nicht in diesem offenen Repo. */
+  const quelle = document.referrer ? new URL(document.referrer).origin
+                                   : "https://docs.getgrist.com";
+  const s = document.createElement("script");
+  s.src = quelle + "/grist-plugin-api.js";
+  s.onload = () => {
+    grist.ready({ requiredAccess: "full" });   // liest vier Tabellen
+    grist.onRecords(ausGrist);
+    ausGrist();
+  };
+  document.head.appendChild(s);
+}
+</script>
+</body>
+</html>
