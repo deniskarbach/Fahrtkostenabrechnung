@@ -411,6 +411,56 @@ def zeitraum_widget():
     print(f"  Zeitraum-Widget: angelegt (Section {sec})")
 
 
+# Reihenfolge = Reihenfolge auf der Ausdruck-Seite.
+AUSGABE_WIDGETS = [
+    ("S1 / S2",                     "abrechnung.html"),
+    ("Vermerke",                    "vermerke.html"),
+    ("Dienstorte",                  "dienstorte.html"),
+    ("Fahrtenbuch",                 "fahrtenbuch.html"),
+    ("Fahrtenbuch (Schnittversion)","fahrtenbuch-schnitt.html"),
+]
+AUSGABE_BASIS_URL = "https://deniskarbach.github.io/Fahrtkostenabrechnung/grist/ausgabe/"
+
+
+def ausgabe_widgets():
+    """Legt für jede Datei in AUSGABE_WIDGETS ein Custom-Widget auf der
+    Ausdruck-Seite an, sofern noch keins mit dieser URL existiert. Idempotent
+    anhand der URL, nicht des Titels -- ein im Editor umbenanntes Widget wird
+    also nicht doppelt angelegt."""
+    seite = sql("select id from _grist_Views where name = 'Ausdruck'")
+    et = sql("select id from _grist_Tables where tableId = 'Einstellungen'")
+    if not (seite and et):
+        print("  Ausgabe-Widgets: Seite 'Ausdruck' oder Tabelle fehlt — übersprungen")
+        return
+    vid, et = seite[0]["id"], et[0]["id"]
+
+    vorhanden = set()
+    for row in sql(f"select options from _grist_Views_section "
+                   f"where parentId = {vid} and parentKey = 'custom'"):
+        try:
+            cv = json.loads(json.loads(row["options"] or "{}").get("customView") or "{}")
+            if cv.get("url"):
+                vorhanden.add(cv["url"])
+        except (ValueError, TypeError):
+            pass
+
+    angelegt = 0
+    for titel, datei in AUSGABE_WIDGETS:
+        url = AUSGABE_BASIS_URL + datei
+        if url in vorhanden:
+            continue
+        sec = api("POST", "/apply",
+                  [["CreateViewSection", et, vid, "custom", None, None]])["retValues"][0]["sectionRef"]
+        options = {"customView": json.dumps({
+            "mode": "url", "url": url, "widgetDef": None, "access": "full",
+            "pluginId": "", "sectionId": "", "renderAfterReady": False,
+            "widgetId": None, "widgetOptions": None, "columnsMapping": None})}
+        api("POST", "/apply", [["UpdateRecord", "_grist_Views_section", sec,
+                                {"title": titel, "options": json.dumps(options)}]])
+        angelegt += 1
+    print(f"  Ausgabe-Widgets: {angelegt} angelegt, {len(AUSGABE_WIDGETS) - angelegt} vorhanden")
+
+
 def selbsttest():
     """Führt REISEWEG und MAPS ohne Grist aus: Auswahl gewinnt, sonst Freitext."""
     class Ort:
@@ -469,12 +519,12 @@ if __name__ == "__main__":
         print("  Einstellungen: leere Zeile angelegt")
 
     zeitraum_widget()      # braucht die Ausdruck-Seite — sonst übersprungen
+    ausgabe_widgets()      # dito
 
     print(f"""
 Fertig. Rest in der Oberfläche:
   1. Bei den {len(ORT_SLOTS)} Ort-Referenzspalten unter SHOW COLUMN 'Kuerzel' wählen
      (ponytail: einmalige Klickarbeit — der API-Weg kostet mehr Code als er spart)
   2. Formular-Widget auf 'Reisen' anlegen — das Layout setzt formular.py
-  3. Custom-Widget-Seite mit der URL der s1.html hinzufügen
-  4. Formular veröffentlichen, dann 'Duplicate Document' — das ist die Vorlage
+  3. Formular veröffentlichen, dann 'Duplicate Document' — das ist die Vorlage
 """)
