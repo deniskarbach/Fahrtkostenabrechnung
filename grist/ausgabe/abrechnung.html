@@ -104,6 +104,7 @@ table { width: 180mm; border-collapse: collapse; table-layout: fixed; }
 .s2 .hoehe42 { height: 7.14mm; }    /* Zeile 42 der Vorlage */
 .s2 .linie { border-bottom: var(--rahmen); }
 .s2 .trenn { border-bottom: var(--rahmen); }   /* Trennlinie über volle Breite */
+.s2 .trenn-v { border-right: var(--rahmen); }  /* Vertikale Trennlinie Datum/Unterschrift | Sachlich richtig */
 .s2 .klein { font-size: var(--schrift-einheit); }
 .s2 .oben { vertical-align: top; }
 
@@ -120,7 +121,6 @@ table { width: 180mm; border-collapse: collapse; table-layout: fixed; }
 .kostenrechnung .ueberschrift { text-align: center; font-weight: bold; height: 5.5mm;
                                 vertical-align: middle; }
 .kostenrechnung .betrag { text-align: right; font-variant-numeric: tabular-nums; }
-.kostenrechnung .ohne { border: none; }
 
 @media print {
   body { background: #fff; }
@@ -222,14 +222,14 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
         <td colspan="2"></td></tr>
     <tr><td class="trenn" colspan="7"></td></tr>
 
-    <tr><td colspan="4"></td><td colspan="3">Sachlich richtig:</td></tr>
-    <tr><td colspan="7"></td></tr>
+    <tr><td class="trenn-v" colspan="4"></td><td colspan="3">Sachlich richtig:</td></tr>
+    <tr><td class="trenn-v" colspan="4"></td><td colspan="3"></td></tr>
 
-    <tr><td class="linie"></td><td class="linie"></td><td class="linie" colspan="2"></td>
+    <tr><td class="linie"></td><td class="linie"></td><td class="linie trenn-v" colspan="2"></td>
         <td class="linie" colspan="3"></td></tr>
     <tr><td class="klein">(Datum)</td>
         <td class="klein">(Unterschrift, Dienstbezeichnung)</td>
-        <td colspan="2"></td>
+        <td class="trenn-v" colspan="2"></td>
         <td class="klein" colspan="3">(Unterschrift, Dienstbezeichnung)</td></tr>
   </table>
 
@@ -240,9 +240,9 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     </colgroup>
 
     <tr><td class="ueberschrift" colspan="4">KOSTENRECHNUNG (nicht vom Antragsteller auszufüllen)</td></tr>
-    <tr><td class="ohne"></td><td class="ohne"></td>
+    <tr><td></td><td></td>
         <td class="betrag">Im Einzelnen</td><td class="betrag">Insgesamt</td></tr>
-    <tr><td class="ohne"></td><td class="ohne"></td>
+    <tr><td></td><td></td>
         <td class="betrag">EUR</td><td class="betrag">EUR</td></tr>
 
     <tr><td>I. Tagegeld</td><td>Tage mit mehr als 8 Stunden</td><td></td><td></td></tr>

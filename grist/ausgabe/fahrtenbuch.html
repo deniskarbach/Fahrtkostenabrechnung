@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Reisekostenabrechnung – Fahrtenbuch</title>
+<style>
+/* ---------------------------------------------------------------
+   Raster aus der Vorlage (Blatt "Druck-Fahrtenbuch") übernommen:
+   A4 quer, 10mm Ränder rundum -> Satzspiegel 277mm.
+   Spaltenbreiten sind die Originalproportionen (Summe 195,95
+   Excel-Einheiten), auf die Satzspiegelbreite normiert.
+   Zeilenhöhen: Original in pt, hier in mm (pt × 25,4/72).
+   fitToPage in der Vorlage: aus -- die Proportionen liegen bereits
+   nahe 100% (Original ~287mm, Satzspiegel 277mm), keine Stauchung nötig.
+   K–N (Mitgenommene Bedienstete, Unterschrift) bleiben handschriftlich leer.
+   --------------------------------------------------------------- */
+@page { size: A4 landscape; margin: 10mm; }
+
+:root {
+  --rahmen: 0.4pt solid #000;
+  --schrift: 8pt;       /* Datenzeilen aus der Vorlage */
+  --schrift-kopf: 7pt;  /* Kopfzeilen 1/2 aus der Vorlage */
+  --h-daten: 6.35mm;   /* 18pt aus der Vorlage, wie in abrechnung.html */
+  --polster-x: 0.8mm;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--schrift);
+  color: #000;
+  background: #f0f0f0;
+}
+
+.blatt {
+  width: 297mm;
+  margin: 10mm auto;
+  padding: 10mm;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,.25);
+}
+
+table { width: 277mm; border-collapse: collapse; table-layout: fixed; }
+th, td { border: var(--rahmen); padding: .4mm var(--polster-x); overflow: hidden; }
+
+thead th { font-weight: bold; font-size: var(--schrift-kopf); text-align: center;
+           vertical-align: middle; white-space: pre-line; line-height: 1.1;
+           overflow-wrap: anywhere; }
+thead .h1 { height: 6.35mm; }
+thead .h2 { height: 6.09mm; }
+thead .h3 { height: 3.97mm; }
+thead .weg { text-align: left; }
+thead .klein { font-size: 5.6pt; }   /* Vergütungsbetrag ist in der Vorlage kleiner (6pt statt 7pt) */
+
+tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
+tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
+
+@media print {
+  body { background: #fff; }
+  .blatt { width: auto; margin: 0; padding: 0; box-shadow: none; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="blatt">
+
+  <table>
+    <colgroup>
+      <col style="width:6.90mm"><col style="width:17.86mm"><col style="width:17.86mm">
+      <col style="width:13.61mm"><col style="width:17.86mm"><col style="width:72.99mm">
+      <col style="width:15.55mm"><col style="width:13.61mm"><col style="width:9.54mm">
+      <col style="width:17.86mm"><col style="width:22.26mm"><col style="width:6.90mm">
+      <col style="width:8.48mm"><col style="width:17.86mm"><col style="width:17.86mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="h1" rowspan="2">Lfd Nr.</th>
+        <th class="h1" rowspan="2">Monat</th>
+        <th class="h1" rowspan="2">Tag</th>
+        <th class="h1" colspan="2">Dauer der Reise</th>
+        <th class="h1 weg" rowspan="2">Reiseweg (Umwege sind zu begründen)&#10;&#10;&#10;Kurze Angabe des Reisezweckes</th>
+        <th class="h1" colspan="2">Stand des Kilometerzählers bei</th>
+        <th class="h1" colspan="2">Zurückgelegte Kilometer</th>
+        <th class="h1" colspan="3">Mitgenommende Bedienstete</th>
+        <th class="h1" rowspan="2">Unterschrift d. Fahrerin/Fahrers</th>
+        <th class="h1" rowspan="2">Vermerke</th>
+      </tr>
+      <tr>
+        <th class="h2">von</th>
+        <th class="h2">bis</th>
+        <th class="h2">Beginn&#10;der Reise</th>
+        <th class="h2">Ende&#10;der Reise</th>
+        <th class="h2">dienstlich</th>
+        <th class="h2">außer-&#10;dienstlich</th>
+        <th class="h2">Name, Amtsbezeichnung</th>
+        <th class="h2">Kilo-&#10;meter</th>
+        <th class="h2 klein">Vergütungsbetrag</th>
+      </tr>
+      <tr>
+        <th class="h3">1</th><th class="h3">2</th><th class="h3">3</th><th class="h3">4</th>
+        <th class="h3">5</th><th class="h3">6</th><th class="h3">7</th><th class="h3">8</th>
+        <th class="h3">9</th><th class="h3">10</th><th class="h3">11</th><th class="h3">12</th>
+        <th class="h3">13</th><th class="h3">14</th><th class="h3">15</th>
+      </tr>
+    </thead>
+    <tbody id="daten"></tbody>
+  </table>
+</div>
+
+<script>
+/* Erfundene Beispieldaten, nur für die Vorschau im Browser ohne Grist. */
+const beispielFahrten = [
+  { nr:1, monat:"02", tag:"03", von:"07:15", bis:"16:40", weg:"Nr. 1 – WO > KV > Beispieldorf > WO",
+    kmBeginn:12000, kmEnde:12087, kmDienstlich:87, kmPrivat:0, vermerk:"" },
+  { nr:2, monat:"02", tag:"05", von:"08:00", bis:"12:10", weg:"Nr. 2 – WO > KV > WO",
+    kmBeginn:12087, kmEnde:12111, kmDienstlich:24, kmPrivat:0, vermerk:"V26-01" },
+];
+
+function rendern(fahrten) {
+const tb = document.getElementById("daten");
+tb.innerHTML = "";
+for (const f of fahrten) {
+  tb.insertAdjacentHTML("beforeend", `<tr>
+    <td>${f.nr ?? ""}</td>
+    <td>${f.monat}</td>
+    <td>${f.tag}</td>
+    <td>${f.von}</td>
+    <td>${f.bis}</td>
+    <td class="weg">${f.weg}</td>
+    <td>${f.kmBeginn ?? ""}</td>
+    <td>${f.kmEnde ?? ""}</td>
+    <td>${f.kmDienstlich ?? ""}</td>
+    <td>${f.kmPrivat ?? ""}</td>
+    <td></td><td></td><td></td><td></td>
+    <td>${f.vermerk}</td></tr>`);
+}
+}
+
+/* ---------------------------------------------------------- Grist-Anbindung */
+
+const zweistellig = n => n == null ? "" : String(n).padStart(2, "0");
+const monatTag = s => {
+  if (s == null) return { monat: "", tag: "" };
+  const d = new Date(s * 1000);
+  return { monat: zweistellig(d.getUTCMonth() + 1), tag: zweistellig(d.getUTCDate()) };
+};
+
+const zeilen = t => t.id.map((_, i) =>
+  Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
+
+async function ausGrist() {
+  const [e] = zeilen(await grist.docApi.fetchTable("Einstellungen"));
+  const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
+
+  const fahrten = zeilen(await grist.docApi.fetchTable("Reisen"))
+    .filter(r => r.Datum != null
+                 && (von == null || r.Datum >= von)
+                 && (bis == null || r.Datum <= bis))
+    .sort((a, b) => a.Datum - b.Datum)
+    .map(r => ({
+      nr:   r.Lfd_Nr,
+      ...monatTag(r.Datum),
+      von:  r.Beginn || "",
+      bis:  r.Ende || "",
+      weg:  r.Reiseweg || "",
+      kmBeginn:     r.KM_Beginn,
+      kmEnde:       r.KM_Ende,
+      kmDienstlich: r.KM_dienstlich,
+      kmPrivat:     r.Umweg_privat || 0,
+      vermerk:      r.Vermerk_Label || "",
+    }));
+
+  rendern(fahrten);
+}
+
+if (window.self === window.top) {
+  rendern(beispielFahrten);
+} else {
+  const quelle = document.referrer ? new URL(document.referrer).origin
+                                   : "https://docs.getgrist.com";
+  const s = document.createElement("script");
+  s.src = quelle + "/grist-plugin-api.js";
+  s.onload = () => {
+    grist.ready({ requiredAccess: "full" });
+    grist.onRecords(ausGrist);
+    ausGrist();
+  };
+  document.head.appendChild(s);
+}
+</script>
+</body>
+</html>

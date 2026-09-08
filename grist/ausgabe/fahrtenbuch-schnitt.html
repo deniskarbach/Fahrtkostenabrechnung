@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Fahrtenbuch – Schnittversion</title>
+<style>
+/* ---------------------------------------------------------------
+   Ausschneidbare Version von fahrtenbuch.html: die 15 Spalten passen
+   bei echter (nicht gestauchter) Größe nicht auf eine A4-Querseite,
+   daher zwei Seiten je Zeilenblock -- Seite 1 Spalten A-F, Seite 2
+   Spalten G-O, exakt am Original-Spaltenumbruch der Vorlage (Grist
+   kennt keinen Spaltenumbruch, das Original-XLSX schon: manueller
+   Umbruch nach Spalte F). Breiten sind aus dem tatsächlichen
+   PDF-Druckergebnis der Vorlage gemessen (LibreOffice, Skalierung
+   100%), nicht aus der Spaltenbreiten-Einheit zurückgerechnet -- die
+   beiden Blöcke werden unterschiedlich skaliert (168,08mm bzw.
+   168,71mm), das lässt sich aus den Excel-Einheiten allein nicht
+   herleiten. Innerhalb jedes Blocks bleiben die Originalproportionen.
+   Zum Zusammenfügen: rechte Kante von Seite 1 und linke Kante von
+   Seite 2 (gestrichelt markiert) an der Tischkante ausschneiden,
+   Zeilenhöhe ist auf beiden Seiten identisch (6,35mm = 18pt Original).
+   --------------------------------------------------------------- */
+@page { size: A4 landscape; margin: 10mm; }
+
+:root {
+  --rahmen: 0.4pt solid #000;
+  --schrift: 8pt;
+  --schrift-kopf: 7pt;
+  --h-daten: 6.35mm;
+  --polster-x: 0.8mm;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--schrift);
+  color: #000;
+  background: #f0f0f0;
+}
+
+.blatt {
+  width: 297mm;
+  margin: 10mm auto;
+  padding: 10mm;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,.25);
+  position: relative;
+}
+
+.hinweis { position: absolute; top: 2mm; left: 10mm; font-size: 7pt; color: #777; }
+
+table { border-collapse: collapse; table-layout: fixed; }
+th, td { border: var(--rahmen); padding: .4mm var(--polster-x); overflow: hidden; }
+
+thead th { font-weight: bold; font-size: var(--schrift-kopf); text-align: center;
+           vertical-align: middle; white-space: pre-line; line-height: 1.1;
+           overflow-wrap: anywhere; }
+thead .h1 { height: 6.35mm; }
+thead .h2 { height: 6.09mm; }
+thead .h3 { height: 3.97mm; }
+thead .weg { text-align: left; }
+thead .klein { font-size: 5.6pt; }
+
+tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
+tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
+
+.schnitt-rechts { border-right: 1pt dashed #000; }
+.schnitt-links  { border-left: 1pt dashed #000; }
+
+@media print {
+  body { background: #fff; }
+  .blatt { width: auto; margin: 0; padding: 10mm; box-shadow: none; break-after: page; }
+  .blatt:last-child { break-after: auto; }
+  .hinweis { display: none; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div id="seiten"></div>
+
+<script>
+/* Erfundene Beispieldaten, nur für die Vorschau im Browser ohne Grist. */
+const beispielFahrten = [
+  { nr:1, monat:"02", tag:"03", von:"07:15", bis:"16:40", weg:"Nr. 1 – WO > KV > Beispieldorf > WO",
+    kmBeginn:12000, kmEnde:12087, kmDienstlich:87, kmPrivat:0, vermerk:"" },
+  { nr:2, monat:"02", tag:"05", von:"08:00", bis:"12:10", weg:"Nr. 2 – WO > KV > WO",
+    kmBeginn:12087, kmEnde:12111, kmDienstlich:24, kmPrivat:0, vermerk:"V26-01" },
+];
+
+const ROWS_PRO_SEITE = 26;   // A4 quer, 190mm Nutzhöhe minus 16,4mm Kopf, bei 6,35mm/Zeile
+
+function kopfSeite1() {
+  return `<colgroup>
+      <col style="width:7.88mm"><col style="width:20.41mm"><col style="width:20.41mm">
+      <col style="width:15.56mm"><col style="width:20.41mm"><col style="width:83.41mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="h1" rowspan="2">Lfd Nr.</th>
+        <th class="h1" rowspan="2">Monat</th>
+        <th class="h1" rowspan="2">Tag</th>
+        <th class="h1" colspan="2">Dauer der Reise</th>
+        <th class="h1 weg" rowspan="2">Reiseweg (Umwege sind zu begründen)&#10;&#10;&#10;Kurze Angabe des Reisezweckes</th>
+      </tr>
+      <tr>
+        <th class="h2">von</th>
+        <th class="h2">bis</th>
+      </tr>
+      <tr>
+        <th class="h3">1</th><th class="h3">2</th><th class="h3">3</th>
+        <th class="h3">4</th><th class="h3">5</th><th class="h3">6</th>
+      </tr>
+    </thead>`;
+}
+
+function kopfSeite2() {
+  return `<colgroup>
+      <col style="width:20.19mm"><col style="width:17.68mm"><col style="width:12.39mm">
+      <col style="width:23.19mm"><col style="width:28.91mm"><col style="width:8.96mm">
+      <col style="width:11.01mm"><col style="width:23.19mm"><col style="width:23.19mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="h1" colspan="2">Stand des Kilometerzählers bei</th>
+        <th class="h1" colspan="2">Zurückgelegte Kilometer</th>
+        <th class="h1" colspan="3">Mitgenommende Bedienstete</th>
+        <th class="h1" rowspan="2">Unterschrift d. Fahrerin/Fahrers</th>
+        <th class="h1" rowspan="2">Vermerke</th>
+      </tr>
+      <tr>
+        <th class="h2">Beginn&#10;der Reise</th>
+        <th class="h2">Ende&#10;der Reise</th>
+        <th class="h2">dienstlich</th>
+        <th class="h2">außer-&#10;dienstlich</th>
+        <th class="h2">Name, Amtsbezeichnung</th>
+        <th class="h2">Kilo-&#10;meter</th>
+        <th class="h2 klein">Vergütungsbetrag</th>
+      </tr>
+      <tr>
+        <th class="h3">7</th><th class="h3">8</th><th class="h3">9</th><th class="h3">10</th>
+        <th class="h3">11</th><th class="h3">12</th><th class="h3">13</th><th class="h3">14</th>
+        <th class="h3">15</th>
+      </tr>
+    </thead>`;
+}
+
+function zeileSeite1(f) {
+  return `<tr>
+    <td>${f.nr ?? ""}</td><td>${f.monat}</td><td>${f.tag}</td>
+    <td>${f.von}</td><td>${f.bis}</td><td class="weg">${f.weg}</td></tr>`;
+}
+
+function zeileSeite2(f) {
+  return `<tr>
+    <td>${f.kmBeginn ?? ""}</td><td>${f.kmEnde ?? ""}</td>
+    <td>${f.kmDienstlich ?? ""}</td><td>${f.kmPrivat ?? ""}</td>
+    <td></td><td></td><td></td><td></td>
+    <td>${f.vermerk}</td></tr>`;
+}
+
+function rendern(fahrten) {
+  const wrap = document.getElementById("seiten");
+  wrap.innerHTML = "";
+  for (let i = 0; i < fahrten.length; i += ROWS_PRO_SEITE) {
+    const block = fahrten.slice(i, i + ROWS_PRO_SEITE);
+    const seite = document.createElement("div");
+    seite.className = "blatt";
+    seite.innerHTML = `<div class="hinweis">Seite ${i / ROWS_PRO_SEITE * 2 + 1} von ${Math.ceil(fahrten.length / ROWS_PRO_SEITE) * 2} — Spalten 1–6, rechte Kante ausschneiden</div>
+      <table class="schnitt-rechts">${kopfSeite1()}<tbody>${block.map(zeileSeite1).join("")}</tbody></table>`;
+    wrap.appendChild(seite);
+
+    const seite2 = document.createElement("div");
+    seite2.className = "blatt";
+    seite2.innerHTML = `<div class="hinweis">Seite ${i / ROWS_PRO_SEITE * 2 + 2} von ${Math.ceil(fahrten.length / ROWS_PRO_SEITE) * 2} — Spalten 7–15, linke Kante ausschneiden, an Seite ${i / ROWS_PRO_SEITE * 2 + 1} ankleben</div>
+      <table class="schnitt-links">${kopfSeite2()}<tbody>${block.map(zeileSeite2).join("")}</tbody></table>`;
+    wrap.appendChild(seite2);
+  }
+}
+
+/* ---------------------------------------------------------- Grist-Anbindung */
+
+const zweistellig = n => n == null ? "" : String(n).padStart(2, "0");
+const monatTag = s => {
+  if (s == null) return { monat: "", tag: "" };
+  const d = new Date(s * 1000);
+  return { monat: zweistellig(d.getUTCMonth() + 1), tag: zweistellig(d.getUTCDate()) };
+};
+
+const zeilen = t => t.id.map((_, i) =>
+  Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
+
+async function ausGrist() {
+  const [e] = zeilen(await grist.docApi.fetchTable("Einstellungen"));
+  const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
+
+  const fahrten = zeilen(await grist.docApi.fetchTable("Reisen"))
+    .filter(r => r.Datum != null
+                 && (von == null || r.Datum >= von)
+                 && (bis == null || r.Datum <= bis))
+    .sort((a, b) => a.Datum - b.Datum)
+    .map(r => ({
+      nr:   r.Lfd_Nr,
+      ...monatTag(r.Datum),
+      von:  r.Beginn || "",
+      bis:  r.Ende || "",
+      weg:  r.Reiseweg || "",
+      kmBeginn:     r.KM_Beginn,
+      kmEnde:       r.KM_Ende,
+      kmDienstlich: r.KM_dienstlich,
+      kmPrivat:     r.Umweg_privat || 0,
+      vermerk:      r.Vermerk_Label || "",
+    }));
+
+  rendern(fahrten);
+}
+
+if (window.self === window.top) {
+  rendern(beispielFahrten);
+} else {
+  const quelle = document.referrer ? new URL(document.referrer).origin
+                                   : "https://docs.getgrist.com";
+  const s = document.createElement("script");
+  s.src = quelle + "/grist-plugin-api.js";
+  s.onload = () => {
+    grist.ready({ requiredAccess: "full" });
+    grist.onRecords(ausGrist);
+    ausGrist();
+  };
+  document.head.appendChild(s);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Reisekostenabrechnung – Dienstorte</title>
+<style>
+/* ---------------------------------------------------------------
+   Raster aus der Vorlage (Blatt "Orte") übernommen -- gleiches Layout,
+   andere Datenquelle: nicht die Stammliste, sondern jeder im gewählten
+   Zeitraum tatsächlich angefahrene Ort (Orte-Auswahl + Adressen-Freitext).
+   A4 hoch, Ränder 17,78mm seitlich / 19,05mm oben-unten -> Satzspiegel
+   174,44mm. Spaltenbreiten sind die Originalproportionen (Summe 158,82
+   Excel-Einheiten), auf die Satzspiegelbreite normiert -- bis auf Spalte
+   "Nr.": deren Original-2,89mm reichten nicht für die Kopfzeile "Nr.",
+   daher +3,11mm zulasten der Wohnort-Spalte (wie schon bei S1: Breite nach
+   Inhaltsbedarf, nicht stur nach Vorlagen-Proportion).
+   --------------------------------------------------------------- */
+@page { size: A4 portrait; margin: 19.05mm 17.78mm; }
+
+:root {
+  --rahmen: 0.4pt solid #000;
+  --schrift: 8.5pt;
+  --schrift-kopf: 12pt;
+  --schrift-titel: 11pt;   /* 22pt aus der Vorlage kollidiert bei dieser
+                               Spaltenbreite mit der Nachbarzelle -- wie
+                               schon bei S1 wird die Schrift ans Raster
+                               angepasst statt die Proportionen zu stauchen */
+  --schrift-kopfspalten: 9pt;
+  --polster-x: 1mm;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--schrift);
+  color: #000;
+  background: #f0f0f0;
+}
+
+.blatt {
+  width: 210mm;
+  margin: 10mm auto;
+  padding: 19.05mm 17.78mm;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,.25);
+}
+
+table { width: 174.44mm; border-collapse: collapse; table-layout: fixed; }
+
+.kopf td { border: var(--rahmen); padding: 0 var(--polster-x); vertical-align: top; }
+.kopf .titel { height: 15.88mm; font-size: var(--schrift-titel); font-weight: bold; vertical-align: middle; }
+.kopf .stand { font-size: var(--schrift-kopf); font-weight: bold; text-align: right; vertical-align: bottom; }
+.kopf .label { height: 5.56mm; font-size: var(--schrift-kopf); font-weight: bold; vertical-align: bottom; }
+.kopf .wert  { height: 18.79mm; font-size: var(--schrift-kopf); font-weight: bold; }
+
+.raster th, .raster td { border: var(--rahmen); padding: .6mm var(--polster-x); overflow: hidden; }
+.raster th { height: 5.56mm; font-size: var(--schrift-kopfspalten); font-weight: bold;
+             vertical-align: bottom; text-align: left; }
+.raster th.mitte { text-align: center; }
+.raster td { height: 5.56mm; vertical-align: middle; }
+.raster .mitte { text-align: center; }
+
+@media print {
+  body { background: #fff; }
+  .blatt { width: auto; margin: 0; padding: 0; box-shadow: none; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="blatt">
+
+  <table class="kopf">
+    <colgroup>
+      <col style="width:6.00mm"><col style="width:22.53mm"><col style="width:43.39mm">
+      <col style="width:46.89mm"><col style="width:55.63mm">
+    </colgroup>
+    <tr><td class="titel" colspan="3">REISEKOSTENRECHNUNG</td>
+        <td class="stand" colspan="2" id="k-stand"></td></tr>
+    <tr><td class="label" colspan="3">Antragssteller/in:</td>
+        <td class="label">Wohnort:</td>
+        <td class="label">Dienstort:</td></tr>
+    <tr><td class="wert" colspan="3" id="k-antragsteller"></td>
+        <td class="wert" id="k-wohnort"></td>
+        <td class="wert" id="k-dienstort"></td></tr>
+  </table>
+
+  <table class="raster">
+    <colgroup>
+      <col style="width:6.00mm"><col style="width:22.53mm"><col style="width:43.39mm">
+      <col style="width:46.89mm"><col style="width:55.63mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="mitte">Nr.</th>
+        <th>Kürzel</th>
+        <th>Kita, Einrichtung, Ort etc.</th>
+        <th colspan="2">Adresse</th>
+      </tr>
+    </thead>
+    <tbody id="daten"></tbody>
+  </table>
+</div>
+
+<script>
+/* Erfundene Beispieldaten, nur für die Vorschau im Browser ohne Grist. */
+const beispielKopf = {
+  stand: "01.01.2026 - 31.03.2026",
+  antragsteller: "Musterfrau Erika, Referat 42",
+  wohnort:   "Beispielweg 7, 00000 Musterstadt",
+  dienstort: "Verwaltungsstraße 1, 00000 Musterstadt",
+};
+const beispielDienstorte = [
+  { kuerzel:"KV",  name:"Kreisverwaltung", adresse:"Verwaltungsstraße 1, 00000 Musterstadt" },
+  { kuerzel:"",    name:"Café Mokka",      adresse:"Bahnhofstr. 7, 00000 Musterstadt" },
+  { kuerzel:"KITA",name:"Kita Sonnenschein", adresse:"Lindenweg 3, 00000 Musterstadt" },
+];
+
+function rendern(kopf, orte) {
+document.getElementById("k-stand").textContent         = kopf.stand;
+document.getElementById("k-antragsteller").textContent = kopf.antragsteller;
+document.getElementById("k-wohnort").textContent       = kopf.wohnort;
+document.getElementById("k-dienstort").textContent     = kopf.dienstort;
+
+const tb = document.getElementById("daten");
+tb.innerHTML = "";
+orte.forEach((o, i) => {
+  tb.insertAdjacentHTML("beforeend", `<tr>
+    <td class="mitte">${i + 1}</td>
+    <td>${o.kuerzel}</td>
+    <td>${o.name}</td>
+    <td colspan="2">${o.adresse}</td></tr>`);
+});
+}
+
+/* ---------------------------------------------------------- Grist-Anbindung */
+
+const ORT_SLOTS = ["Ort_Beginn", "Ort_1", "Ort_2", "Ort_3", "Ort_4", "Ort_5", "Ort_Ende"];
+
+const tag = s => s == null ? "" : new Date(s * 1000).toLocaleDateString("de-DE",
+  { day:"2-digit", month:"2-digit", year:"numeric", timeZone:"UTC" });
+
+const zeilen = t => t.id.map((_, i) =>
+  Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
+
+const anschrift = (strasse, plz, ort) =>
+  [strasse, [plz, ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+
+async function ausGrist() {
+  const [e] = zeilen(await grist.docApi.fetchTable("Einstellungen"));
+  const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
+  const imZeitraum = d => d != null && (von == null || d >= von) && (bis == null || d <= bis);
+
+  const orteNachId = Object.fromEntries(
+    zeilen(await grist.docApi.fetchTable("Orte")).map(o => [o.id, o]));
+
+  const reisen = zeilen(await grist.docApi.fetchTable("Reisen")).filter(r => imZeitraum(r.Datum));
+
+  // Aus den Ref-Feldern (Auswahl aus Orte) je Fahrt und Slot einen Treffer.
+  const ausOrte = [];
+  for (const r of reisen) {
+    for (const slot of ORT_SLOTS) {
+      const id = r[slot];
+      if (id) {
+        const o = orteNachId[id];
+        if (o) ausOrte.push({ datum: r.Datum, kuerzel: o.Kuerzel || "", name: o.Name || "", adresse: o.Adresse || "" });
+      }
+    }
+  }
+
+  // Freitext-Ziele kommen automatisch aus Adressen (Adressen_Sync in Reisen
+  // legt sie an) -- nicht neu aus Ort_N_Text ableiten, sonst zählt ein
+  // Treffer doppelt.
+  const ausAdressen = zeilen(await grist.docApi.fetchTable("Adressen"))
+    .filter(a => imZeitraum(a.Datum))
+    .map(a => ({ datum: a.Datum, kuerzel: "", name: a.Label || "", adresse: a.Adresse || "" }));
+
+  const dienstorte = [...ausOrte, ...ausAdressen].sort((a, b) => a.datum - b.datum);
+
+  rendern({
+    stand: [tag(von), tag(bis)].filter(Boolean).join(" - "),
+    antragsteller: [[e.Name, e.Vorname].filter(Boolean).join(" "),
+                    e.Organisationseinheit].filter(Boolean).join(", "),
+    wohnort:   anschrift(e.Wohnort_Strasse, e.Wohnort_PLZ, e.Wohnort_Ort),
+    dienstort: anschrift(e.Dienstort_Strasse, e.Dienstort_PLZ, e.Dienstort_Ort),
+  }, dienstorte);
+}
+
+if (window.self === window.top) {
+  rendern(beispielKopf, beispielDienstorte);
+} else {
+  const quelle = document.referrer ? new URL(document.referrer).origin
+                                   : "https://docs.getgrist.com";
+  const s = document.createElement("script");
+  s.src = quelle + "/grist-plugin-api.js";
+  s.onload = () => {
+    grist.ready({ requiredAccess: "full" });
+    grist.onRecords(ausGrist);
+    ausGrist();
+  };
+  document.head.appendChild(s);
+}
+</script>
+</body>
+</html>

@@ -142,6 +142,17 @@ return "V%s-%02d" % ($Datum.strftime("%y"), n)
 
 JA_NEIN = {"choices": ["Ja", "Nein"]}
 
+def SYNC(slot):
+    """Legt bei ausgefülltem Freitext automatisch die zugehörige Zeile in
+    Adressen an (Reise+Slot als Schlüssel -> nie ein Treffer auf eine fremde
+    Zeile, jede Fahrt bekommt ihre eigene). Siehe grist/test_lookuporadd.py
+    für den Nachweis, dass lookupOrAddDerived das leistet."""
+    return f'''
+if not ${slot}_Text:
+  return None
+return Adressen.lookupOrAddDerived(Reise=$id, Slot="{slot}", Label=${slot}_Text)
+'''.strip()
+
 # ---------------------------------------------------------------- Tabellen
 
 ORTE = [
@@ -215,6 +226,32 @@ REISEN = [
     spalte("Vermerk_Label",   "Vermerk-Kennung", "Text", formel=VERMERK_LABEL),
 ]
 
+# Ein Freitext-Ziel je Fahrt und Ort-Slot, automatisch von den Sync-Spalten
+# unten befüllt -- keine Dropdown-Auswahl, keine Zusammenführung gleicher
+# Texte (jede Fahrt bleibt eine eigene Zeile). Strasse/PLZ/Ort bleiben leer,
+# bis die Abrechnungsstelle sie beim Prüfen einer Fahrt nachträgt; der
+# Sync-Mechanismus fasst diese Felder nie an. Aufbau bewusst analog zu ORTE
+# (gleiche Spalten Strasse/PLZ/Ort + zusammengesetzte Adresse-Formel).
+ADRESSEN = [
+    spalte("Reise",   "Reise", "Ref:Reisen"),
+    spalte("Slot",    "Ort-Feld", "Text"),
+    spalte("Label",   "Freitext (wie erfasst)", "Text"),
+    spalte("Strasse", "Straße und Hausnummer", "Text"),
+    spalte("PLZ",     "PLZ", "Text"),
+    spalte("Ort",     "Ort", "Text"),
+    spalte("Adresse", "Vollständige Adresse", "Text",
+           formel='", ".join(x for x in [$Strasse, ($PLZ + " " + $Ort).strip()] if x)'),
+    spalte("Datum",   "Reisedatum", "Date", formel="$Reise.Datum"),
+]
+
+def adressen_sync_spalten():
+    """Je Ort-Slot eine unsichtbare Formelspalte auf Reisen (kein Eingabefeld,
+    taucht daher nie im Formular auf). Braucht die Tabelle Adressen -- erst
+    nach deren Anlage aufrufen."""
+    return [spalte(f"{sid}_Sync", f"{ORT_LABEL[sid]} – Adressen-Sync", "Ref:Adressen",
+                    formel=SYNC(sid))
+            for sid in ORT_SLOTS]
+
 # ---------------------------------------------------------------- Ausführung
 
 def anlegen(tabelle, spalten):
@@ -276,18 +313,64 @@ def reihenfolge_ordnen():
     print(f"  Reihenfolge: {len(aktionen)} Spalten/Felder einsortiert")
 
 
+# Reine Zwischenwerte oder Verknüpfungs-Spalten ohne eigenständigen
+# Aussagewert für die Fachkraft -- bleiben im Datenmodell (Formeln greifen
+# weiter darauf zu), verschwinden nur aus der Tabellenansicht.
+HILFSSPALTEN = {
+    "Reisen": ["Datum_bis", "KM_gesamt", "Abwesenheit_min", "Rest_min"]
+              + [f"{s}_Sync" for s in ORT_SLOTS],
+    "Adressen": ["Reise", "Slot", "Adresse"],
+    # Adresse ist wie in Orte nur die zusammengesetzte Formel aus
+    # Strasse/PLZ/Ort -- die Fachkraft trägt in den Einzelfeldern ein.
+    "Orte": ["Adresse"],
+}
+
+
+def hilfsspalten_ausblenden():
+    """Entfernt die HILFSSPALTEN aus allen Nicht-Formular-Ansichten der
+    jeweiligen Tabelle (Formular bleibt unberührt, zeigte sie ohnehin nie).
+    Die Spalte bleibt im Datenmodell -- im Editor über 'Hidden columns' am
+    Ende der Tabellenansicht jederzeit wieder einblendbar. Idempotent: ein
+    bereits entferntes Feld taucht in der Section nicht mehr auf."""
+    aktionen = []
+    for tabelle, versteckt in HILFSSPALTEN.items():
+        treffer = sql(f'select id, rawViewSectionRef from _grist_Tables '
+                      f'where tableId = "{tabelle}"')
+        if not treffer:
+            continue
+        tid, raw = treffer[0]["id"], treffer[0]["rawViewSectionRef"]
+        # rawViewSectionRef ist die interne "Raw Data"-Ansicht -- Grist
+        # verweigert das Entfernen von Feldern dort (jede Spalte muss dort
+        # vollständig bleiben); ausgeblendet wird nur in echten Grid-/
+        # Card-Ansichten (Reisen-Seite, Adressen-Seite, Record-Card-Popup).
+        for sek in sql(f"select id from _grist_Views_section "
+                       f"where tableRef = {tid} and parentKey <> 'form' and id <> {raw}"):
+            felder = sql(f"select f.id, c.colId from _grist_Views_section_field f "
+                         f"join _grist_Tables_column c on c.id = f.colRef "
+                         f"where f.parentId = {sek['id']}")
+            aktionen += [["RemoveRecord", "_grist_Views_section_field", f["id"]]
+                         for f in felder if f["colId"] in versteckt]
+    if aktionen:
+        api("POST", "/apply", aktionen)
+    print(f"  Hilfsspalten ausgeblendet: {len(aktionen)} Feld(er)")
+
+
 def formeln_angleichen(tabelle, spalten):
     """Bringt die reinen Rechenspalten (isFormula) auf den Stand hier im Code.
     Anders als Label und Formular-Layout werden diese Spalten nicht im Editor
     getunt — ein erneuter Lauf darf sie also gefahrlos zurücksetzen. Fängt u. a.
     ab, dass ein Snapshot-Restore Reiseweg/Maps_Link auf eine ältere Fassung
     zieht, die die (Freitext)-Felder ignoriert."""
-    live = {c["id"]: (c.get("fields") or {}).get("formula", "")
+    live = {c["id"]: (c.get("fields") or {})
             for c in api("GET", f"/tables/{tabelle}/columns")["columns"]}
-    patch = [{"id": s["id"], "fields": {"formula": s["fields"]["formula"]}}
+    # isFormula wird mitgeschickt, nicht nur formula -- fängt auch den Fall
+    # ab, dass eine Spalte (wie Adressen!Adresse) von einer Eingabe- zu einer
+    # Rechenspalte umgewidmet wird, nicht nur ihr Formeltext sich ändert.
+    patch = [{"id": s["id"], "fields": {"isFormula": True, "formula": s["fields"]["formula"]}}
              for s in spalten
              if s["fields"]["isFormula"] and s["id"] in live
-             and live[s["id"]].strip() != s["fields"]["formula"].strip()]
+             and (not live[s["id"]].get("isFormula")
+                  or live[s["id"]].get("formula", "").strip() != s["fields"]["formula"].strip())]
     if patch:
         api("PATCH", f"/tables/{tabelle}/columns", {"columns": patch})
     print(f"  Formeln {tabelle}: {len(patch)} angeglichen")
@@ -371,7 +454,15 @@ if __name__ == "__main__":
     for name, spalten in (("Orte", ORTE), ("Einstellungen", EINSTELLUNGEN), ("Reisen", REISEN)):
         anlegen(name, spalten)      # Orte zuerst — Reisen verweist darauf
         formeln_angleichen(name, spalten)
+
+    anlegen("Adressen", ADRESSEN)              # braucht Reisen (Ref-Spalte)
+    formeln_angleichen("Adressen", ADRESSEN)
+    sync_spalten = adressen_sync_spalten()
+    anlegen("Reisen", sync_spalten)            # braucht Adressen (Ref-Spalte)
+    formeln_angleichen("Reisen", sync_spalten)
+
     reihenfolge_ordnen()
+    hilfsspalten_ausblenden()
 
     if not api("GET", "/tables/Einstellungen/records")["records"]:
         api("POST", "/tables/Einstellungen/records", {"records": [{"fields": {}}]})
