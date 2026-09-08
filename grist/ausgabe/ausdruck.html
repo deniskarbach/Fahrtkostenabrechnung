@@ -20,7 +20,8 @@
    Fahrtenbuch-Schnittversion bleibt bewusst ein eigenes Widget: kein
    Bestandteil der Standardausgabe, nur für den Sonderfall "ausschneiden".
    --------------------------------------------------------------- */
-@page            { size: A4 portrait;  margin: 15mm; }              /* S1/S2 */
+@page            { size: A4 portrait;  margin: 15mm; }              /* S1 */
+@page s2         { size: A4 portrait;  margin: 10mm 17.78mm 0; }
 @page vermerke   { size: A4 portrait;  margin: 19.05mm 17.78mm; }
 @page dienstorte { size: A4 portrait;  margin: 19.05mm 17.78mm; }
 @page fahrtenbuch{ size: A4 landscape; margin: 10mm; }
@@ -32,11 +33,18 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   color: #000;
   background: #f0f0f0;
+
+  /* Kopfblock "Antragssteller/in / Wohnort / Dienstort" -- Beschriftung wie
+     Wert -- sieht in S1, Vermerke und Dienstorte identisch aus
+     (Nutzerentscheid; die Vorlage hätte hier je Blatt 12pt). Deshalb EIN Wert
+     für alle drei Blätter statt sechs einzelne Stellen. Titel und
+     Zeitraum-Angabe bleiben davon unberührt. */
+  --schrift-kopfblock: 7.6pt;
 }
 
 /* ============================================================ S1 / S2 */
 
-.dok-s1s2 {
+.dok-s1 {
   --h-datenzeile: 6.35mm;
   --rahmen: 0.4pt solid #000;
   --rahmen-breit: 1.4pt solid #000;
@@ -50,25 +58,26 @@ body {
   --hoch-polster:   2.2mm;
 }
 
-.dok-s1s2 .blatt { page: auto; width: 210mm; margin: 10mm auto; padding: 15mm;
+.dok-s1 .blatt { page: auto; width: 210mm; margin: 10mm auto; padding: 15mm;
                    background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25);
                    font-size: var(--schrift); }
 
-.dok-s1s2 table { width: 180mm; border-collapse: collapse; table-layout: fixed; }
+.dok-s1 table { width: 180mm; border-collapse: collapse; table-layout: fixed; }
 
-.dok-s1s2 .kopf td { border: var(--rahmen); padding: 0 var(--polster-x); vertical-align: bottom; }
-.dok-s1s2 .kopf .titel  { height: 15.88mm; font-size: 13pt; font-weight: bold; letter-spacing: .02em; vertical-align: middle; }
-.dok-s1s2 .kopf .label  { height: 5.56mm; }
-.dok-s1s2 .kopf .wert   { height: 13.23mm; vertical-align: middle; }
+.dok-s1 .kopf td { border: var(--rahmen); padding: 0 var(--polster-x); vertical-align: bottom; }
+.dok-s1 .kopf .titel  { height: 15.88mm; font-size: 13pt; font-weight: bold; letter-spacing: .02em; vertical-align: middle; }
+.dok-s1 .kopf .label  { height: 5.56mm; }
+.dok-s1 .kopf .wert   { height: 13.23mm; vertical-align: middle;
+                        font-size: var(--schrift-kopfblock); }
 
-.dok-s1s2 .raster th, .dok-s1s2 .raster td { border: var(--rahmen); padding: 0 var(--polster-x); overflow: hidden; }
+.dok-s1 .raster th, .dok-s1 .raster td { border: var(--rahmen); padding: 0 var(--polster-x); overflow: hidden; }
 
-.dok-s1s2 .raster thead .g1 { height: 7.94mm;  vertical-align: bottom; text-align: center; font-weight: normal;
+.dok-s1 .raster thead .g1 { height: 7.94mm;  vertical-align: bottom; text-align: center; font-weight: normal;
                     font-size: var(--schrift-gruppe); white-space: normal; hyphens: auto; line-height: 1.1; }
-.dok-s1s2 .raster thead .g2 { height: 34.40mm; vertical-align: bottom; padding: 0; }
-.dok-s1s2 .raster thead .g3 { height: 3.97mm;  vertical-align: bottom; text-align: center; font-weight: normal; font-size: var(--schrift-einheit); }
+.dok-s1 .raster thead .g2 { height: 34.40mm; vertical-align: bottom; padding: 0; }
+.dok-s1 .raster thead .g3 { height: 3.97mm;  vertical-align: bottom; text-align: center; font-weight: normal; font-size: var(--schrift-einheit); }
 
-.dok-s1s2 .hoch {
+.dok-s1 .hoch {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   white-space: normal;
@@ -81,41 +90,49 @@ body {
   line-height: 1.2;
 }
 
-.dok-s1s2 .raster .spanne { vertical-align: middle; text-align: left; }
-.dok-s1s2 .kopf td.fett,
-.dok-s1s2 .raster thead th.fett,
-.dok-s1s2 .fett { font-weight: bold; }
-.dok-s1s2 .weg-titel  { display: block; font-weight: bold; font-size: var(--schrift-gruppe); margin-bottom: .6mm; }
-.dok-s1s2 .weg-zusatz { display: block; font-size: var(--schrift-weg); white-space: pre-line; }
-.dok-s1s2 .raster .weg    { vertical-align: top; text-align: left; font-size: var(--schrift-weg); line-height: 1.15; white-space: pre-line; padding-top: .8mm; }
+.dok-s1 .raster .spanne { vertical-align: middle; text-align: left; }
+.dok-s1 .kopf td.fett,
+.dok-s1 .raster thead th.fett,
+.dok-s1 .fett { font-weight: bold; }
+.dok-s1 .weg-titel  { display: block; font-weight: bold; font-size: var(--schrift-gruppe); margin-bottom: .6mm; }
+.dok-s1 .weg-zusatz { display: block; font-size: var(--schrift-weg); white-space: pre-line; }
+.dok-s1 .raster .weg    { vertical-align: top; text-align: left; font-size: var(--schrift-weg); line-height: 1.15; white-space: pre-line; padding-top: .8mm; }
 
-.dok-s1s2 .raster tbody td { height: var(--h-datenzeile); vertical-align: middle; }
-.dok-s1s2 .raster tbody td:nth-child(4) { font-size: var(--schrift-weg-daten); line-height: 1.15;
+.dok-s1 .raster tbody td { height: var(--h-datenzeile); vertical-align: middle; }
+.dok-s1 .raster tbody td:nth-child(4) { font-size: var(--schrift-weg-daten); line-height: 1.15;
                                 padding-top: .4mm; padding-bottom: .4mm; }
-.dok-s1s2 .z-mitte { text-align: center; }
-.dok-s1s2 .z-rechts { text-align: right; font-variant-numeric: tabular-nums; }
-.dok-s1s2 .uebertrag td { font-weight: bold; height: var(--h-datenzeile); }
-.dok-s1s2 .uebertrag .beschriftung { text-align: right; }
+.dok-s1 .z-mitte { text-align: center; }
+.dok-s1 .z-rechts { text-align: right; font-variant-numeric: tabular-nums; }
+.dok-s1 .uebertrag td { font-weight: bold; height: var(--h-datenzeile); }
+.dok-s1 .uebertrag .beschriftung { text-align: right; }
 
-.dok-s1s2 .s2 { width: 180mm; border-collapse: collapse; table-layout: fixed; }
-.dok-s1s2 .s2 td { height: 4.5mm; padding: 0 var(--polster-x); vertical-align: bottom; }
-.dok-s1s2 .s2 .hoehe2 { height: 6.09mm; }
-.dok-s1s2 .s2 .hoehe42 { height: 7.14mm; }
-.dok-s1s2 .s2 .linie { border-bottom: var(--rahmen); }
-.dok-s1s2 .s2 .trenn { border-bottom: var(--rahmen); }
-.dok-s1s2 .s2 .trenn-v { border-right: var(--rahmen); }
-.dok-s1s2 .s2 .klein { font-size: var(--schrift-einheit); }
-.dok-s1s2 .s2 .oben { vertical-align: top; }
+/* ============================================================ S2
 
-.dok-s1s2 .s2.rahmen-oben { border-left: var(--rahmen); border-right: var(--rahmen); border-top: var(--rahmen); }
-.dok-s1s2 .s2.rahmen-breit { border: var(--rahmen-breit); }
+   S2 ist Zelle für Zelle aus dem XLSX-Blatt erzeugt (Ränder, Füllungen,
+   Schriftgrößen, Zeilenhöhen und Verbünde stehen als Inline-Styles am
+   jeweiligen <td>). Hier steht nur, was für alle Zellen gilt. Wer S2
+   ändern will, ändert die Vorlage und erzeugt den Block neu — nicht von
+   Hand nachziehen, sonst driftet es vom amtlichen Formular weg.
+   Eigene Seitenränder laut Vorlage: 17,78mm seitlich, 10mm oben, 0 unten. */
 
-.dok-s1s2 .kostenrechnung { width: 180mm; border-collapse: collapse; table-layout: fixed; margin-top: 4mm; }
-.dok-s1s2 .kostenrechnung td { height: 4.5mm; border: var(--rahmen); padding: 0 var(--polster-x);
-                     vertical-align: bottom; }
-.dok-s1s2 .kostenrechnung .ueberschrift { text-align: center; font-weight: bold; height: 5.5mm;
-                                vertical-align: middle; }
-.dok-s1s2 .kostenrechnung .betrag { text-align: right; font-variant-numeric: tabular-nums; }
+.dok-s2 {
+  --rahmen: 0.4pt solid #000;
+  --rahmen-breit: 1.4pt solid #000;   /* "medium" der Vorlage */
+}
+
+.dok-s2 .blatt { page: s2; width: 210mm; margin: 10mm auto; padding: 10mm 17.78mm 0;
+                 background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25); }
+
+.dok-s2 table { width: 145.79mm; border-collapse: collapse; table-layout: fixed; }
+
+/* Excel bricht nur um, wo "Zeilenumbruch" gesetzt ist — die betroffenen
+   Zellen bringen ihr eigenes white-space:normal mit. */
+/* Feste Zeilenbox statt schriftgrößenabhängiger: die Vorlage hat Zellen mit
+   12pt und 14pt in 12,75pt hohen Zeilen -- Excel lässt die Glyphen dort
+   überstehen, statt die Zeile zu dehnen. Ohne feste line-height wüchse die
+   Tabelle in der Höhe über das Original hinaus. */
+.dok-s2 td { padding: 0 0.7mm; vertical-align: bottom; white-space: nowrap;
+             line-height: 4.3mm; font-size: 11pt; }
 
 /* ============================================================ Vermerke */
 
@@ -137,8 +154,9 @@ body {
 .dok-vermerke .kopf td { border: var(--rahmen); padding: 0 var(--polster-x); vertical-align: top; }
 .dok-vermerke .kopf .titel  { height: 15.88mm; font-size: var(--schrift-titel); font-weight: bold; vertical-align: middle; }
 .dok-vermerke .kopf .stand  { font-size: var(--schrift-kopf); font-weight: bold; text-align: right; vertical-align: bottom; }
-.dok-vermerke .kopf .label  { height: 5.56mm; font-size: var(--schrift-kopf); font-weight: bold; vertical-align: bottom; }
-.dok-vermerke .kopf .wert   { height: 12.43mm; font-size: var(--schrift-kopf); font-weight: bold; }
+.dok-vermerke .kopf .label  { height: 5.56mm; font-size: var(--schrift-kopfblock); font-weight: bold; vertical-align: bottom; }
+.dok-vermerke .kopf .wert   { height: 12.43mm; font-size: var(--schrift-kopfblock);
+                              font-weight: normal; vertical-align: middle; }
 .dok-vermerke .kopf .banner { height: 12.43mm; font-size: var(--schrift-kopf); vertical-align: middle; }
 
 .dok-vermerke .raster th, .dok-vermerke .raster td { border: var(--rahmen); padding: .6mm var(--polster-x); overflow: hidden; }
@@ -168,8 +186,9 @@ body {
 .dok-dienstorte .kopf td { border: var(--rahmen); padding: 0 var(--polster-x); vertical-align: top; }
 .dok-dienstorte .kopf .titel { height: 15.88mm; font-size: var(--schrift-titel); font-weight: bold; vertical-align: middle; }
 .dok-dienstorte .kopf .stand { font-size: var(--schrift-kopf); font-weight: bold; text-align: right; vertical-align: bottom; }
-.dok-dienstorte .kopf .label { height: 5.56mm; font-size: var(--schrift-kopf); font-weight: bold; vertical-align: bottom; }
-.dok-dienstorte .kopf .wert  { height: 18.79mm; font-size: var(--schrift-kopf); font-weight: bold; }
+.dok-dienstorte .kopf .label { height: 5.56mm; font-size: var(--schrift-kopfblock); font-weight: bold; vertical-align: bottom; }
+.dok-dienstorte .kopf .wert  { height: 18.79mm; font-size: var(--schrift-kopfblock);
+                               font-weight: normal; vertical-align: middle; }
 
 .dok-dienstorte .raster th, .dok-dienstorte .raster td { border: var(--rahmen); padding: .6mm var(--polster-x); overflow: hidden; }
 .dok-dienstorte .raster th { height: 5.56mm; font-size: var(--schrift-kopfspalten); font-weight: bold;
@@ -221,12 +240,35 @@ body {
   thead { display: table-header-group; }
   tr { break-inside: avoid; }
 }
+/* ---------------------------------------------------------- Druckleiste
+
+   Grist versteckt "Widget drucken" hinter dem Drei-Punkte-Menü. Dieser Knopf
+   liegt sichtbar im Widget selbst; im Ausdruck ist er ausgeblendet. */
+.druckleiste {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px 12px; background: #f0f0f0;
+  border-bottom: 1px solid #ccc; font-size: 13px;
+}
+.druckleiste button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: 6px 14px; border: 1px solid #16a34a; border-radius: 4px;
+  background: #16a34a; color: #fff;
+}
+.druckleiste button:hover { background: #15803d; border-color: #15803d; }
+.druckleiste .info { color: #666; }
+
+@media print { .druckleiste { display: none !important; } }
 </style>
 </head>
 <body>
+<div class="druckleiste">
+  <button type="button" onclick="window.print()">Drucken</button>
+  <span class="info">S1/S2, Vermerke, Dienstorte und Fahrtenbuch — alle Seiten in einem Druckauftrag.</span>
+</div>
 
 <!-- ================================ S1 / S2 ================================ -->
-<div class="dok-s1s2">
+<div class="dok-s1">
 <div class="blatt">
 
   <table class="kopf">
@@ -291,99 +333,328 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     <tbody id="daten-s1"></tbody>
   </table>
 </div>
+</div>
 
+<!-- ================================ S2 ================================ -->
+<div class="dok-s2">
 <div class="blatt">
-
-  <table class="s2 rahmen-oben">
+  <table class="s2">
     <colgroup>
-      <col style="width:12.84%"><col style="width:16.95%"><col style="width:12.84%">
-      <col style="width:12.84%"><col style="width:13.69%"><col style="width:16.95%">
-      <col style="width:13.87%">
+      <col style="width:17.93mm">
+      <col style="width:23.66mm">
+      <col style="width:17.93mm">
+      <col style="width:24.14mm">
+      <col style="width:19.11mm">
+      <col style="width:23.66mm">
+      <col style="width:19.36mm">
     </colgroup>
-
-    <tr><td class="oben hoehe2" colspan="7">Ich versichere pflichtgemäß, dass mir die
-        umseitig genannten Auslagen im Rahmen der Dienstreise(n) entstanden sind.</td></tr>
-    <tr><td colspan="7"></td></tr>
-
-    <tr><td colspan="5">Bitte überweisen sie den Betrag auf folgendes Konto:</td>
-        <td colspan="2"></td></tr>
-    <tr><td colspan="7"></td></tr>
-
-    <tr><td>IBAN:</td><td></td><td class="linie" colspan="3" id="k-s1-iban"></td>
-        <td colspan="2"></td></tr>
-    <tr><td colspan="7"></td></tr>
-    <tr><td>BIC:</td><td></td><td class="linie" colspan="3" id="k-s1-bic"></td>
-        <td colspan="2"></td></tr>
-    <tr><td class="trenn" colspan="7"></td></tr>
-
-    <tr><td class="trenn-v" colspan="4"></td><td colspan="3">Sachlich richtig:</td></tr>
-    <tr><td class="trenn-v" colspan="4"></td><td colspan="3"></td></tr>
-
-    <tr><td class="linie"></td><td class="linie"></td><td class="linie trenn-v" colspan="2"></td>
-        <td class="linie" colspan="3"></td></tr>
-    <tr><td class="klein">(Datum)</td>
-        <td class="klein">(Unterschrift, Dienstbezeichnung)</td>
-        <td class="trenn-v" colspan="2"></td>
-        <td class="klein" colspan="3">(Unterschrift, Dienstbezeichnung)</td></tr>
-  </table>
-
-  <table class="kostenrechnung">
-    <colgroup>
-      <col style="width:29.79%"><col style="width:39.37%">
-      <col style="width:16.95%"><col style="width:13.87%">
-    </colgroup>
-
-    <tr><td class="ueberschrift" colspan="4">KOSTENRECHNUNG (nicht vom Antragsteller auszufüllen)</td></tr>
-    <tr><td></td><td></td>
-        <td class="betrag">Im Einzelnen</td><td class="betrag">Insgesamt</td></tr>
-    <tr><td></td><td></td>
-        <td class="betrag">EUR</td><td class="betrag">EUR</td></tr>
-
-    <tr><td>I. Tagegeld</td><td>Tage mit mehr als 8 Stunden</td><td></td><td></td></tr>
-    <tr><td></td><td>Tage mit mindestens 14 Stunden</td><td></td><td></td></tr>
-    <tr><td></td><td>Tage mit 24 Stunden</td><td></td><td></td></tr>
-    <tr><td></td><td>Verpflegungsmehraufwand</td><td></td><td></td></tr>
-
-    <tr><td>II. Übernachtungskosten</td><td>lt. beigefügtem Beleg</td><td></td><td></td></tr>
-
-    <tr><td>III. Fahrtkosten</td><td>ÖPNV lt. Beleg</td><td></td><td></td></tr>
-    <tr><td></td><td>km je&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cent</td><td></td><td></td></tr>
-    <tr><td rowspan="3"></td><td>Mitnahme von</td><td rowspan="3"></td><td rowspan="3"></td></tr>
-    <tr><td>Personen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;km</td></tr>
-    <tr><td>Gepäck&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;km</td></tr>
-
-    <tr><td>IV. Nebenkosten</td><td>lt. Beleg</td><td></td><td></td></tr>
-    <tr><td></td><td class="betrag">Reisekosten gesamt:</td><td></td><td></td></tr>
-    <tr><td></td><td class="betrag">Auszuzahlen:</td><td></td><td></td></tr>
-  </table>
-
-  <table class="s2 rahmen-breit" style="margin-top:6mm">
-    <colgroup>
-      <col style="width:12.84%"><col style="width:16.95%"><col style="width:12.84%">
-      <col style="width:12.84%"><col style="width:13.69%"><col style="width:16.95%">
-      <col style="width:13.87%">
-    </colgroup>
-
-    <!-- Behördenspezifische Angaben bewusst als Platzhalter: Abteilung, Sitz,
-         Buchungsstelle und Behördenname trägt jede Stelle in ihrer eigenen
-         Kopie ein. Dieses Repository bleibt frei davon. -->
-    <tr><td colspan="2">Abteilung: __________</td><td></td>
-        <td colspan="4">_______________, _______________</td></tr>
-    <tr><td colspan="7"></td></tr>
-    <tr><td colspan="2">Verfügung:</td><td colspan="5"></td></tr>
-    <tr><td colspan="7">1. KK anweisen, _____________ € bei: _____________________</td></tr>
-    <tr><td colspan="2"></td><td colspan="4">Anordnungs-Nr.:</td><td></td></tr>
-    <tr><td colspan="2"></td><td colspan="4">Beleg-Nr.:</td><td></td></tr>
-    <tr><td colspan="4">Buchungsjahr 20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;zu zahlen.</td>
-        <td colspan="3"></td></tr>
-    <tr><td colspan="7"></td></tr>
-    <tr><td class="hoehe42 oben" colspan="6">2. Sachlich und rechnerisch richtig festgestellt
-        auf ______________&nbsp;€</td><td></td></tr>
-    <tr><td colspan="7"></td></tr>
-    <tr><td>3. z. d. A.</td><td></td><td colspan="5"></td></tr>
-    <tr><td colspan="2"></td><td colspan="5">_____________________________</td></tr>
-    <tr><td colspan="2"></td><td colspan="5">Im Auftrag:</td></tr>
-    <tr><td colspan="3"></td><td colspan="4">_____________________________</td></tr>
+    <tr style="height:4.50mm">
+      <td rowspan="2" colspan="7" style="border-top:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:top;white-space:normal">Ich versichere pflichtgemäß, dass mir die umseitig genannten Auslagen im Rahmen der Dienstreise(n) entstanden sind.</td>
+    </tr>
+    <tr style="height:6.09mm">
+    </tr>
+    <tr style="height:4.50mm">
+      <td rowspan="2" colspan="5" style="border-left:var(--rahmen);font-size:11pt;text-align:left;vertical-align:middle">Bitte überweisen sie den Betrag auf folgendes Konto:</td>
+      <td></td>
+      <td style="border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td></td>
+      <td style="border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">IBAN:</td>
+      <td></td>
+      <td id="k-s2-iban" colspan="3" style="border-bottom:var(--rahmen)"></td>
+      <td></td>
+      <td style="border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen)"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">BIC:</td>
+      <td></td>
+      <td id="k-s2-bic" colspan="3" style="border-bottom:var(--rahmen)"></td>
+      <td></td>
+      <td style="border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-top:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);font-size:11pt;vertical-align:bottom">Sachlich richtig:</td>
+      <td style="border-top:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen)"></td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen)"></td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen)"></td>
+      <td></td>
+      <td colspan="2" style="border-right:var(--rahmen)"></td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom;overflow:hidden">(Datum)</td>
+      <td style="border-bottom:var(--rahmen);font-size:11pt;vertical-align:bottom">&nbsp;&nbsp; (Unterschrift, Dienstbezeichnung)</td>
+      <td style="border-bottom:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="3" style="border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">&nbsp;&nbsp;(Unterschrift, Dienstbezeichnung)</td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td rowspan="2" colspan="7" style="border-top:var(--rahmen);border-bottom:var(--rahmen);background:#D8D8D8"></td>
+    </tr>
+    <tr style="height:4.50mm">
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="7" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:center;vertical-align:bottom">KOSTENRECHNUNG (nicht vom Antragsteller auszufüllen)</td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:center;vertical-align:bottom;overflow:hidden">Im Einzelnen</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:center;vertical-align:bottom">Insgesamt</td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:center;vertical-align:bottom;overflow:hidden">EUR</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:center;vertical-align:bottom">EUR</td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">I. Tagegeld</td>
+      <td colspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">Tage mit mehr als 8 Stunden</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">Tage mit mindestens 14 Stunden</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">Tage mit 24 Stunden</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">Verpflegungsmehraufwand</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">II. Übernachtungskosten</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">lt. beigefügtem Beleg</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">III. Fahrtkosten</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">ÖPNV lt. Beleg</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;text-align:center;vertical-align:bottom;overflow:hidden">km je</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">Cent</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td rowspan="3" colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">Mitnahme von</td>
+      <td style="border-top:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td rowspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td rowspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">Personen</td>
+      <td style="border-bottom:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:11pt;vertical-align:bottom">km</td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">Gepäck</td>
+      <td style="border-bottom:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:11pt;vertical-align:bottom">km</td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="2" style="border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">IV. Nebenkosten</td>
+      <td style="border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">lt. Beleg</td>
+      <td style="border-bottom:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="4" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:right;vertical-align:bottom">Reisekosten gesamt:</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
+      <td style="border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="4" style="border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:right;vertical-align:bottom">Auszuzahlen:</td>
+      <td style="border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td rowspan="2" colspan="7" style="border-top:var(--rahmen);border-bottom:var(--rahmen-breit);background:#D8D8D8"></td>
+    </tr>
+    <tr style="height:4.50mm">
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-top:var(--rahmen-breit);border-left:var(--rahmen-breit)"></td>
+      <td style="border-top:var(--rahmen-breit)"></td>
+      <td style="border-top:var(--rahmen-breit)"></td>
+      <td style="border-top:var(--rahmen-breit)"></td>
+      <td style="border-top:var(--rahmen-breit)"></td>
+      <td style="border-top:var(--rahmen-breit)"></td>
+      <td style="border-top:var(--rahmen-breit);border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="2" style="border-left:var(--rahmen-breit);font-size:14pt;font-weight:bold;text-align:left;vertical-align:bottom">Abteilung: __________</td>
+      <td></td>
+      <td colspan="4" style="border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom">_______________, _______________</td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen-breit)"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="2" style="border-left:var(--rahmen-breit);font-size:14pt;font-weight:bold;text-align:left;vertical-align:bottom">Verfügung:</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="7" style="border-left:var(--rahmen-breit);border-right:var(--rahmen-breit);font-size:12pt;font-weight:bold;text-align:left;vertical-align:bottom">1. KK anweisen,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; € bei: _____________________</td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen-breit)"></td>
+      <td></td>
+      <td colspan="4" style="font-size:12pt;text-align:left;vertical-align:bottom">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Anordnungs-Nr.:</td>
+      <td style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen-breit)"></td>
+      <td></td>
+      <td colspan="4" style="font-size:12pt;text-align:left;vertical-align:bottom">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Beleg-Nr.:</td>
+      <td style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="4" style="border-left:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom">Buchungsjahr 20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;zu zahlen.</td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="3" style="border-left:var(--rahmen-breit)"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:7.14mm">
+      <td colspan="6" style="border-left:var(--rahmen-breit);font-size:12pt;font-weight:bold;text-align:left;vertical-align:bottom;white-space:normal">2. Sachlich und rechnerisch richtig festgestellt auf ______________€</td>
+      <td style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td colspan="2" style="border-left:var(--rahmen-breit)"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen-breit);font-size:12pt;font-weight:bold;vertical-align:bottom">3. z. d. A.</td>
+      <td></td>
+      <td colspan="5" style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen-breit)"></td>
+      <td></td>
+      <td colspan="5" style="border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom">_____________________________</td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen-breit)"></td>
+      <td></td>
+      <td style="font-size:12pt;vertical-align:bottom">Im Auftrag:</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-left:var(--rahmen-breit)"></td>
+      <td></td>
+      <td></td>
+      <td style="font-size:11pt;vertical-align:bottom">_____________________________</td>
+      <td></td>
+      <td></td>
+      <td style="border-right:var(--rahmen-breit)"></td>
+    </tr>
+    <tr style="height:4.50mm">
+      <td style="border-bottom:var(--rahmen-breit);border-left:var(--rahmen-breit)"></td>
+      <td style="border-bottom:var(--rahmen-breit)"></td>
+      <td style="border-bottom:var(--rahmen-breit)"></td>
+      <td style="border-bottom:var(--rahmen-breit)"></td>
+      <td style="border-bottom:var(--rahmen-breit)"></td>
+      <td style="border-bottom:var(--rahmen-breit)"></td>
+      <td style="border-bottom:var(--rahmen-breit);border-right:var(--rahmen-breit)"></td>
+    </tr>
   </table>
 </div>
 </div>
@@ -610,8 +881,8 @@ function renderS1S2(kopf, reisen) {
 document.getElementById("k-s1-antragsteller").textContent = kopf.antragsteller;
 document.getElementById("k-s1-wohnort").textContent       = kopf.wohnort;
 document.getElementById("k-s1-dienstort").textContent     = kopf.dienstort;
-document.getElementById("k-s1-iban").textContent          = kopf.iban || "";
-document.getElementById("k-s1-bic").textContent           = kopf.bic || "";
+document.getElementById("k-s2-iban").textContent          = kopf.iban || "";
+document.getElementById("k-s2-bic").textContent           = kopf.bic || "";
 
 const tb = document.getElementById("daten-s1");
 tb.innerHTML = "";

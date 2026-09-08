@@ -77,9 +77,32 @@ tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
   thead { display: table-header-group; }
   tr { break-inside: avoid; }
 }
+/* ---------------------------------------------------------- Druckleiste
+
+   Grist versteckt "Widget drucken" hinter dem Drei-Punkte-Menü. Dieser Knopf
+   liegt sichtbar im Widget selbst; im Ausdruck ist er ausgeblendet. */
+.druckleiste {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px 12px; background: #f0f0f0;
+  border-bottom: 1px solid #ccc; font-size: 13px;
+}
+.druckleiste button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: 6px 14px; border: 1px solid #16a34a; border-radius: 4px;
+  background: #16a34a; color: #fff;
+}
+.druckleiste button:hover { background: #15803d; border-color: #15803d; }
+.druckleiste .info { color: #666; }
+
+@media print { .druckleiste { display: none !important; } }
 </style>
 </head>
 <body>
+<div class="druckleiste">
+  <button type="button" onclick="window.print()">Drucken</button>
+  <span class="info">Je Zeilenblock zwei Seiten: links Spalten 1–6, rechts 7–15.</span>
+</div>
 <div id="seiten"></div>
 
 <script>
