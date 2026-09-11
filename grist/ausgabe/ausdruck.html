@@ -909,7 +909,7 @@ for (const r of reisen) {
     <td class="z-mitte">${kreuz(r.stufe,"24h")  }</td>
     <td class="z-mitte">${r.verpflegung}</td>
     <td class="z-rechts">${eur(r.oepnv)}</td>
-    <td class="z-rechts">${zahl(r.km)}</td>
+    <td class="z-rechts">${r.km}</td>
     <td class="z-rechts">${zahl(r.mitnahme)}</td>
     <td class="z-rechts">${eur(r.uebernachtung)}</td>
     <td class="z-rechts">${eur(r.neben)}</td></tr>`);
@@ -919,7 +919,7 @@ tb.insertAdjacentHTML("beforeend", html`<tr class="uebertrag">
   <td class="beschriftung" colspan="4">Übertrag:</td>
   <td colspan="5"></td>
   <td class="z-rechts">${eur(summe.oepnv)}</td>
-  <td class="z-rechts">${zahl(summe.km)}</td>
+  <td class="z-rechts">${summe.km}</td>
   <td class="z-rechts">${zahl(summe.mitnahme)}</td>
   <td class="z-rechts">${eur(summe.uebernachtung)}</td>
   <td class="z-rechts">${eur(summe.neben)}</td></tr>`);

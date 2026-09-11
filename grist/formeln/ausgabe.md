@@ -63,8 +63,17 @@ Je Reise eine Zeile, darunter eine Übertragszeile mit den Summen.
 - `eur(n)` / `zahl(n)` – geben bei `0` einen **Leerstring** aus, nicht „0,00"
 - die Übertragszeile summiert dieselben fünf Felder über alle gedruckten Zeilen
 
-**Sonderfall:** Eine Null erscheint als leere Zelle. Ein amtlicher Vordruck mit
-lauter Nullen ist schwerer zu lesen als einer mit leeren Feldern.
+**Sonderfall:** Bei ÖPNV, Mitnahme, Übernachtung und Nebenkosten erscheint eine
+Null als leere Zelle — ein amtlicher Vordruck mit lauter Nullen ist schwerer zu
+lesen als einer mit leeren Feldern für tatsächlich nicht angefallene Kosten.
+
+**Ausnahme km:** Dienstliche Kilometer werden **immer** gedruckt, auch `0` —
+anders als die vier Kostenfelder ist die Spalte nicht optional, sondern zu
+jeder Reise berechnet. Eine Fahrt, die vollständig als privater Umweg erfasst
+wurde (z. B. eine reine Verwaltungsfahrt ohne erstattungsfähige Strecke), muss
+als `0` erkennbar bleiben — eine leere Zelle sähe nach vergessener Eingabe aus.
+Das Fahrtenbuch (`f.kmDienstlich ?? ""`) hatte das schon richtig; S1 zog vorher
+fälschlich `zahl()` heran und blendete die `0` aus.
 
 Der Kopfblock (Titel, Antragsteller, Wohnort, Dienstort) steht im `<thead>` der
 Datentabelle, nicht in einer eigenen Tabelle davor — so wiederholt er sich beim
