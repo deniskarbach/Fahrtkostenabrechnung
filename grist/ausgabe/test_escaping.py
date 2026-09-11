@@ -31,7 +31,8 @@ HIER = pathlib.Path(__file__).resolve().parent
 TEMPLATE = re.compile(r"`(?:[^`\\]|\\.)*`", re.S)
 
 fehler = []
-for datei in ["ausdruck.html", "fahrtenbuch-schnitt.html", "routenlinks.html"]:
+for datei in ["ausdruck.html", "fahrtenbuch-schnitt.html", "routenlinks.html",
+              "pruefliste.html"]:
     text = (HIER / datei).read_text(encoding="utf-8")
     js = "\n".join(re.findall(r"<script>(.*?)</script>", text, re.S))
 

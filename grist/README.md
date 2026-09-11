@@ -74,7 +74,10 @@ echten. Daneben
 [`ausgabe/fahrtenbuch-schnitt.html`](ausgabe/fahrtenbuch-schnitt.html ':ignore') zum
 Ausschneiden und Einkleben, und
 [`ausgabe/routenlinks.html`](ausgabe/routenlinks.html ':ignore') — klickbare
-Google-Maps-Routen je Reise, zur Prüfung der gefahrenen Strecke.
+Google-Maps-Routen je Reise, zur Prüfung der gefahrenen Strecke. Auf einer
+eigenen, getrennt freigebbaren Seite liegt
+[`ausgabe/pruefliste.html`](ausgabe/pruefliste.html ':ignore') — alles aus allen
+Blättern in einer Zeile je Reise, für die Zeiterfassungsstelle.
 
 | Ausdruck | Kopf aus | Zeilen aus |
 |---|---|---|
@@ -83,6 +86,7 @@ Google-Maps-Routen je Reise, zur Prüfung der gefahrenen Strecke.
 | Dienstorte | Einstellungen | Orte (je höchstens einmal) + Adressen (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 | Routenlinks | — | Reisen im Zeitraum |
+| Prüfliste (eigene Seite) | Einstellungen | Reisen im Zeitraum + Orte-Legende |
 
 ## Einrichten
 
@@ -91,5 +95,6 @@ cp grist/.env.beispiel grist/.env   # dort die drei Werte eintragen
 python3 grist/setup.py
 ```
 
-Legt Tabellen, Spalten, Formeln, die Seite `Ausdruck` und beide Widgets an.
+Legt Tabellen, Spalten, Formeln, die Seiten `Ausdruck` und `Prüfliste`
+sowie alle Ausgabe-Widgets an.
 Wiederholbar. Einzelheiten: [Einrichtung](formeln/setup.md).

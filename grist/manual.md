@@ -14,8 +14,9 @@ Technische Details zu den einzelnen Formeln: siehe [Formeln](formeln/README.md).
 7. [Orte pflegen](#orte-pflegen)
 8. [Prüfen vor dem Drucken & Einreichung](#prüfen-vor-dem-drucken--einreichung)
 9. [Drucken](#drucken)
-10. ["Einkleben" und Unterschreiben](#einkleben-und-unterschreiben)
-11. [Wenn sich das Formular ändert](#wenn-sich-das-formular-ändert)
+10. [Prüfliste für die Zeiterfassungsstelle](#prüfliste-für-die-zeiterfassungsstelle)
+11. ["Einkleben" und Unterschreiben](#einkleben-und-unterschreiben)
+12. [Wenn sich das Formular ändert](#wenn-sich-das-formular-ändert)
 
 ---
 
@@ -80,6 +81,7 @@ Formular, `Adressen` entsteht von selbst.
 | ✅ | Reisen | Eine Zeile je Dienstreise aus dem Formular, dazu alle Rechenspalten (Kilometer, Tagegeld-Stufe, Reiseweg, laufende Nummer, Routenlink) | **Nichts.** Eine Korrektur ist hier trotzdem möglich — anders als bei Google Sheets |
 | ✍️ | Adressen | Die Einmalziele: sobald ein Ortsfeld als Freitext ausgefüllt wurde, entsteht hier automatisch eine Zeile | **Adresse nachtragen.** Straße/PLZ/Ort ergänzen, damit das Dienstorte-Blatt vollständig ist |
 | 🖨️ | Ausdruck (Seite) | Abrechnungszeitraum und drei Widgets: Ausdruck (S1/S2, Vermerke, Dienstorte, Fahrtenbuch), Fahrtenbuch zum Einkleben, Routenlinks (Google Maps) | **Zeitraum setzen, aktualisieren, drucken bzw. Route öffnen** |
+| 🖨️ | Prüfliste (eigene Seite) | Alles aus allen Blättern in einer Zeile je Reise — für die Zeiterfassungsstelle, die den Antrag final bearbeitet | **Nichts.** Getrennt freigebbar, siehe unten |
 
 ✍️ von Hand pflegen · ✅ läuft automatisch · 🖨️ ausdrucken/unterschreiben
 
@@ -96,8 +98,8 @@ Formular, `Adressen` entsteht von selbst.
 
 ## Einrichten
 
-Das Datenmodell legt `setup.py` an — Tabellen, Spalten, Formeln, die Seite
-`Ausdruck` samt Widgets. Einzelheiten: [Einrichtung](formeln/setup.md).
+Das Datenmodell legt `setup.py` an — Tabellen, Spalten, Formeln, die Seiten
+`Ausdruck` und `Prüfliste` samt Widgets. Einzelheiten: [Einrichtung](formeln/setup.md).
 
 ```
 cp grist/.env.beispiel grist/.env   # dort die drei Werte eintragen
@@ -276,6 +278,30 @@ Ges. = Abwesenheit insgesamt, DSt = Aufenthalt Dienststätte, DO = Aufenthalt
 Dienstort, Priv (nur falls eingetragen) = privater Zeitabzug, Rest = das,
 was von der Tagegeld-Staffel übrig bleibt. Der eigentliche Reiseweg
 (`WO > KV > WO`) steht stattdessen im Fahrtenbuch.
+
+---
+
+## Prüfliste für die Zeiterfassungsstelle
+
+Die Stelle, die den Antrag final bearbeitet, müsste sonst zwischen fünf
+Blättern blättern, um eine einzelne Reise vollständig zu beurteilen. Die
+**Prüfliste** legt alles davon in **eine Zeile je Reise**:
+
+Nr. · Reisedatum · Uhrzeit (Beginn/Ende) · Reiseweg · Tagegeldzeiten
+(Ges./DSt/DO/Priv/Rest) · Tagegeld-Stufe · Verpflegung · Kilometerstand
+(Beginn/Ende) · Wegstrecke (privat/dienstlich) · ÖPNV · Mitnahme ·
+Übernachtung · Nebenkosten · Vermerk-Kennung · Routenlink
+
+Darunter steht die **Orte-Legende** — dieselben Zeilen wie auf dem
+Dienstorte-Blatt, damit die Kürzel im Reiseweg ohne Blattwechsel auflösbar
+sind. Die Spaltenbegriffe sind bewusst die aus S1, damit die Ansicht vertraut
+ist. A4 quer, mit **Drucken** und **Aktualisieren**.
+
+> **Eigene Seite, mit Absicht:** Die Prüfliste liegt **nicht** auf der Seite
+> `Ausdruck`, sondern auf einer eigenen Seite `Prüfliste`. Eine Grist-Freigabe
+> geht über Seiten — läge das Widget neben den Druck-Widgets, bekäme die
+> Zeiterfassungsstelle bei einer Freigabe zwangsläufig auch S1/S2, Vermerke
+> und Fahrtenbuch zu sehen. So lässt sich genau diese eine Seite freigeben.
 
 ---
 

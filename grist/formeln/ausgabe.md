@@ -15,7 +15,11 @@ Standardausgabe:
 [`ausgabe/routenlinks.html`](../ausgabe/routenlinks.html ':ignore') (Gegenstück
 zum Sheets-Blatt „GoogleMapsExport", siehe [unten](#routenlinks-google-maps)).
 
-Alle drei Dateien lassen sich direkt im Browser öffnen — dann rendern sie
+Dazu [`ausgabe/pruefliste.html`](../ausgabe/pruefliste.html ':ignore') auf einer
+eigenen Seite: alles aus allen Blättern in einer Zeile je Reise, für die
+Zeiterfassungsstelle — siehe [unten](#prüfliste-zeiterfassungsstelle).
+
+Alle vier Dateien lassen sich direkt im Browser öffnen — dann rendern sie
 erfundene Beispieldaten. Das ist die Arbeitsweise für Layoutänderungen ohne
 Grist.
 
@@ -28,6 +32,7 @@ Grist.
 | Dienstorte | Einstellungen | Orte (je höchstens einmal) + Adressen (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 | Routenlinks | — | Reisen im Zeitraum |
+| Prüfliste | Einstellungen | Reisen im Zeitraum + Orte/Adressen als Legende |
 
 ## Zeitraumfilter
 
@@ -253,6 +258,54 @@ Deutlich einfacher als die Sheets-Version: dort löst eine `BYROW`/`MAP`/
 Text liefert. In Grist ist ein Ortsfeld eine echte `Ref:Orte`-Referenz --
 die Auflösung passiert schon in `Maps_Link` selbst (siehe
 [Reisen](reisen.md#maps_link--routenlink)), hier wird nur noch gelesen.
+
+## Prüfliste (Zeiterfassungsstelle)
+
+Eigenes Widget, [`ausgabe/pruefliste.html`](../ausgabe/pruefliste.html ':ignore') --
+**ohne Vorbild in der Sheets-Umsetzung.** Dort muss die Stelle, die den Antrag
+final bearbeitet, zwischen S1, Vermerken, Dienstorten, Fahrtenbuch und
+GoogleMapsExport hin- und herblättern, um eine Reise vollständig zu beurteilen.
+Hier steht alles davon in **einer Zeile je Reise**, A4 quer, 22 Spalten:
+
+| Gruppe | Spalten | Quelle |
+|---|---|---|
+| — | Nr., Reisedatum | `Lfd_Nr`, `Datum` (mehrtägig als Spanne, wie S1) |
+| Uhrzeit | Beginn, Ende | `Beginn`, `Ende` |
+| — | Reiseweg | `Reiseweg` |
+| Tagegeld für | Ges., DSt, DO, Priv, Rest, Stufe | `Abwesenheit_min`, `Min_Dienststaette`, `Min_Dienstort`, `Min_privat_Abzug`, `Rest_min`, `Tagegeld_Stufe` |
+| — | Unentgeltliche Verpflegung | `Verpflegung` |
+| Kilometerstand | Beginn, Ende | `KM_Beginn`, `KM_Ende` |
+| Wegstrecke | privat, dienstl. | `Umweg_privat`, `KM_dienstlich` |
+| Fahrt- und Nebenkosten | ÖPNV, Mitn., Übernachtung, Nebenkosten | `OePNV`, `Mitnahme_Personen`, `Uebernachtung`, `Nebenkosten` |
+| — | Vermerk, Route | `Vermerk_Label`, `Maps_Link` |
+
+Darunter die **Orte-Legende** — dieselben Zeilen wie das
+[Dienstorte-Blatt](#dienstorte), damit die Kürzel im Reiseweg ohne Blattwechsel
+auflösbar sind.
+
+**Statement:**
+- Spaltenbegriffe absichtlich aus S1 übernommen („Tagegeld für",
+  „Unentgeltliche Verpflegung", „Wegstrecke", „Mitnahme von Personen") --
+  die Stelle soll die gewohnte Ansicht wiedererkennen, nicht eine neue lernen
+- die Tagegeldzeiten stehen als **eigene Spalten**, nicht als Textzeile wie in
+  der [S1-Spalte „Reiseweg"](#spalte-reiseweg) -- einzeln prüfbar statt nur lesbar
+- Route-Zelle wie in [Routenlinks](#routenlinks-google-maps): erst `data-link`,
+  dann per DOM-API zum `<a>`
+
+**Sonderfall:** Die Sortierlogik der Orte-Legende steht in **zwei** Dateien
+(`pruefliste.html` und `ausdruck.html`) -- die Widgets sind bewusst
+eigenständige Einzeldateien ohne gemeinsames Modul. Gegen ein Auseinanderlaufen
+prüft [`test_pruefliste.mjs`](../ausgabe/test_pruefliste.mjs) beide Blätter auf
+dieselbe Liste; der Wächter wurde mit einer absichtlich gebrochenen Sortierung
+gegengetestet.
+
+### Eigene Seite, nicht die Ausdruck-Seite
+
+`setup.py` legt die Prüfliste über `pruefliste_widget()` auf eine **eigene**
+Grist-Seite (`PRUEFLISTE`), nicht neben die Druck-Widgets. Grund: eine
+Grist-Freigabe geht über Seiten. Läge das Widget auf der Ausdruck-Seite,
+bekäme die Zeiterfassungsstelle bei einer Freigabe zwangsläufig auch S1/S2,
+Vermerke und Fahrtenbuch mit zu sehen.
 
 ## Escaping
 

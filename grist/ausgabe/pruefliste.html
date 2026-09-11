@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Prüfliste – Reisekostenabrechnung</title>
+<style>
+/* ---------------------------------------------------------------
+   Prüfblatt für die Zeiterfassungsstelle: alles, was sonst auf fünf
+   Blättern verteilt liegt (S1, Vermerke, Dienstorte, Fahrtenbuch,
+   Routenlinks), kompakt in EINER Zeile je Reise -- damit die Stelle,
+   die den Antrag final bearbeitet, nicht zwischen Blättern blättern
+   muss.
+
+   Spaltenbegriffe absichtlich aus S1 übernommen (Tagegeld für /
+   Unentgeltliche Verpflegung / ÖPNV / Wegstrecke / Mitnahme von
+   Personen / Übernachtungskosten / Nebenkosten), Kopfblock und
+   Orte-Legende aus dem Dienstorte-Blatt -- die Stelle soll die
+   gewohnte Ansicht wiedererkennen, nicht eine neue lernen.
+
+   A4 quer: 22 Spalten passen nicht auf Hochformat. Spaltenbreiten
+   summieren sich auf 275mm (277mm nutzbar bei 10mm Rand).
+   --------------------------------------------------------------- */
+@page { size: A4 landscape; margin: 10mm; }
+
+:root {
+  --rahmen: 0.4pt solid #000;
+  --rahmen-breit: 1pt solid #000;
+  --schrift: 6pt;
+  --schrift-kopf: 5.2pt;
+  --schrift-kopfblock: 8pt;
+  --schrift-titel: 13pt;
+  --h-daten: 7.2mm;
+  --polster-x: 0.6mm;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--schrift);
+  color: #000;
+  background: #f0f0f0;
+}
+
+.blatt {
+  width: 297mm;
+  margin: 10mm auto;
+  padding: 10mm;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,.25);
+}
+
+table { border-collapse: collapse; table-layout: fixed; width: 275mm; }
+
+/* -------------------------------------------------- Kopfblock (wie Dienstorte) */
+.kopf { margin-bottom: 3mm; }
+.kopf td { border: var(--rahmen); padding: 0 1mm; vertical-align: top; }
+.kopf .titel { height: 12mm; font-size: var(--schrift-titel); font-weight: bold;
+               vertical-align: middle; }
+.kopf .stand { font-size: 8pt; font-weight: bold; text-align: right; vertical-align: bottom; }
+.kopf .label { height: 4.5mm; font-size: var(--schrift-kopfblock); font-weight: bold;
+               vertical-align: bottom; }
+.kopf .wert  { height: 8mm; font-size: var(--schrift-kopfblock); vertical-align: middle; }
+
+/* -------------------------------------------------- Datenraster */
+.raster th, .raster td { border: var(--rahmen); padding: .3mm var(--polster-x);
+                         overflow: hidden; }
+.raster thead th {
+  font-size: var(--schrift-kopf); font-weight: bold; text-align: center;
+  vertical-align: middle; line-height: 1.05; overflow-wrap: anywhere;
+  background: #ededed;
+}
+.raster thead .g1 { height: 5mm; }
+.raster thead .g2 { height: 7mm; }
+.raster thead .gruppe { border-bottom: var(--rahmen-breit); }
+
+.raster tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
+.raster tbody td.links { text-align: left; }
+.raster tbody td.rechts { text-align: right; }
+.raster tbody td.weg { text-align: left; line-height: 1.05; overflow-wrap: anywhere;
+                       white-space: normal; }
+.raster tbody tr:nth-child(even) { background: #fafafa; }
+
+/* Gruppentrenner: senkrechte kräftige Linie vor jeder Spaltengruppe */
+.raster .trenn { border-left: var(--rahmen-breit); }
+
+/* -------------------------------------------------- Orte-Legende */
+.legende { margin-top: 5mm; width: 180mm; }
+.legende caption { caption-side: top; text-align: left; font-size: 8pt;
+                   font-weight: bold; padding-bottom: 1mm; }
+.legende th, .legende td { border: var(--rahmen); padding: .4mm 1mm; font-size: 7pt; }
+.legende th { background: #ededed; font-weight: bold; text-align: left; }
+.legende td.mitte, .legende th.mitte { text-align: center; }
+
+a { color: #1a73e8; }
+
+/* -------------------------------------------------- Leiste / Druck */
+.leiste {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px 12px; background: #f0f0f0;
+  border-bottom: 1px solid #ccc; font-size: 13px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.leiste button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: 6px 14px; border: 1px solid #16a34a; border-radius: 4px;
+  background: #16a34a; color: #fff;
+}
+.leiste button:hover { background: #15803d; border-color: #15803d; }
+.leiste button.sek { background: #fff; color: #16a34a; }
+.leiste button.sek:hover { background: #f0fdf4; }
+.leiste .info { color: #666; }
+
+@media print {
+  body { background: #fff; }
+  .blatt { width: auto; margin: 0; padding: 0; box-shadow: none; }
+  .leiste { display: none !important; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  /* Ein Link ist auf Papier nicht klickbar -- Spalte bleibt als Nachweis
+     stehen, zeigt aber "ja"/leer statt eines toten "Route"-Wortes. */
+  .raster .route a { color: #000; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<div class="leiste">
+  <button type="button" onclick="window.print()">Drucken</button>
+  <button type="button" class="sek" id="neu-laden" hidden>Aktualisieren</button>
+  <span class="info" id="hinweis">Alle Angaben je Reise in einer Zeile — für die abschließende Bearbeitung.</span>
+</div>
+
+<div class="blatt">
+  <table class="kopf">
+    <colgroup>
+      <col style="width:90mm"><col style="width:92mm"><col style="width:93mm">
+    </colgroup>
+    <tr><td class="titel" colspan="2">REISEKOSTENRECHNUNG — Prüfliste</td>
+        <td class="stand" id="k-stand"></td></tr>
+    <tr><td class="label">Antragssteller/in:</td>
+        <td class="label">Wohnort:</td>
+        <td class="label">Dienstort:</td></tr>
+    <tr><td class="wert" id="k-antragsteller"></td>
+        <td class="wert" id="k-wohnort"></td>
+        <td class="wert" id="k-dienstort"></td></tr>
+  </table>
+
+  <table class="raster">
+    <colgroup>
+      <col style="width:7mm"><col style="width:18mm">
+      <col style="width:10mm"><col style="width:10mm">
+      <col style="width:40mm">
+      <col style="width:9mm"><col style="width:9mm"><col style="width:9mm">
+      <col style="width:9mm"><col style="width:9mm"><col style="width:13mm">
+      <col style="width:11mm">
+      <col style="width:13mm"><col style="width:13mm">
+      <col style="width:11mm"><col style="width:11mm">
+      <col style="width:12mm"><col style="width:10mm">
+      <col style="width:13mm"><col style="width:13mm">
+      <col style="width:13mm"><col style="width:12mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="g1" rowspan="2">Nr.</th>
+        <th class="g1" rowspan="2">Reisedatum</th>
+        <th class="g1 trenn" colspan="2">Uhrzeit</th>
+        <th class="g1 trenn" rowspan="2">Reiseweg</th>
+        <th class="g1 trenn" colspan="6">Tagegeld für</th>
+        <th class="g1 trenn" rowspan="2">Unentgeltliche Verpflegung</th>
+        <th class="g1 trenn" colspan="2">Kilometerstand</th>
+        <th class="g1 trenn" colspan="2">Wegstrecke</th>
+        <th class="g1 trenn" colspan="4">Fahrt- und Nebenkosten</th>
+        <th class="g1 trenn" rowspan="2">Vermerk</th>
+        <th class="g1 trenn" rowspan="2">Route</th>
+      </tr>
+      <tr>
+        <th class="g2 trenn">Beginn</th>
+        <th class="g2">Ende</th>
+        <th class="g2 trenn">Ges.</th>
+        <th class="g2">DSt</th>
+        <th class="g2">DO</th>
+        <th class="g2">Priv</th>
+        <th class="g2">Rest</th>
+        <th class="g2">Stufe</th>
+        <th class="g2 trenn">Beginn</th>
+        <th class="g2">Ende</th>
+        <th class="g2 trenn">privat<br>km</th>
+        <th class="g2">dienstl.<br>km</th>
+        <th class="g2 trenn">ÖPNV<br>EUR</th>
+        <th class="g2">Mitn.<br>Anz.</th>
+        <th class="g2">Über-<br>nachtung EUR</th>
+        <th class="g2">Neben-<br>kosten EUR</th>
+      </tr>
+    </thead>
+    <tbody id="daten"></tbody>
+  </table>
+
+  <table class="legende">
+    <caption>Dienstorte — Legende zu den Kürzeln im Reiseweg</caption>
+    <colgroup>
+      <col style="width:8mm"><col style="width:26mm"><col style="width:60mm"><col style="width:86mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="mitte">Nr.</th>
+        <th>Kürzel / Datum</th>
+        <th>Kita, Einrichtung, Ort etc.</th>
+        <th>Adresse</th>
+      </tr>
+    </thead>
+    <tbody id="daten-orte"></tbody>
+  </table>
+</div>
+
+<script>
+/* Erfundene Beispieldaten, nur für die Vorschau im Browser ohne Grist. */
+const beispielKopf = {
+  stand: "01.01.2026 - 31.03.2026",
+  antragsteller: "Musterfrau Erika, Referat 42",
+  wohnort:       "Beispielweg 7, 00000 Musterstadt",
+  dienstort:     "Verwaltungsstraße 1, 00000 Musterstadt",
+};
+const beispielReisen = [
+  { nr:1, datum:"03.02.2026", von:"07:15", bis:"16:40", weg:"WO > KV > Beispieldorf > WO",
+    ges:"9:25", dst:"1:00", dort:"4:30", priv:"0:00", rest:"3:55", stufe:"anteilig",
+    verpflegung:"Nein", kmBeginn:12000, kmEnde:12087, kmPrivat:0, kmDienst:87,
+    oepnv:0, mitnahme:0, uebernachtung:0, neben:0, vermerk:"V26-01",
+    link:"https://www.google.com/maps/dir/?api=1&origin=A&destination=A&waypoints=B" },
+  { nr:2, datum:"05.02.2026", von:"08:00", bis:"12:10", weg:"WO > KV > WO",
+    ges:"4:10", dst:"0:00", dort:"0:00", priv:"0:00", rest:"4:10", stufe:"",
+    verpflegung:"Nein", kmBeginn:12087, kmEnde:12111, kmPrivat:0, kmDienst:24,
+    oepnv:0, mitnahme:0, uebernachtung:0, neben:3.50, vermerk:"",
+    link:"https://www.google.com/maps/dir/?api=1&origin=A&destination=A" },
+  { nr:3, datum:"11.02.2026 - 12.02.2026", von:"06:30", bis:"18:05", weg:"WO > Fortbildungsort > WO",
+    ges:"35:35", dst:"0:00", dort:"0:00", priv:"0:45", rest:"34:50", stufe:"24h",
+    verpflegung:"Ja", kmBeginn:12111, kmEnde:12111, kmPrivat:0, kmDienst:0,
+    oepnv:42.80, mitnahme:0, uebernachtung:89.00, neben:6.00, vermerk:"",
+    link:"" },
+];
+const beispielOrte = [
+  { kuerzel:"WO", name:"Wohnung", adresse:"Beispielweg 7, 00000 Musterstadt" },
+  { kuerzel:"KV", name:"Kreisverwaltung", adresse:"Verwaltungsstraße 1, 00000 Musterstadt" },
+  { kuerzel:"03.02.2026", name:"Beispieldorf", adresse:"Dorfstr. 2, 00000 Beispieldorf" },
+];
+
+/* Tabellenzellen werden als HTML zusammengesetzt. Das Präfix html`…` schiebt
+   jeden eingesetzten Wert durch esc(); Formulareingaben (Vermerk, Freitext-Orte,
+   Adressen) können so kein Markup einschleusen. Ohne Präfix kein Schutz. */
+const esc = s => String(s ?? "").replace(/[&<>"]/g,
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const html = (t, ...v) => t.reduce((a, s, i) => a + esc(v[i - 1]) + s);
+
+/* Grist liefert Datumswerte als Sekunden seit 1970, UTC-Mitternacht. */
+const tag = s => s == null ? "" : new Date(s * 1000).toLocaleDateString("de-DE",
+  { day:"2-digit", month:"2-digit", year:"numeric", timeZone:"UTC" });
+
+const zeilen = t => t.id.map((_, i) =>
+  Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
+
+const anschrift = (strasse, plz, ort) =>
+  [strasse, [plz, ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+
+/* Minuten als Stunden:Minuten, auch über 24h hinaus (mehrtägige Reisen) --
+   dieselbe Darstellung wie in der Reiseweg-Spalte auf S1. */
+const stunden = min => {
+  min = Math.round(min ?? 0);
+  const vz = min < 0 ? "-" : "";
+  min = Math.abs(min);
+  return `${vz}${Math.trunc(min / 60)}:${String(min % 60).padStart(2, "0")}`;
+};
+
+const eur = n => n > 0 ? n.toLocaleString("de-DE",
+  { minimumFractionDigits:2, maximumFractionDigits:2 }) : "";
+const zahl = n => n > 0 ? String(n) : "";
+
+/* Die Route-Zelle braucht ein echtes <a href>, kein reiner Text -- deshalb
+   hier NICHT html`` (das würde das Tag selbst escapen). Der Link steht
+   zunächst als data-Attribut (durchläuft dort ganz normal esc()) und wird
+   danach per DOM-API zum <a>; siehe routenlinks.html, gleiches Muster. */
+function zeile(r) {
+  return html`<tr>
+    <td>${r.nr ?? ""}</td>
+    <td>${r.datum}</td>
+    <td class="trenn">${r.von}</td>
+    <td>${r.bis}</td>
+    <td class="weg trenn">${r.weg}</td>
+    <td class="trenn">${r.ges}</td>
+    <td>${r.dst}</td>
+    <td>${r.dort}</td>
+    <td>${r.priv}</td>
+    <td>${r.rest}</td>
+    <td>${r.stufe}</td>
+    <td class="trenn">${r.verpflegung}</td>
+    <td class="trenn rechts">${r.kmBeginn ?? ""}</td>
+    <td class="rechts">${r.kmEnde ?? ""}</td>
+    <td class="trenn rechts">${zahl(r.kmPrivat)}</td>
+    <td class="rechts">${r.kmDienst}</td>
+    <td class="trenn rechts">${eur(r.oepnv)}</td>
+    <td class="rechts">${zahl(r.mitnahme)}</td>
+    <td class="rechts">${eur(r.uebernachtung)}</td>
+    <td class="rechts">${eur(r.neben)}</td>
+    <td class="trenn">${r.vermerk}</td>
+    <td class="route trenn" data-link="${r.link || ""}"></td></tr>`;
+}
+
+function ortZeile(o, i) {
+  return html`<tr>
+    <td class="mitte">${i + 1}</td>
+    <td>${o.kuerzel}</td>
+    <td>${o.name}</td>
+    <td>${o.adresse}</td></tr>`;
+}
+
+function rendern(kopf, reisen, orte) {
+  document.getElementById("k-stand").textContent         = kopf.stand;
+  document.getElementById("k-antragsteller").textContent = kopf.antragsteller;
+  document.getElementById("k-wohnort").textContent       = kopf.wohnort;
+  document.getElementById("k-dienstort").textContent     = kopf.dienstort;
+
+  const tb = document.getElementById("daten");
+  tb.innerHTML = reisen.map(zeile).join("");
+  for (const td of tb.querySelectorAll("td[data-link]")) {
+    const link = td.dataset.link;
+    td.removeAttribute("data-link");
+    if (!link) continue;
+    const a = document.createElement("a");
+    a.href = link;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = "Route";
+    td.appendChild(a);
+  }
+
+  document.getElementById("daten-orte").innerHTML = orte.map(ortZeile).join("");
+}
+
+/* ---------------------------------------------------------- Grist-Anbindung */
+
+/* Meldungen gehen in die Leiste, nicht in den <body>: ein ersetzter Body
+   nimmt die Tabellen mit, und der naechste onRecords-Lauf findet seine Zellen
+   dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
+const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
+const hinweis = t => { document.getElementById("hinweis").textContent = t; };
+
+const ORT_SLOTS = ["Ort_Beginn", "Ort_1", "Ort_2", "Ort_3", "Ort_4", "Ort_5", "Ort_Ende"];
+
+async function ausGrist() {
+  const [e] = zeilen(await grist.docApi.fetchTable("Einstellungen"));
+  if (!e) {
+    hinweis("Tabelle 'Einstellungen' ist leer -- setup.py laufen lassen, "
+            + "dann 'Aktualisieren'.");
+    return;
+  }
+  hinweis(HINWEIS_STANDARD);
+  const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
+  const imZeitraum = d => d != null && (von == null || d >= von) && (bis == null || d <= bis);
+
+  const kopf = {
+    stand: [tag(von), tag(bis)].filter(Boolean).join(" - "),
+    antragsteller: [[e.Name, e.Vorname].filter(Boolean).join(" "),
+                    e.Organisationseinheit].filter(Boolean).join(", "),
+    wohnort:   anschrift(e.Wohnort_Strasse, e.Wohnort_PLZ, e.Wohnort_Ort),
+    dienstort: anschrift(e.Dienstort_Strasse, e.Dienstort_PLZ, e.Dienstort_Ort),
+  };
+
+  const orteNachId = Object.fromEntries(
+    zeilen(await grist.docApi.fetchTable("Orte")).map(o => [o.id, o]));
+
+  /* Gefiltert wird ueber den Reisebeginn -- siehe ausdruck.html: eine Reise,
+     die vor `von` beginnt, gehoert in die vorige Abrechnung. */
+  const reisen = zeilen(await grist.docApi.fetchTable("Reisen"))
+    .filter(r => imZeitraum(r.Datum))
+    .sort((a, b) => a.Datum - b.Datum);
+
+  /* Orte-Legende: identische Reihenfolge wie im Dienstorte-Blatt von
+     ausdruck.html -- Wohnung und Dienststaette fest vorn, dann die uebrigen
+     Stammorte nach erstem Vorkommen, dann die Einmalziele nach Datum.
+     Gegen ein Auseinanderlaufen der beiden Kopien prueft
+     test_pruefliste.mjs beide Blaetter auf dieselbe Liste. */
+  const orteListe = Object.values(orteNachId);
+  const stammIds = ["WO", "KV"]
+    .map(k => orteListe.find(o => o.Kuerzel === k))
+    .filter(Boolean).map(o => o.id);
+  for (const r of reisen)
+    for (const slot of ORT_SLOTS)
+      if (r[slot] && orteNachId[r[slot]] && !stammIds.includes(r[slot]))
+        stammIds.push(r[slot]);
+
+  const ausOrte = stammIds.map(id => ({
+    kuerzel: orteNachId[id].Kuerzel || "",
+    name:    orteNachId[id].Name || "",
+    adresse: orteNachId[id].Adresse || "",
+  }));
+
+  const ausAdressen = zeilen(await grist.docApi.fetchTable("Adressen"))
+    .filter(a => imZeitraum(a.Datum))
+    .sort((a, b) => a.Datum - b.Datum)
+    .map(a => ({ kuerzel: tag(a.Datum), name: a.Label || "", adresse: a.Adresse || "" }));
+
+  rendern(kopf, reisen.map(r => ({
+      nr:    r.Lfd_Nr,
+      datum: r.Datum_bis && r.Datum_bis !== r.Datum
+             ? `${tag(r.Datum)} - ${tag(r.Datum_bis)}` : tag(r.Datum),
+      von:   r.Beginn || "",
+      bis:   r.Ende || "",
+      weg:   r.Reiseweg || "",
+      ges:   stunden(r.Abwesenheit_min),
+      dst:   stunden(r.Min_Dienststaette),
+      dort:  stunden(r.Min_Dienstort),
+      priv:  stunden(r.Min_privat_Abzug),
+      rest:  stunden(r.Rest_min),
+      stufe: r.Tagegeld_Stufe || "",
+      verpflegung: r.Verpflegung || "Nein",
+      kmBeginn: r.KM_Beginn,
+      kmEnde:   r.KM_Ende,
+      kmPrivat: r.Umweg_privat || 0,
+      kmDienst: r.KM_dienstlich || 0,
+      oepnv:         r.OePNV || 0,
+      mitnahme:      r.Mitnahme_Personen || 0,
+      uebernachtung: r.Uebernachtung || 0,
+      neben:         r.Nebenkosten || 0,
+      vermerk: r.Vermerk_Label || "",
+      link:    r.Maps_Link || "",
+    })), [...ausOrte, ...ausAdressen]);
+}
+
+if (window.self === window.top) {
+  rendern(beispielKopf, beispielReisen, beispielOrte);
+} else {
+  /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
+     Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
+     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy loescht
+     document.referrer, und ein fest verdrahtetes docs.getgrist.com waere dann
+     doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
+     Host bekaeme einen Request aus dem Dokument. Lieber nichts laden und es
+     sagen. */
+  const quelle = document.referrer ? new URL(document.referrer).origin
+                : window.location.ancestorOrigins?.[0] || "";
+  if (!quelle) {
+    hinweis("Herkunft der Grist-Instanz nicht ermittelbar (Referrer-Policy) -- "
+            + "Widget kann die Plugin-API nicht laden.");
+    throw new Error("keine Grist-Herkunft");
+  }
+  const s = document.createElement("script");
+  s.src = quelle + "/grist-plugin-api.js";
+  s.onload = () => {
+    grist.ready({ requiredAccess: "full" });   // liest vier Tabellen
+    /* onRecords feuert nur bei Aenderungen an 'Einstellungen' -- eine neu
+       erfasste oder korrigierte Reise erreicht das Widget NICHT von selbst. */
+    grist.onRecords(ausGrist);
+    const knopf = document.getElementById("neu-laden");
+    knopf.hidden = false;
+    knopf.onclick = ausGrist;
+  };
+  document.head.appendChild(s);
+}
+</script>
+</body>
+</html>

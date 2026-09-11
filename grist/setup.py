@@ -578,7 +578,74 @@ AUSGABE_WIDGETS = [
     ("Fahrtenbuch (Schnittversion)", "fahrtenbuch-schnitt.html"),
     ("Routenlinks (Google Maps)",    "routenlinks.html"),
 ]
+
+# Die Prüfliste liegt bewusst NICHT auf der Ausdruck-Seite, sondern auf einer
+# eigenen: sie ist für die Zeiterfassungsstelle, und eine Grist-Freigabe geht
+# über Seiten -- neben den Druck-Widgets bekäme die Stelle zwangsläufig alles
+# andere mit zu sehen. (Seitenname, Datei)
+PRUEFLISTE = ("Prüfliste", "pruefliste.html")
 AUSGABE_BASIS_URL = "https://deniskarbach.github.io/Fahrtkostenabrechnung/grist/ausgabe/"
+
+
+def widget_einrichten(vid, titel, url, sec=None):
+    """Legt auf Seite `vid` ein Custom-Widget auf `url` an (oder konfiguriert
+    eine bereits vorhandene Section `sec` dazu um) und gibt dessen Section-Id
+    zurück. Die options-Struktur ist die, die Grist selbst schreibt --
+    'access': 'full', weil die Widgets mehrere Tabellen lesen."""
+    if sec is None:
+        sec = api("POST", "/apply", [["CreateViewSection", et_id(), vid, "custom", None, None]]
+                  )["retValues"][0]["sectionRef"]
+    options = {"customView": json.dumps({
+        "mode": "url", "url": url, "widgetDef": None, "access": "full",
+        "pluginId": "", "sectionId": "", "renderAfterReady": False,
+        "widgetId": None, "widgetOptions": None, "columnsMapping": None})}
+    api("POST", "/apply", [["UpdateRecord", "_grist_Views_section", sec,
+                            {"title": titel, "options": json.dumps(options)}]])
+    return sec
+
+
+def et_id():
+    """Table-Ref von 'Einstellungen' -- die Custom-Widgets hängen alle daran
+    (sie lesen zwar mehrere Tabellen, eine Section braucht aber genau eine)."""
+    return sql("select id from _grist_Tables where tableId = 'Einstellungen'")[0]["id"]
+
+
+def pruefliste_widget():
+    """Die Prüfliste bekommt eine EIGENE Seite, nicht die Ausdruck-Seite: sie
+    ist für die Zeiterfassungsstelle gedacht, und eine Grist-Freigabe geht über
+    Seiten. Läge sie neben den Druck-Widgets, sähe die Stelle bei einer
+    Freigabe zwangsläufig auch alles andere.
+
+    Idempotent: ist die Seite mit dem Widget da, passiert nichts."""
+    url = AUSGABE_BASIS_URL + PRUEFLISTE[1]
+    seite = sql(f"select id from _grist_Views where name = '{PRUEFLISTE[0]}'")
+
+    if seite:
+        vid = seite[0]["id"]
+        for row in sql(f"select id, options from _grist_Views_section "
+                       f"where parentId = {vid} and parentKey = 'custom'"):
+            try:
+                cv = json.loads(json.loads(row["options"] or "{}").get("customView") or "{}")
+            except (ValueError, TypeError):
+                continue
+            if cv.get("url") == url:
+                print(f"  Prüflisten-Seite: vorhanden")
+                return
+        sec = widget_einrichten(vid, PRUEFLISTE[0], url)
+    else:
+        # parentId 0 legt Seite und Section zusammen an (wie in
+        # zeitraum_widget); die entstandene Section wird gleich das Widget.
+        neu = api("POST", "/apply",
+                  [["CreateViewSection", et_id(), 0, "custom", None, None]])["retValues"][0]
+        vid = neu["viewRef"]
+        api("POST", "/apply",
+            [["UpdateRecord", "_grist_Views", vid, {"name": PRUEFLISTE[0]}]])
+        sec = widget_einrichten(vid, PRUEFLISTE[0], url, sec=neu["sectionRef"])
+        print(f"  Seite '{PRUEFLISTE[0]}' angelegt (View {vid})")
+
+    api("POST", "/apply", [["UpdateRecord", "_grist_Views", vid, {"layoutSpec": json.dumps(
+        {"children": [{"leaf": sec}] + seiten_kinder(vid), "collapsed": []})}]])
+    print(f"  Prüflisten-Widget: angelegt (Section {sec})")
 
 
 def ausgabe_widgets():
@@ -621,14 +688,7 @@ def ausgabe_widgets():
         url = AUSGABE_BASIS_URL + datei
         if url in vorhanden:
             continue
-        sec = api("POST", "/apply",
-                  [["CreateViewSection", et, vid, "custom", None, None]])["retValues"][0]["sectionRef"]
-        options = {"customView": json.dumps({
-            "mode": "url", "url": url, "widgetDef": None, "access": "full",
-            "pluginId": "", "sectionId": "", "renderAfterReady": False,
-            "widgetId": None, "widgetOptions": None, "columnsMapping": None})}
-        api("POST", "/apply", [["UpdateRecord", "_grist_Views_section", sec,
-                                {"title": titel, "options": json.dumps(options)}]])
+        widget_einrichten(vid, titel, url)
         angelegt += 1
     print(f"  Ausgabe-Widgets: {angelegt} angelegt, {len(veraltet)} entfernt, "
           f"{len(AUSGABE_WIDGETS) - angelegt} vorhanden")
@@ -830,6 +890,7 @@ if __name__ == "__main__":
     zeitraum_widget()      # braucht die Ausdruck-Seite — sonst übersprungen
     ausgabe_widgets()      # dito
     ausdruck_layout()      # dito; ordnet nur ein frisch eingerichtetes Dokument
+    pruefliste_widget()    # eigene Seite, getrennt freigebbar
     layouts_aufraeumen()   # nach allem, was Sections anlegt oder entfernt
 
     print(f"""
