@@ -67,9 +67,10 @@ return [r.id for r in alle].index($id) + 1
 **Sonderfall:** Zeilen ohne Datum bekommen keine Nummer (`None`).
 **Muster:** Rang im Kalenderjahr (E).
 
-Erscheint auf S1 vor dem Reiseweg (`Nr. 3 – WO > KV > WO`) und in Spalte 1 des
-Fahrtenbuchs. Wird eine ältere Reise nachgetragen, vergeben sich alle Nummern
-des Jahres neu — die Nummer ist also keine Belegnummer, sondern eine Position.
+Erscheint auf S1 in der Spalte „Reiseweg" (siehe [Ausgabe → S1](ausgabe.md#s1--reisekostenabrechnung))
+und in Spalte 1 des Fahrtenbuchs. Wird eine ältere Reise nachgetragen,
+vergeben sich alle Nummern des Jahres neu — die Nummer ist also keine
+Belegnummer, sondern eine Position.
 
 ---
 

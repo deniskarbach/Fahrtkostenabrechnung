@@ -53,7 +53,7 @@ Je Reise eine Zeile, darunter eine Übertragszeile mit den Summen.
 |---|---|
 | Reisedatum | `Datum`, bei `Datum_bis` ≠ `Datum` als Spanne |
 | Beginn / Ende | `Beginn`, `Ende` |
-| Reiseweg | `Nr. {Lfd_Nr} – {Reiseweg}` |
+| Reiseweg | `s1Zeile(r)`, siehe unten |
 | vier Tagegeld-Spalten | Kreuz aus `Tagegeld_Stufe` |
 | Verpflegung | `Verpflegung`, leer → `Nein` |
 | ÖPNV, km, Mitnahme, Übernachtung, Nebenkosten | `OePNV`, `KM_dienstlich`, `Mitnahme_Personen`, `Uebernachtung`, `Nebenkosten` |
@@ -62,6 +62,39 @@ Je Reise eine Zeile, darunter eine Übertragszeile mit den Summen.
 - `kreuz(stufe, s)` – setzt `X` in genau die Spalte, deren Name der Stufe entspricht
 - `eur(n)` / `zahl(n)` – geben bei `0` einen **Leerstring** aus, nicht „0,00"
 - die Übertragszeile summiert dieselben fünf Felder über alle gedruckten Zeilen
+
+### Spalte „Reiseweg"
+
+Der amtliche Vordruck verlangt hier nur die laufende Nummer, **wenn ein
+Fahrtenbuch geführt wird** — genau das steht im Spaltenkopf. Da diese
+Ausgabe immer ein Fahrtenbuch mitliefert, wäre der eigentliche Reiseweg an
+dieser Stelle eine Dopplung dessen, was dort ohnehin steht. Statt der bloßen
+Nummer zeigt die Spalte deshalb die Zeiten, aus denen sich die
+Tagegeld-Stufe ergibt — zur Prüfung beim Unterschreiben, wie in der
+Sheets-Version:
+
+```js
+const s1Zeile = r => {
+  if (!r.Lfd_Nr) return "";
+  const priv = r.Min_privat_Abzug > 0 ? ` | Priv: ${stunden(r.Min_privat_Abzug)}` : "";
+  return `Nr. ${r.Lfd_Nr}  –  (Ges.: ${stunden(r.Abwesenheit_min)}`
+       + ` | DSt: ${stunden(r.Min_Dienststaette)} | DO: ${stunden(r.Min_Dienstort)}`
+       + `${priv} | Rest: ${stunden(r.Rest_min)})`;
+};
+```
+
+**Statement:**
+- `stunden(min)` – wandelt Minuten in `H:MM`, auch über 24 h hinaus (mehrtägige Reisen)
+- `priv` – der Priv-Teil erscheint nur, wenn ein privater Zeitabzug eingetragen ist
+
+**Ergebnis:** `Nr. 67  –  (Ges.: 8:55 | DSt: 0:00 | DO: 0:00 | Rest: 8:55)`
+**Rechenweg:** Ges. = `Abwesenheit_min`, DSt = `Min_Dienststaette`,
+DO = `Min_Dienstort`, Rest = `Rest_min` — dieselben vier Werte, aus denen
+`Tagegeld_Stufe` die Stufe ableitet (siehe [Reisen](reisen.md#tagegeld_stufe--tagegeld-stufe)).
+**Sonderfall:** War die Sache vorher (bis inkl. Commit `e0db8dc`): die Spalte
+zeigte `Reiseweg` — identisch zu dem, was ohnehin im Fahrtenbuch steht, und
+ohne jeden Bezug zur Tagegeld-Prüfung, die diese Spalte laut Vordruck
+eigentlich leisten soll.
 
 **Sonderfall:** Bei ÖPNV, Mitnahme, Übernachtung und Nebenkosten erscheint eine
 Null als leere Zelle — ein amtlicher Vordruck mit lauter Nullen ist schwerer zu
