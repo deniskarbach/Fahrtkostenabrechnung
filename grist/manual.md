@@ -258,6 +258,19 @@ Was auf welchem Blatt landet:
 | Dienstorte | Einstellungen | Orte (je höchstens einmal) + Adressen (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 
+**Spalte „Reiseweg" auf S1:** Der Vordruck verlangt dort nur die laufende
+Nummer, „bei Führung eines Fahrtenbuches" — genau das steht im Spaltenkopf,
+und ein Fahrtenbuch liegt bei dieser Ausgabe ohnehin immer bei. Statt den
+Reiseweg dort ein zweites Mal zu zeigen, steht in der Zelle die
+Zeitaufschlüsselung zur Tagegeld-Prüfung, z. B.:
+
+> Nr. 67  –  (Ges.: 8:55 | DSt: 0:00 | DO: 0:00 | Rest: 8:55)
+
+Ges. = Abwesenheit insgesamt, DSt = Aufenthalt Dienststätte, DO = Aufenthalt
+Dienstort, Priv (nur falls eingetragen) = privater Zeitabzug, Rest = das,
+was von der Tagegeld-Staffel übrig bleibt. Der eigentliche Reiseweg
+(`WO > KV > WO`) steht stattdessen im Fahrtenbuch.
+
 ---
 
 ## "Einkleben" und Unterschreiben
