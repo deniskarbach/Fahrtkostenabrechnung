@@ -570,11 +570,13 @@ def zeitraum_widget():
 
 # Reihenfolge = Reihenfolge auf der Ausdruck-Seite. S1/S2, Vermerke, Dienstorte
 # und Fahrtenbuch stecken zusammen in einer Datei (ausdruck.html) -- ein
-# Widget statt vier, ein Grist-Fetch statt vier. Die Schnittversion bleibt
-# eigenständig, sie ist kein Bestandteil der Standardausgabe.
+# Widget statt vier, ein Grist-Fetch statt vier. Schnittversion und
+# Routenlinks bleiben eigenständig, sie sind kein Bestandteil der
+# Standardausgabe (Arbeitswerkzeuge, keine Druckformulare).
 AUSGABE_WIDGETS = [
     ("Ausdruck",                     "ausdruck.html"),
     ("Fahrtenbuch (Schnittversion)", "fahrtenbuch-schnitt.html"),
+    ("Routenlinks (Google Maps)",    "routenlinks.html"),
 ]
 AUSGABE_BASIS_URL = "https://deniskarbach.github.io/Fahrtkostenabrechnung/grist/ausgabe/"
 
@@ -634,13 +636,15 @@ def ausgabe_widgets():
 
 def ausdruck_layout():
     """Bringt die Ausdruck-Seite in die Anordnung des eingerichteten Dokuments:
-    der Abrechnungszeitraum als schmale Zeile oben, darunter die beiden
-    Druck-Widgets nebeneinander. Die Groessen sind die dort abgelesenen
+    der Abrechnungszeitraum als schmale Zeile oben, darunter die Widgets aus
+    AUSGABE_WIDGETS nebeneinander. Die Groessen sind die dort abgelesenen
     Verhaeltniswerte -- Grist rechnet sie relativ, die absolute Zahl ist egal.
 
-    Fasst eine Seite nicht an, auf der bereits alle drei Widgets im Layout
-    stehen: wer sie von Hand umsortiert hat, behaelt seine Anordnung. Greift
-    also genau einmal, beim Einrichten eines frischen Dokuments."""
+    Fasst eine Seite nicht an, auf der bereits alle Widgets im Layout stehen:
+    wer sie von Hand umsortiert hat, behaelt seine Anordnung. Greift also
+    im Normalfall genau einmal, beim Einrichten eines frischen Dokuments --
+    ein neu ergaenztes AUSGABE_WIDGETS-Widget zieht aber automatisch nach,
+    weil dann noch nicht 'alle' im Layout stehen."""
     seite = sql("select id from _grist_Views where name = 'Ausdruck'")
     if not seite:
         print("  Ausdruck-Layout: Seite fehlt -- übersprungen")

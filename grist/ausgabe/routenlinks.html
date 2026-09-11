@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Routenlinks (Google Maps)</title>
+<style>
+/* Kein Druckformular wie ausdruck.html -- Gegenstück zum Sheets-Blatt
+   "GoogleMapsExport": eine Arbeitsliste zum Durchklicken, kein Vordruck.
+   Deshalb keine A4-Maße, keine Druckleiste mit "Drucken" -- nur ein
+   normales Tabellen-Layout. */
+:root {
+  --rahmen: 1px solid #ccc;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  color: #111;
+  background: #fff;
+}
+
+.leiste {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px 12px; background: #f0f0f0;
+  border-bottom: 1px solid #ccc;
+}
+.leiste button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: 6px 14px; border: 1px solid #16a34a; border-radius: 4px;
+  background: #fff; color: #16a34a;
+}
+.leiste button:hover { background: #f0fdf4; }
+.leiste .info { color: #666; }
+
+.wrap { padding: 4px 12px 16px; overflow-x: auto; }
+
+table { border-collapse: collapse; width: 100%; min-width: 780px; }
+th, td { border: var(--rahmen); padding: 4px 8px; text-align: left; }
+th { background: #f7f7f7; font-weight: 600; white-space: nowrap; }
+td.mitte, th.mitte { text-align: center; }
+td.z-rechts, th.z-rechts { text-align: right; }
+td.weg { max-width: 32em; }
+tbody tr:nth-child(even) { background: #fafafa; }
+
+a { color: #1a73e8; text-decoration: none; }
+a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="leiste">
+  <button type="button" class="sek" id="neu-laden" hidden>Aktualisieren</button>
+  <span class="info" id="hinweis">Klickbare Google-Maps-Route je Reise, zur Prüfung der gefahrenen Strecke.</span>
+</div>
+<div class="wrap">
+  <table>
+    <thead>
+      <tr>
+        <th class="mitte">Nr.</th>
+        <th>Datum</th>
+        <th>Reiseweg</th>
+        <th>von</th>
+        <th>bis</th>
+        <th class="z-rechts">km dienstlich</th>
+        <th class="mitte">Route</th>
+      </tr>
+    </thead>
+    <tbody id="daten"></tbody>
+  </table>
+</div>
+
+<script>
+/* Erfundene Beispieldaten, nur für die Vorschau im Browser ohne Grist. */
+const beispielReisen = [
+  { nr:1, datum:"03.02.2026", weg:"WO > KV > Beispieldorf > WO", von:"07:15", bis:"16:40", km:87,
+    link:"https://www.google.com/maps/dir/?api=1&origin=Beispielweg+7&destination=Beispielweg+7&waypoints=Amtsstr.+1|Dorfstr.+2" },
+  { nr:2, datum:"05.02.2026", weg:"WO > KV > WO", von:"08:00", bis:"12:10", km:24,
+    link:"https://www.google.com/maps/dir/?api=1&origin=Beispielweg+7&destination=Beispielweg+7&waypoints=Amtsstr.+1" },
+  { nr:3, datum:"09.02.2026", weg:"WO > KV > WO", von:"09:00", bis:"09:45", km:0,
+    link:"https://www.google.com/maps/dir/?api=1&origin=Beispielweg+7&destination=Beispielweg+7&waypoints=Amtsstr.+1" },
+];
+
+/* Tabellenzellen werden als HTML zusammengesetzt. Das Präfix html`…` schiebt
+   jeden eingesetzten Wert durch esc(); Freitext-Orte können so kein Markup
+   einschleusen. Ohne Präfix kein Schutz. */
+const esc = s => String(s ?? "").replace(/[&<>"]/g,
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const html = (t, ...v) => t.reduce((a, s, i) => a + esc(v[i - 1]) + s);
+
+/* Grist liefert Datumswerte als Sekunden seit 1970, UTC-Mitternacht. */
+const tag = s => s == null ? "" : new Date(s * 1000).toLocaleDateString("de-DE",
+  { day:"2-digit", month:"2-digit", year:"numeric", timeZone:"UTC" });
+
+const zeilen = t => t.id.map((_, i) =>
+  Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
+
+/* Der Routenlink braucht ein echtes <a href>, kein reiner Text -- deshalb
+   hier NICHT html`` verwenden (das würde das Tag selbst escapen und den
+   Link kaputt machen). Der Link steht stattdessen als data-Attribut in der
+   Zelle (durchläuft dort ganz normal esc()) und wird erst danach per DOM-API
+   in ein <a> umgesetzt -- ohne je als HTML-String geparst zu werden, sicherer
+   als ein selbst zusammengebautes <a href="…">. */
+function zeile(r) {
+  return html`<tr>
+    <td class="mitte">${r.nr ?? ""}</td>
+    <td>${r.datum}</td>
+    <td class="weg">${r.weg}</td>
+    <td>${r.von}</td>
+    <td>${r.bis}</td>
+    <td class="z-rechts">${r.km}</td>
+    <td class="mitte" data-link="${r.link || ""}"></td></tr>`;
+}
+
+function rendern(reisen) {
+  const tb = document.getElementById("daten");
+  tb.innerHTML = reisen.map(zeile).join("");
+  for (const td of tb.querySelectorAll("td[data-link]")) {
+    const link = td.dataset.link;
+    td.removeAttribute("data-link");
+    if (!link) continue;
+    const a = document.createElement("a");
+    a.href = link;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = "Route";
+    td.appendChild(a);
+  }
+}
+
+/* ---------------------------------------------------------- Grist-Anbindung */
+
+/* Meldungen gehen in die Leiste, nicht in den <body>: ein ersetzter Body
+   nimmt die Tabelle mit, und der naechste onRecords-Lauf findet seine Zellen
+   dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
+const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
+const hinweis = t => { document.getElementById("hinweis").textContent = t; };
+
+async function ausGrist() {
+  const [e] = zeilen(await grist.docApi.fetchTable("Einstellungen"));
+  if (!e) {
+    hinweis("Tabelle 'Einstellungen' ist leer -- setup.py laufen lassen, "
+            + "dann 'Aktualisieren'.");
+    return;
+  }
+  const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
+  const stand = [tag(von), tag(bis)].filter(Boolean).join(" - ");
+  hinweis(stand ? `Zeitraum: ${stand}` : HINWEIS_STANDARD);
+
+  /* Gefiltert wird ueber den Reisebeginn -- siehe ausdruck.html: eine Reise,
+     die vor `von` beginnt, gehoert in die vorige Abrechnung. */
+  const reisen = zeilen(await grist.docApi.fetchTable("Reisen"))
+    .filter(r => r.Datum != null
+                 && (von == null || r.Datum >= von)
+                 && (bis == null || r.Datum <= bis))
+    .sort((a, b) => a.Datum - b.Datum)
+    .map(r => ({
+      nr:   r.Lfd_Nr,
+      datum: tag(r.Datum),
+      weg:  r.Reiseweg || "",
+      von:  r.Beginn || "",
+      bis:  r.Ende || "",
+      km:   r.KM_dienstlich || 0,
+      link: r.Maps_Link || "",
+    }));
+
+  rendern(reisen);
+}
+
+if (window.self === window.top) {
+  rendern(beispielReisen);
+} else {
+  /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
+     Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
+     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy loescht
+     document.referrer, und ein fest verdrahtetes docs.getgrist.com waere dann
+     doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
+     Host bekaeme einen Request aus dem Dokument. Lieber nichts laden und es
+     sagen. */
+  const quelle = document.referrer ? new URL(document.referrer).origin
+                : window.location.ancestorOrigins?.[0] || "";
+  if (!quelle) {
+    hinweis("Herkunft der Grist-Instanz nicht ermittelbar (Referrer-Policy) -- "
+            + "Widget kann die Plugin-API nicht laden.");
+    throw new Error("keine Grist-Herkunft");
+  }
+  const s = document.createElement("script");
+  s.src = quelle + "/grist-plugin-api.js";
+  s.onload = () => {
+    grist.ready({ requiredAccess: "full" });   // liest zwei Tabellen
+    /* onRecords feuert nur bei Aenderungen an 'Einstellungen' -- eine neu
+       erfasste oder korrigierte Reise erreicht das Widget NICHT von selbst. */
+    grist.onRecords(ausGrist);
+    const knopf = document.getElementById("neu-laden");
+    knopf.hidden = false;
+    knopf.onclick = ausGrist;
+  };
+  document.head.appendChild(s);
+}
+</script>
+</body>
+</html>

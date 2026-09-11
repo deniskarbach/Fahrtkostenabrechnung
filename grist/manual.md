@@ -79,7 +79,7 @@ Formular, `Adressen` entsteht von selbst.
 | ✍️ | Orte | Stammziele mit Kürzel und vollständiger Adresse — speist die Auswahlliste im Formular, den Routenlink und die Legende auf dem Ausdruck | **Pflegen.** `WO` und `KV` sind Pflichtzeilen, ihre Adresse eintragen; neue regelmäßige Ziele ergänzen |
 | ✅ | Reisen | Eine Zeile je Dienstreise aus dem Formular, dazu alle Rechenspalten (Kilometer, Tagegeld-Stufe, Reiseweg, laufende Nummer, Routenlink) | **Nichts.** Eine Korrektur ist hier trotzdem möglich — anders als bei Google Sheets |
 | ✍️ | Adressen | Die Einmalziele: sobald ein Ortsfeld als Freitext ausgefüllt wurde, entsteht hier automatisch eine Zeile | **Adresse nachtragen.** Straße/PLZ/Ort ergänzen, damit das Dienstorte-Blatt vollständig ist |
-| 🖨️ | Ausdruck (Seite) | Abrechnungszeitraum und die beiden Druck-Widgets: S1/S2, Vermerke, Dienstorte, Fahrtenbuch | **Zeitraum setzen, aktualisieren, drucken** |
+| 🖨️ | Ausdruck (Seite) | Abrechnungszeitraum und drei Widgets: Ausdruck (S1/S2, Vermerke, Dienstorte, Fahrtenbuch), Fahrtenbuch zum Einkleben, Routenlinks (Google Maps) | **Zeitraum setzen, aktualisieren, drucken bzw. Route öffnen** |
 
 ✍️ von Hand pflegen · ✅ läuft automatisch · 🖨️ ausdrucken/unterschreiben
 
@@ -230,14 +230,15 @@ Freitextfeld im Formular da. Es landet automatisch in `Adressen`.
 
 ## Drucken
 
-Auf der Seite `Ausdruck` liegen zwei Widgets:
+Auf der Seite `Ausdruck` liegen drei Widgets:
 
 | Widget | Inhalt |
 |---|---|
 | **Ausdruck** | S1, S2, Vermerke, Dienstorte und Fahrtenbuch — alle Seiten in einem Druckauftrag |
 | **Fahrtenbuch (Schnittversion)** | dasselbe Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt |
+| **Routenlinks (Google Maps)** | keine Druckseite, sondern eine Arbeitsliste: je Reise ein klickbarer „Route"-Link, um die gefahrene Strecke in Google Maps nachzuvollziehen und zu prüfen |
 
-Jedes Widget hat oben eine Leiste mit zwei Knöpfen:
+Die beiden Druck-Widgets haben oben eine Leiste mit zwei Knöpfen:
 
 - **Drucken** — öffnet den Druckdialog. Grist versteckt „Widget drucken" sonst
   im Drei-Punkte-Menü.
@@ -249,6 +250,10 @@ Jedes Widget hat oben eine Leiste mit zwei Knöpfen:
 > erreicht ihn **nicht** von selbst. Vor dem Drucken einmal **Aktualisieren**
 > drücken.
 
+**Routenlinks** hat nur **Aktualisieren** — es gibt dort nichts zu drucken,
+nur Links zum Öffnen. Derselbe Hinweis gilt trotzdem: eine neu erfasste Reise
+erscheint erst nach einem Klick auf **Aktualisieren**.
+
 Was auf welchem Blatt landet:
 
 | Blatt | Kopf aus | Zeilen aus |
@@ -257,6 +262,7 @@ Was auf welchem Blatt landet:
 | Vermerke | Einstellungen | Reisen mit ausgefülltem Feld „Sonstige Informationen" |
 | Dienstorte | Einstellungen | Orte (je höchstens einmal) + Adressen (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
+| Routenlinks | — | Reisen im Zeitraum |
 
 **Spalte „Reiseweg" auf S1:** Der Vordruck verlangt dort nur die laufende
 Nummer, „bei Führung eines Fahrtenbuches" — genau das steht im Spaltenkopf,

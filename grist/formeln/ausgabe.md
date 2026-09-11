@@ -8,12 +8,16 @@ Was in der Google-Sheets-Umsetzung eigene Blätter mit Formeln sind, ist hier
 Dienstorte und Fahrtenbuch, A4 hoch, eine Datei ohne Abhängigkeiten. Ein Widget
 statt vier, ein Grist-Zugriff statt vier.
 
-Daneben steht [`ausgabe/fahrtenbuch-schnitt.html`](../ausgabe/fahrtenbuch-schnitt.html ':ignore'):
-dasselbe Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt. Eigenes
-Widget, kein Bestandteil der Standardausgabe.
+Daneben stehen zwei eigenständige Widgets, kein Bestandteil der
+Standardausgabe:
+[`ausgabe/fahrtenbuch-schnitt.html`](../ausgabe/fahrtenbuch-schnitt.html ':ignore')
+(dasselbe Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt) und
+[`ausgabe/routenlinks.html`](../ausgabe/routenlinks.html ':ignore') (Gegenstück
+zum Sheets-Blatt „GoogleMapsExport", siehe [unten](#routenlinks-google-maps)).
 
-Beide Dateien lassen sich direkt im Browser öffnen — dann rendern sie erfundene
-Beispieldaten. Das ist die Arbeitsweise für Layoutänderungen ohne Grist.
+Alle drei Dateien lassen sich direkt im Browser öffnen — dann rendern sie
+erfundene Beispieldaten. Das ist die Arbeitsweise für Layoutänderungen ohne
+Grist.
 
 ## Was auf welchem Blatt landet
 
@@ -23,6 +27,7 @@ Beispieldaten. Das ist die Arbeitsweise für Layoutänderungen ohne Grist.
 | Vermerke | Einstellungen | Reisen im Zeitraum **mit** `Vermerk` |
 | Dienstorte | Einstellungen | Orte (je höchstens einmal) + Adressen (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
+| Routenlinks | — | Reisen im Zeitraum |
 
 ## Zeitraumfilter
 
@@ -193,6 +198,42 @@ Je Reise eine Zeile, Spalten 1–15 des amtlichen Fahrtenbuchs.
 Die **Schnittversion** bricht dieselben Daten auf zwei Seiten je Zeilenblock um:
 links die Spalten 1–6, rechts 7–15. Bei **100 %** drucken, an der bezeichneten
 Kante schneiden, einkleben, unterschreiben.
+
+## Routenlinks (Google Maps)
+
+Eigenes Widget, [`ausgabe/routenlinks.html`](../ausgabe/routenlinks.html ':ignore') --
+Gegenstück zum Sheets-Blatt
+[GoogleMapsExport](../../sheets/formeln/googlemapsexport.md ':ignore'): eine
+Arbeitsliste zum Durchklicken, kein Druckformular. Kein A4-Layout, keine
+Druckleiste -- nur eine Tabelle mit Aktualisieren-Knopf.
+
+| Spalte | Quelle |
+|---|---|
+| Nr. | `Lfd_Nr` |
+| Datum | `Datum` |
+| Reiseweg | `Reiseweg` |
+| von / bis | `Beginn`, `Ende` |
+| km dienstlich | `KM_dienstlich` |
+| Route | `Maps_Link`, verlinkt als „Route" |
+
+**Statement:**
+- die Route-Zelle bekommt kein `html\`…\`` -- ein eingebettetes `<a>` würde
+  darin selbst escaped und der Link ginge kaputt
+- stattdessen steht der Link zunächst als `data-link`-Attribut (läuft dort
+  ganz normal durch `esc()`) und wird erst danach per DOM-API
+  (`a.href = …`) zum `<a>` -- der Wert wird nie als HTML geparst, das ist
+  sicherer als ein von Hand zusammengesetztes `<a href="…">`
+
+**Ergebnis:** Ein „Route"-Link, der die Reise direkt in Google Maps öffnet,
+in einem neuen Tab (`target="_blank"`, das Widget-Iframe bleibt bestehen).
+**Sonderfall:** Weniger als zwei Orte → `Maps_Link` ist leer → keine Zelle
+mit Link, kein Fehler.
+
+Deutlich einfacher als die Sheets-Version: dort löst eine `BYROW`/`MAP`/
+`XMATCH`-Formel Formular-Kürzel gegen `Orte` auf, weil das Formular rohen
+Text liefert. In Grist ist ein Ortsfeld eine echte `Ref:Orte`-Referenz --
+die Auflösung passiert schon in `Maps_Link` selbst (siehe
+[Reisen](reisen.md#maps_link--routenlink)), hier wird nur noch gelesen.
 
 ## Escaping
 

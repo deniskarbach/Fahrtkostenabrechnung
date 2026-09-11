@@ -72,7 +72,9 @@ und Fahrtenbuch als druckbare Seiten, A4 hoch, eine Datei ohne Abhängigkeiten.
 Im Browser geöffnet rendert sie erfundene Beispieldaten; als Grist-Widget die
 echten. Daneben
 [`ausgabe/fahrtenbuch-schnitt.html`](ausgabe/fahrtenbuch-schnitt.html ':ignore') zum
-Ausschneiden und Einkleben.
+Ausschneiden und Einkleben, und
+[`ausgabe/routenlinks.html`](ausgabe/routenlinks.html ':ignore') — klickbare
+Google-Maps-Routen je Reise, zur Prüfung der gefahrenen Strecke.
 
 | Ausdruck | Kopf aus | Zeilen aus |
 |---|---|---|
@@ -80,6 +82,7 @@ Ausschneiden und Einkleben.
 | Vermerke | Einstellungen | Reisen mit Vermerk |
 | Dienstorte | Einstellungen | Orte (je höchstens einmal) + Adressen (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
+| Routenlinks | — | Reisen im Zeitraum |
 
 ## Einrichten
 
