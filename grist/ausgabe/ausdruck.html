@@ -230,13 +230,21 @@ body {
 
 @media print {
   body { background: #fff; }
-  /* Jedes Blatt erzwingt einen Seitenumbruch danach -- auch das letzte,
-     eine leere Schlussseite ist der Preis für vier unabhängige Dokumente
-     in einem Druckjob ohne fragile :last-child-Logik über Namensräume
-     hinweg. !important nötig, da die Bildschirm-Regeln oben je Dokument
+  /* Umbruch VOR jedem Blatt, nicht dahinter. Beides trennt die vier
+     Dokumente gleich gut, aber die Richtung entscheidet, welche @page-Regel
+     für die erzeugte Seite gilt: ein Umbruch gilt der Seite, auf der das
+     nächste Blatt beginnt, und dieses Blatt bringt sein "page: …" mit.
+     Hinter dem letzten Blatt (Fahrtenbuch, quer) kommt keines mehr -- die
+     Seite, die "break-after" dort erzwang, fiel deshalb auf die namenlose
+     Standardregel zurück und damit auf A4 HOCH. Chrome unterschlug diese
+     leere Schlussseite, Edge druckte sie: dasselbe Dokument sah je nach
+     Browser anders aus. "break-before" erzeugt am Anfang keine Seite --
+     ein erzwungener Umbruch vor dem ersten Blatt wird verworfen --, also
+     bleibt kein Blatt ohne @page-Regel. Kein :last-child über Namensräume
+     nötig. !important nötig, da die Bildschirm-Regeln oben je Dokument
      spezifischer sind (zwei Klassen statt einer). */
   .blatt { width: auto !important; margin: 0 !important; padding: 0 !important;
-           box-shadow: none !important; break-after: page; }
+           box-shadow: none !important; break-before: page; }
   thead { display: table-header-group; }
   tr { break-inside: avoid; }
 }
