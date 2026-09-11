@@ -47,7 +47,7 @@ Beim Ändern:
 
 1. `ZWISCHENZIELE` erhöhen, `python3 grist/setup.py` erneut laufen lassen —
    die fehlenden Spalten kommen hinzu.
-2. `ORT_SLOTS` in [`ausgabe/ausdruck.html`](../ausgabe/ausdruck.html) mitziehen.
+2. `ORT_SLOTS` in [`ausgabe/ausdruck.html`](../ausgabe/ausdruck.html ':ignore') mitziehen.
    Die Liste steht dort **fest im Quelltext** und wird für das Dienstorte-Blatt
    gebraucht; sie wächst nicht von selbst mit.
 3. Formularlayout mit `formular.py` neu setzen.

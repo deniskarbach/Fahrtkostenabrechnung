@@ -67,11 +67,11 @@ Einzelheiten zu jeder Tabelle und jeder Formel:
 
 ## Ausgabe
 
-[`ausgabe/ausdruck.html`](ausgabe/ausdruck.html) — S1, S2, Vermerke, Dienstorte
+[`ausgabe/ausdruck.html`](ausgabe/ausdruck.html ':ignore') — S1, S2, Vermerke, Dienstorte
 und Fahrtenbuch als druckbare Seiten, A4 hoch, eine Datei ohne Abhängigkeiten.
 Im Browser geöffnet rendert sie erfundene Beispieldaten; als Grist-Widget die
 echten. Daneben
-[`ausgabe/fahrtenbuch-schnitt.html`](ausgabe/fahrtenbuch-schnitt.html) zum
+[`ausgabe/fahrtenbuch-schnitt.html`](ausgabe/fahrtenbuch-schnitt.html ':ignore') zum
 Ausschneiden und Einkleben.
 
 | Ausdruck | Kopf aus | Zeilen aus |

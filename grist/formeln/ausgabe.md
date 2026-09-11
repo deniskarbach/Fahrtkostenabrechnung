@@ -4,11 +4,11 @@
 
 Was in der Google-Sheets-Umsetzung eigene Blätter mit Formeln sind, ist hier
 **ein Widget**, das die vier Tabellen liest und daraus die Druckseiten baut:
-[`ausgabe/ausdruck.html`](../ausgabe/ausdruck.html) — S1, S2, Vermerke,
+[`ausgabe/ausdruck.html`](../ausgabe/ausdruck.html ':ignore') — S1, S2, Vermerke,
 Dienstorte und Fahrtenbuch, A4 hoch, eine Datei ohne Abhängigkeiten. Ein Widget
 statt vier, ein Grist-Zugriff statt vier.
 
-Daneben steht [`ausgabe/fahrtenbuch-schnitt.html`](../ausgabe/fahrtenbuch-schnitt.html):
+Daneben steht [`ausgabe/fahrtenbuch-schnitt.html`](../ausgabe/fahrtenbuch-schnitt.html ':ignore'):
 dasselbe Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt. Eigenes
 Widget, kein Bestandteil der Standardausgabe.
 
