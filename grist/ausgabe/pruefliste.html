@@ -341,10 +341,14 @@ function rendern(kopf, reisen, orte) {
 }
 
 /* Gedruckt wird NICHT per window.print() aus dem Widget heraus: dabei oeffnete
-   der Dialog in Hochformat und schnitt die 22 Spalten ab. Warum, ist offen --
-   ausdruck.html druckt sein Fahrtenbuch (@page fahrtenbuch, A4 quer) aus
-   demselben iframe korrekt, an der iframe-Einbettung allein liegt es also
-   nicht. Das fertige Blatt wandert deshalb in ein eigenes Fenster, wo es
+   der Dialog in Hochformat und schnitt die 22 Spalten ab. Im Grist-Iframe
+   greifen die @page-Regeln dieses Dokuments nicht zuverlaessig -- an der
+   iframe-Einbettung liegt es also doch. Hier stand frueher das Gegenteil, mit
+   ausdruck.html als Gegenbeispiel; das war ein Trugschluss aus einer reinen
+   macOS/Chrome-Probe. Unter Windows/Edge quetschte ausdruck.html sein
+   Fahrtenbuch aus demselben Iframe genauso auf Hochformat und druckt
+   inzwischen ueber denselben Weg wie hier.
+   Das fertige Blatt wandert deshalb in ein eigenes Fenster, wo es
    Top-Level-Dokument ist und @page in jedem Fall greift.
    Die Breiten sind zusaetzlich so gewaehlt (252mm statt der moeglichen 277mm),
    dass sie auch bei den groesseren Standardraendern des Dialogs passen --

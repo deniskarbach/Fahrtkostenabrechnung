@@ -273,7 +273,7 @@ body {
 </head>
 <body>
 <div class="druckleiste">
-  <button type="button" onclick="window.print()">Drucken</button>
+  <button type="button" id="drucken">Drucken</button>
   <button type="button" class="sek" id="neu-laden" hidden>Aktualisieren</button>
   <span class="info" id="hinweis">S1/S2, Vermerke, Dienstorte und Fahrtenbuch — alle Seiten in einem Druckauftrag.</span>
 </div>
@@ -870,6 +870,40 @@ const html = (t, ...v) => t.reduce((a, s, i) => a + esc(v[i - 1]) + s);
    dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
 const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
 const hinweis = t => { document.getElementById("hinweis").textContent = t; };
+
+/* Gedruckt wird NICHT per window.print() aus dem Widget heraus. Im Grist-
+   Iframe greifen die @page-Regeln dieses Dokuments nicht zuverlaessig: unter
+   Windows/Edge fiel der ganze Druckjob auf A4 hoch zurueck und quetschte das
+   297mm breite Fahrtenbuch auf Hochformat. Unter macOS/Chrome passierte das
+   nicht -- dieselbe Datei sah je nach Arbeitsplatz anders aus.
+
+   Die Pruefliste hatte genau denselben Fehler ("oeffnete in Hochformat und
+   schnitt rechts ab") und ist so geloest worden; der Kommentar dort nahm
+   ausdruck.html noch als Gegenbeispiel an, weil hier auf dem Mac nichts
+   auffiel. Der Weg ist derselbe: die fertigen Blaetter wandern in ein eigenes
+   Fenster, wo sie Top-Level-Dokument sind und @page in jedem Fall gilt.
+
+   Mitgenommen werden alle fuenf .dok-*-Huellen, nicht nur die .blatt darin --
+   das CSS ist je Dokument unter .dok-XXX gekapselt und griffe sonst nicht. */
+function drucken() {
+  const w = window.open("", "_blank");
+  if (!w) {
+    hinweis("Zum Drucken wird ein neues Fenster gebraucht -- bitte Popups "
+            + "für diese Seite erlauben.");
+    return;
+  }
+  w.document.write('<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
+    + "<title>Reisekostenabrechnung – Ausdruck</title><style>"
+    + document.querySelector("style").textContent
+    + "</style></head><body>"
+    + [...document.querySelectorAll("body > [class^='dok-']")]
+        .map(d => d.outerHTML).join("")
+    + "</body></html>");
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 200);   // document.write ist synchron fertig
+}
+document.getElementById("drucken").onclick = drucken;
 
 /* Grist liefert Datumswerte als Sekunden seit 1970, UTC-Mitternacht. */
 const tag = s => s == null ? "" : new Date(s * 1000).toLocaleDateString("de-DE",

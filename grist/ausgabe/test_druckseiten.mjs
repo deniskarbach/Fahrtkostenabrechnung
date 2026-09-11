@@ -39,5 +39,22 @@ const fb = /@page\s+fahrtenbuch\s*\{([^}]*)\}/i.exec(css)?.[1] ?? "";
 assert.ok(/landscape/.test(fb), "@page fahrtenbuch ist nicht landscape");
 assert.ok(/@page\s*\{[^}]*portrait/.test(css), "namenlose @page ist nicht portrait");
 
+// 4. Gedruckt wird aus einem eigenen Fenster, nicht aus dem Grist-Iframe:
+//    dort greifen die @page-Regeln unter Windows/Edge nicht und der ganze
+//    Job fiel auf A4 hoch zurueck. Gleiche Loesung wie in pruefliste.html.
+const html = readFileSync("grist/ausgabe/ausdruck.html", "utf8");
+assert.ok(!/onclick="window\.print\(\)"/.test(html),
+          "druckt noch direkt aus dem Widget-Iframe");
+assert.ok(/window\.open\(/.test(html) && /\bw\.print\(\)/.test(html),
+          "kein Druckfenster-Pfad gefunden");
+
+// 5. Das Druckfenster muss alle .dok-*-Huellen mitnehmen, nicht nur die
+//    .blatt darin -- das CSS ist je Dokument unter .dok-XXX gekapselt.
+const huellen = [...html.matchAll(/<div class="(dok-[a-z0-9-]+)">/gi)].map(m => m[1]);
+assert.equal(huellen.length, doks.length,
+             `${huellen.length} Huellen im HTML, aber ${doks.length} im CSS`);
+assert.ok(/querySelectorAll\("body > \[class\^='dok-'\]"\)/.test(html),
+          "Druckfenster kopiert nicht alle .dok-*-Huellen");
+
 console.log(`ok — ${doks.length} Blätter mit @page-Zuordnung, Umbruch vor dem Blatt, `
-            + `keine Seite ohne Blatt`);
+            + `keine Seite ohne Blatt, Druck aus eigenem Fenster`);
