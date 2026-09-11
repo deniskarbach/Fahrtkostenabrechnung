@@ -242,6 +242,8 @@ async function ausGrist() {
   hinweis(HINWEIS_STANDARD);
   const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
 
+  /* Gefiltert wird ueber den Reisebeginn -- siehe ausdruck.html: eine Reise,
+     die vor `von` beginnt, gehoert in die vorige Abrechnung. */
   const fahrten = zeilen(await grist.docApi.fetchTable("Reisen"))
     .filter(r => r.Datum != null
                  && (von == null || r.Datum >= von)

@@ -999,6 +999,10 @@ async function ausGrist() {
   }
   hinweis(HINWEIS_STANDARD);
   const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
+  /* Massgeblich ist der BEGINN der Reise, nicht ihr Ende: eine mehrtaegige
+     Reise, die vor `von` beginnt und in den Zeitraum hineinreicht, wurde mit
+     der frueheren Abrechnung bereits erledigt. Sie hier noch einmal zu zeigen
+     hiesse, sie ein zweites Mal abzurechnen -- das ist Absicht, kein Fehler. */
   const imZeitraum = d => d != null && (von == null || d >= von) && (bis == null || d <= bis);
 
   const orteNachId = Object.fromEntries(
