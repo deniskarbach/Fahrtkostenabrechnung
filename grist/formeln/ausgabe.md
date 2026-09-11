@@ -283,6 +283,25 @@ Darunter die **Orte-Legende** — dieselben Zeilen wie das
 [Dienstorte-Blatt](#dienstorte), damit die Kürzel im Reiseweg ohne Blattwechsel
 auflösbar sind.
 
+### Drucken: eigenes Fenster, und warum nicht 277mm
+
+Zwei Fallen, beide aufgetreten:
+
+- **`window.print()` aus dem Widget öffnete den Dialog in Hochformat.** Das
+  Widget läuft in einem iframe, und dort übernimmt der Druckdialog die
+  `@page`-Regel (`size: A4 landscape`) nicht zuverlässig. `drucken()` schreibt
+  das fertige Blatt deshalb in ein **eigenes Fenster**, wo es
+  Top-Level-Dokument ist und `@page` sicher greift.
+- **Auch im Querformat wurde rechts abgeschnitten.** A4 quer misst 297mm;
+  greift `@page` mit 10mm Rand, bleiben 277mm — greift sie nicht, gelten die
+  Standardränder des Dialogs (~12,7mm je Seite) und es bleiben nur
+  **271,6mm**. Die Tabelle war auf 275mm ausgelegt, also genau dazwischen.
+  Jetzt 252mm, damit sie in beiden Fällen passt.
+
+`test_pruefliste.mjs` prüft beides: die Breitensumme jeder der drei Tabellen
+gegen 271,6mm, und dass der Knopf über ein eigenes Fenster druckt statt über
+`window.print()`.
+
 **Statement:**
 - Spaltenbegriffe absichtlich aus S1 übernommen („Tagegeld für",
   „Unentgeltliche Verpflegung", „Wegstrecke", „Mitnahme von Personen") --

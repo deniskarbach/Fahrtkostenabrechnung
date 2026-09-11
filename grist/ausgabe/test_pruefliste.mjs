@@ -12,6 +12,10 @@
       wie das Dienstorte-Blatt in ausdruck.html -- die Sortierlogik steht
       in beiden Dateien (eigenständige Widgets ohne gemeinsame Datei) und
       darf nicht auseinanderlaufen.
+   6. Druckbreite und Druckweg -- beides war kaputt: die Tabelle war mit
+      275mm breiter als die 271,6mm, die bei Standardrändern bleiben, und
+      gedruckt wurde per window.print() aus dem iframe, wo die @page-Regel
+      (A4 quer) nicht übernommen wird -- der Dialog öffnete in Hochformat.
 
        node grist/ausgabe/test_pruefliste.mjs
 */
@@ -197,5 +201,63 @@ assert.deepEqual(ausPruefliste, ausAusdruck,
   + "steht in beiden Dateien und ist auseinandergelaufen");
 assert.ok(ausPruefliste.length >= 4, "zu wenige Orte im Vergleich: " + ausPruefliste.length);
 
+/* ------------------------------------------------- 6. Druckbreite und Druckweg */
+const datei = readFileSync("grist/ausgabe/pruefliste.html", "utf8");
+
+/* A4 quer ist 297mm breit. Greift die @page-Regel, bleiben bei 10mm Rand
+   277mm; greift sie nicht (Grists eigenes "Widget drucken", fremder Browser),
+   gelten die Standardraender des Dialogs -- rund 12,7mm je Seite, also nur
+   271,6mm. Die Tabelle muss unter das KLEINERE Mass passen, sonst wird rechts
+   abgeschnitten. Genau das war der Fehler: 275mm bei 271,6mm verfuegbar. */
+const A4_QUER_STANDARDRAND = 271.6;
+for (const [name, start, ende] of [
+  ["Kopf",    '<table class="kopf">',    '<table class="raster">'],
+  ["Raster",  '<table class="raster">',  '<table class="legende">'],
+  ["Legende", '<table class="legende">', '</body>'],
+]) {
+  const blk = datei.slice(datei.indexOf(start), datei.indexOf(ende));
+  const mm = [...blk.matchAll(/<col style="width:([\d.]+)mm">/g)]
+    .reduce((a, m) => a + parseFloat(m[1]), 0);
+  assert.ok(mm <= A4_QUER_STANDARDRAND,
+    `${name}-Tabelle ist ${mm}mm breit, auf A4 quer passen bei Standardrändern `
+    + `nur ${A4_QUER_STANDARDRAND}mm -- rechte Spalten würden abgeschnitten`);
+}
+
+/* Gedruckt werden muss aus einem eigenen Fenster: im iframe uebernimmt der
+   Dialog die @page-Regel nicht und oeffnet in Hochformat. */
+{
+  const css = datei.slice(datei.indexOf("<style>") + 7, datei.indexOf("</style>"));
+  const zellen2 = {};
+  const kn = id => (zellen2[id] ??= { html: "", onclick: null, hidden: true,
+    set textContent(v) { this.html = v; }, get textContent() { return this.html; },
+    innerHTML: "", querySelectorAll: () => [] });
+  let geschrieben = "", gedruckt = false;
+  const fenster = { document: { write(s) { geschrieben += s; }, close() {} },
+                    focus() {}, print() { gedruckt = true; } };
+  const sb = {
+    document: { getElementById: kn, createElement: () => ({}), head: { appendChild() {} },
+      querySelector: sel => sel === "style" ? { textContent: css }
+                          : sel === ".blatt" ? { outerHTML: "<div>BLATT</div>" } : null },
+    window: { self: 1, top: 1, open: () => fenster,
+              print() { throw new Error("window.print() aus dem iframe -- genau das war der Bug"); } },
+    setTimeout: f => f(), console, URL,
+  };
+  vm.createContext(sb);
+  vm.runInContext([...datei.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]).join("\n"), sb);
+
+  assert.equal(typeof kn("drucken").onclick, "function", "Drucken-Knopf ohne Handler");
+  kn("drucken").onclick();
+  assert.ok(gedruckt, "im Druckfenster wurde nicht gedruckt");
+  assert.ok(geschrieben.includes("@page { size: A4 landscape"),
+    "@page-Querformat fehlt im Druckfenster -- der Dialog öffnet dann in Hochformat");
+  assert.ok(geschrieben.includes("BLATT"), "Blatt-Inhalt fehlt im Druckfenster");
+
+  sb.window.open = () => null;          // Popup blockiert
+  kn("hinweis").textContent = "";
+  kn("drucken").onclick();
+  assert.ok(kn("hinweis").html.includes("Popups"), "blockiertes Popup wird nicht gemeldet");
+}
+
 console.log(`ok — ${kopfSpalten} Spalten je Zeile, Werte in der richtigen Spalte, `
-          + `Orte-Legende deckungsgleich mit dem Dienstorte-Blatt (${ausPruefliste.length} Zeilen)`);
+          + `Orte-Legende deckungsgleich mit dem Dienstorte-Blatt (${ausPruefliste.length} Zeilen), `
+          + `Druckbreite und Querformat-Druckweg abgesichert`);

@@ -17,8 +17,12 @@
    Orte-Legende aus dem Dienstorte-Blatt -- die Stelle soll die
    gewohnte Ansicht wiedererkennen, nicht eine neue lernen.
 
-   A4 quer: 22 Spalten passen nicht auf Hochformat. Spaltenbreiten
-   summieren sich auf 275mm (277mm nutzbar bei 10mm Rand).
+   A4 quer: 22 Spalten passen nicht auf Hochformat. Die Spaltenbreiten
+   summieren sich auf 252mm -- bewusst NICHT auf die theoretisch moeglichen
+   277mm (A4 quer minus 2x10mm @page-Rand). Greift die @page-Regel naemlich
+   nicht, gelten die Standardraender des Druckdialogs (~12,7mm je Seite),
+   und es bleiben nur 271,6mm. Mit 252mm passt es in beiden Faellen.
+   Gedruckt wird ueber ein eigenes Fenster, siehe drucken() weiter unten.
    --------------------------------------------------------------- */
 @page { size: A4 landscape; margin: 10mm; }
 
@@ -51,7 +55,7 @@ body {
   box-shadow: 0 1px 6px rgba(0,0,0,.25);
 }
 
-table { border-collapse: collapse; table-layout: fixed; width: 275mm; }
+table { border-collapse: collapse; table-layout: fixed; width: 252mm; }
 
 /* -------------------------------------------------- Kopfblock (wie Dienstorte) */
 .kopf { margin-bottom: 3mm; }
@@ -86,7 +90,7 @@ table { border-collapse: collapse; table-layout: fixed; width: 275mm; }
 .raster .trenn { border-left: var(--rahmen-breit); }
 
 /* -------------------------------------------------- Orte-Legende */
-.legende { margin-top: 5mm; width: 180mm; }
+.legende { margin-top: 5mm; width: 170mm; }
 .legende caption { caption-side: top; text-align: left; font-size: 8pt;
                    font-weight: bold; padding-bottom: 1mm; }
 .legende th, .legende td { border: var(--rahmen); padding: .4mm 1mm; font-size: 7pt; }
@@ -127,7 +131,7 @@ a { color: #1a73e8; }
 </head>
 <body>
 <div class="leiste">
-  <button type="button" onclick="window.print()">Drucken</button>
+  <button type="button" id="drucken">Drucken</button>
   <button type="button" class="sek" id="neu-laden" hidden>Aktualisieren</button>
   <span class="info" id="hinweis">Alle Angaben je Reise in einer Zeile — für die abschließende Bearbeitung.</span>
 </div>
@@ -135,7 +139,7 @@ a { color: #1a73e8; }
 <div class="blatt">
   <table class="kopf">
     <colgroup>
-      <col style="width:90mm"><col style="width:92mm"><col style="width:93mm">
+      <col style="width:84mm"><col style="width:84mm"><col style="width:84mm">
     </colgroup>
     <tr><td class="titel" colspan="2">REISEKOSTENRECHNUNG — Prüfliste</td>
         <td class="stand" id="k-stand"></td></tr>
@@ -149,17 +153,17 @@ a { color: #1a73e8; }
 
   <table class="raster">
     <colgroup>
-      <col style="width:7mm"><col style="width:18mm">
+      <col style="width:7mm"><col style="width:17mm">
+      <col style="width:9mm"><col style="width:9mm">
+      <col style="width:34mm">
+      <col style="width:8mm"><col style="width:8mm"><col style="width:8mm">
+      <col style="width:8mm"><col style="width:8mm"><col style="width:12mm">
+      <col style="width:10mm">
+      <col style="width:12mm"><col style="width:12mm">
       <col style="width:10mm"><col style="width:10mm">
-      <col style="width:40mm">
-      <col style="width:9mm"><col style="width:9mm"><col style="width:9mm">
-      <col style="width:9mm"><col style="width:9mm"><col style="width:13mm">
-      <col style="width:11mm">
+      <col style="width:12mm"><col style="width:9mm">
       <col style="width:13mm"><col style="width:13mm">
-      <col style="width:11mm"><col style="width:11mm">
-      <col style="width:12mm"><col style="width:10mm">
-      <col style="width:13mm"><col style="width:13mm">
-      <col style="width:13mm"><col style="width:12mm">
+      <col style="width:12mm"><col style="width:11mm">
     </colgroup>
     <thead>
       <tr>
@@ -200,7 +204,7 @@ a { color: #1a73e8; }
   <table class="legende">
     <caption>Dienstorte — Legende zu den Kürzeln im Reiseweg</caption>
     <colgroup>
-      <col style="width:8mm"><col style="width:26mm"><col style="width:60mm"><col style="width:86mm">
+      <col style="width:8mm"><col style="width:24mm"><col style="width:56mm"><col style="width:82mm">
     </colgroup>
     <thead>
       <tr>
@@ -335,6 +339,33 @@ function rendern(kopf, reisen, orte) {
 
   document.getElementById("daten-orte").innerHTML = orte.map(ortZeile).join("");
 }
+
+/* Gedruckt wird NICHT per window.print() aus dem Widget heraus: das Widget
+   laeuft in einem iframe, und dort uebernimmt der Druckdialog die @page-Regel
+   (A4 quer) nicht zuverlaessig -- er oeffnet in Hochformat, und die 22 Spalten
+   werden abgeschnitten. Stattdessen wandert das fertige Blatt in ein eigenes
+   Fenster, wo es Top-Level-Dokument ist und @page sicher greift.
+   Die Breiten sind zusaetzlich so gewaehlt (252mm statt der moeglichen 277mm),
+   dass sie auch bei den groesseren Standardraendern des Dialogs passen --
+   falls jemand doch ueber Grists eigenes "Widget drucken" geht. */
+function drucken() {
+  const w = window.open("", "_blank");
+  if (!w) {
+    hinweis("Zum Drucken wird ein neues Fenster gebraucht -- bitte Popups "
+            + "für diese Seite erlauben.");
+    return;
+  }
+  w.document.write('<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
+    + "<title>Prüfliste – Reisekostenabrechnung</title><style>"
+    + document.querySelector("style").textContent
+    + "</style></head><body>"
+    + document.querySelector(".blatt").outerHTML
+    + "</body></html>");
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 200);   // document.write ist synchron fertig
+}
+document.getElementById("drucken").onclick = drucken;
 
 /* ---------------------------------------------------------- Grist-Anbindung */
 
