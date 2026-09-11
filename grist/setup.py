@@ -486,6 +486,29 @@ def ohne_blaetter(knoten, weg):
     return raus
 
 
+def layouts_aufraeumen():
+    """Nimmt aus jedem Seitenlayout die Blätter heraus, die auf eine Section
+    zeigen, die es nicht (mehr) gibt oder die inzwischen zu einer anderen
+    Seite gehört. Solche Karteileichen entstanden, solange das Entfernen eines
+    Widgets sein Blatt stehen liess -- die Reisen-Seite verwies dadurch auf die
+    Einstellungs-Karte. Idempotent: ohne Fund passiert nichts."""
+    aktionen = []
+    for v in sql("select id, name, layoutSpec from _grist_Views"):
+        if not v["layoutSpec"]:
+            continue
+        eigen = {s["id"] for s in
+                 sql(f"select id from _grist_Views_section where parentId = {v['id']}")}
+        kinder = json.loads(v["layoutSpec"]).get("children") or []
+        fremd = set(blaetter(kinder)) - eigen
+        if fremd:
+            aktionen.append(["UpdateRecord", "_grist_Views", v["id"], {"layoutSpec": json.dumps(
+                {"children": ohne_blaetter(kinder, fremd), "collapsed": []})}])
+            print(f"  Layout {v['name']}: Blatt/Blätter {sorted(fremd)} entfernt")
+    if aktionen:
+        api("POST", "/apply", aktionen)
+    print(f"  Layouts aufgeräumt: {len(aktionen)} Seite(n)")
+
+
 def seiten_kinder(vid, ohne=()):
     """Kind-Knoten des Seitenlayouts, ohne die Knoten der genannten Sections.
     Verschachtelte Knoten (nebeneinander angeordnete Widgets) tragen keinen
@@ -504,20 +527,34 @@ def zeitraum_widget():
     Datumsfelder aus Einstellungen, über dem Druck-Widget. Die Fachkraft setzt
     den Zeitraum damit dort, wo gedruckt wird, statt in der Stammdaten-Zeile.
     Idempotent: ist das Widget da, passiert nichts."""
-    seite = sql("select id from _grist_Views where name = 'Ausdruck'")
     et = sql("select id from _grist_Tables where tableId = 'Einstellungen'")
-    if not (seite and et):
-        print("  Zeitraum-Widget: Seite 'Ausdruck' oder Tabelle fehlt — übersprungen")
+    if not et:
+        print("  Zeitraum-Widget: Tabelle 'Einstellungen' fehlt — übersprungen")
         return
-    vid, et = seite[0]["id"], et[0]["id"]
+    et = et[0]["id"]
+    seite = sql("select id from _grist_Views where name = 'Ausdruck'")
 
-    if sql(f"select id from _grist_Views_section "
-           f"where parentId = {vid} and tableRef = {et} and parentKey <> 'custom'"):
-        print("  Zeitraum-Widget: vorhanden")
-        return
-
-    sec = api("POST", "/apply",
-              [["CreateViewSection", et, vid, "single", None, None]])["retValues"][0]["sectionRef"]
+    if seite:
+        vid = seite[0]["id"]
+        if sql(f"select id from _grist_Views_section "
+               f"where parentId = {vid} and tableRef = {et} and parentKey <> 'custom'"):
+            print("  Zeitraum-Widget: vorhanden")
+            return
+        sec = api("POST", "/apply", [["CreateViewSection", et, vid, "single", None, None]]
+                  )["retValues"][0]["sectionRef"]
+    else:
+        # Ein frisch angelegtes Dokument hat die Seite noch nicht. Ohne sie
+        # blieb die komplette Ausgabeseite ungebaut -- Zeitraum-Karte, beide
+        # Druck-Widgets, Anordnung: alles übersprungen, kommentarlos. Beim
+        # Lauf gegen ein leeres Testdokument aufgefallen, nicht im Betrieb,
+        # weil dort immer ein Vorlagendokument kopiert wird.
+        # parentId 0 legt Seite und Section zusammen an; die Seite trägt
+        # danach den Tabellennamen und wird umbenannt.
+        neu = api("POST", "/apply",
+                  [["CreateViewSection", et, 0, "single", None, None]])["retValues"][0]
+        vid, sec = neu["viewRef"], neu["sectionRef"]
+        api("POST", "/apply", [["UpdateRecord", "_grist_Views", vid, {"name": "Ausdruck"}]])
+        print(f"  Seite 'Ausdruck' angelegt (View {vid})")
     weg = [f["id"] for f in sql(
         f"select f.id from _grist_Views_section_field f "
         f"join _grist_Tables_column c on c.id = f.colRef "
@@ -789,6 +826,7 @@ if __name__ == "__main__":
     zeitraum_widget()      # braucht die Ausdruck-Seite — sonst übersprungen
     ausgabe_widgets()      # dito
     ausdruck_layout()      # dito; ordnet nur ein frisch eingerichtetes Dokument
+    layouts_aufraeumen()   # nach allem, was Sections anlegt oder entfernt
 
     print(f"""
 Fertig. Rest in der Oberfläche:
