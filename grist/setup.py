@@ -171,13 +171,19 @@ def SYNC(slot):
     Freitext-Korrektur so oder so -- Grist leitet die Zeile bei jeder
     Neuberechnung neu ab (nachgemessen in grist/test_lookuporadd.py, Test 3).
     Gewinnt die Auswahl (wie in REISEWEG/MAPS), entsteht keine Adressen-Zeile
-    -- sonst taucht der ignorierte Freitext trotzdem im Dienstorte-Blatt auf."""
+    -- sonst taucht der ignorierte Freitext trotzdem im Dienstorte-Blatt auf.
+
+    Die lokale Variable heisst bewusst NICHT 'rec': Grist ersetzt jedes $Feld
+    durch rec.Feld und uebergibt die eigene Zeile als Parameter 'rec'. Eine
+    Zuweisung an 'rec' im Formelrumpf macht daraus einen SyntaxError -- und
+    zwar in allen sieben Sync-Spalten gleichzeitig, womit lautlos nie wieder
+    eine Adressen-Zeile entstand."""
     return f'''
 if ${slot} or not ${slot}_Text:
   return None
-rec = Adressen.lookupOrAddDerived(Reise=$id, Slot="{slot}")
-rec.Label = ${slot}_Text
-return rec
+zeile = Adressen.lookupOrAddDerived(Reise=$id, Slot="{slot}")
+zeile.Label = ${slot}_Text
+return zeile
 '''.strip()
 
 # ---------------------------------------------------------------- Tabellen
@@ -783,6 +789,28 @@ def feste_orte_anlegen():
               f"Orte bekommen keinen Routenlink, Strasse/PLZ/Ort nachtragen")
 
 
+def formelfehler_melden():
+    """Nennt jede Formelspalte, deren Zellen einen Fehler tragen.
+
+    Noetig, weil der Fehler sonst niemandem auffaellt: der REST-Endpunkt
+    /tables/X/records liefert fuer eine Fehlerzelle schlicht null, und die
+    Ausgabe-Widgets zeigen dann eine leere Spalte. So blieben die sieben
+    Sync-Spalten lange kaputt. /tables/X/data reicht den Rohwert
+    ["E", "SyntaxError"] durch -- daher dieser Endpunkt."""
+    fehler = []
+    for name in ("Orte", "Einstellungen", "Reisen", "Adressen"):
+        for spalte_id, werte in api("GET", f"/tables/{name}/data").items():
+            art = {w[1] for w in werte if isinstance(w, list) and w and w[0] == "E"}
+            if art:
+                fehler.append(f"{name}.{spalte_id}: {', '.join(sorted(art))}")
+    if fehler:
+        print(f"  FORMELFEHLER in {len(fehler)} Spalte(n):")
+        for z in fehler:
+            print(f"    {z}")
+    else:
+        print("  Formeln: keine Fehlerzellen")
+
+
 def einstellungen_karte():
     """Ersetzt die Tabellenansicht auf der eigenen 'Einstellungen'-Seite durch
     ein Card-Widget: eine Zeile als Formular gelesen ist unmissverständlich,
@@ -938,6 +966,7 @@ if __name__ == "__main__":
     ort_anzeige_setzen()
     hilfsspalten_ausblenden()
     adressen_aufraeumen()
+    formelfehler_melden()
 
     if not api("GET", "/tables/Einstellungen/records")["records"]:
         api("POST", "/tables/Einstellungen/records", {"records": [{"fields": {}}]})
