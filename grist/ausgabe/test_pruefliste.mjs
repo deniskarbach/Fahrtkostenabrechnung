@@ -14,8 +14,9 @@
       darf nicht auseinanderlaufen.
    6. Druckbreite und Druckweg -- beides war kaputt: die Tabelle war mit
       275mm breiter als die 271,6mm, die bei Standardrändern bleiben, und
-      gedruckt wurde per window.print() aus dem iframe, wo die @page-Regel
-      (A4 quer) nicht übernommen wird -- der Dialog öffnete in Hochformat.
+      gedruckt wurde per window.print() aus dem Widget, wobei der Dialog in
+      Hochformat öffnete (Ursache offen -- ausdruck.html druckt sein
+      Fahrtenbuch aus demselben iframe korrekt quer).
 
        node grist/ausgabe/test_pruefliste.mjs
 */

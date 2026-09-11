@@ -287,11 +287,14 @@ auflösbar sind.
 
 Zwei Fallen, beide aufgetreten:
 
-- **`window.print()` aus dem Widget öffnete den Dialog in Hochformat.** Das
-  Widget läuft in einem iframe, und dort übernimmt der Druckdialog die
-  `@page`-Regel (`size: A4 landscape`) nicht zuverlässig. `drucken()` schreibt
-  das fertige Blatt deshalb in ein **eigenes Fenster**, wo es
-  Top-Level-Dokument ist und `@page` sicher greift.
+- **`window.print()` aus dem Widget öffnete den Dialog in Hochformat.**
+  Beobachtet, Ursache **nicht abschließend geklärt**: eine naheliegende
+  Erklärung wäre, dass der Dialog die `@page`-Regel aus dem iframe nicht
+  übernimmt — die ist aber widerlegt, denn `ausdruck.html` druckt sein
+  Fahrtenbuch (`@page fahrtenbuch { size: A4 landscape }`) aus demselben
+  iframe korrekt quer. `drucken()` schreibt das fertige Blatt deshalb in ein
+  **eigenes Fenster**, wo es Top-Level-Dokument ist und `@page` in jedem Fall
+  greift — das umgeht die offene Frage, statt sie zu beantworten.
 - **Auch im Querformat wurde rechts abgeschnitten.** A4 quer misst 297mm;
   greift `@page` mit 10mm Rand, bleiben 277mm — greift sie nicht, gelten die
   Standardränder des Dialogs (~12,7mm je Seite) und es bleiben nur

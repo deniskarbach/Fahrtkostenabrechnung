@@ -340,11 +340,12 @@ function rendern(kopf, reisen, orte) {
   document.getElementById("daten-orte").innerHTML = orte.map(ortZeile).join("");
 }
 
-/* Gedruckt wird NICHT per window.print() aus dem Widget heraus: das Widget
-   laeuft in einem iframe, und dort uebernimmt der Druckdialog die @page-Regel
-   (A4 quer) nicht zuverlaessig -- er oeffnet in Hochformat, und die 22 Spalten
-   werden abgeschnitten. Stattdessen wandert das fertige Blatt in ein eigenes
-   Fenster, wo es Top-Level-Dokument ist und @page sicher greift.
+/* Gedruckt wird NICHT per window.print() aus dem Widget heraus: dabei oeffnete
+   der Dialog in Hochformat und schnitt die 22 Spalten ab. Warum, ist offen --
+   ausdruck.html druckt sein Fahrtenbuch (@page fahrtenbuch, A4 quer) aus
+   demselben iframe korrekt, an der iframe-Einbettung allein liegt es also
+   nicht. Das fertige Blatt wandert deshalb in ein eigenes Fenster, wo es
+   Top-Level-Dokument ist und @page in jedem Fall greift.
    Die Breiten sind zusaetzlich so gewaehlt (252mm statt der moeglichen 277mm),
    dass sie auch bei den groesseren Standardraendern des Dialogs passen --
    falls jemand doch ueber Grists eigenes "Widget drucken" geht. */
