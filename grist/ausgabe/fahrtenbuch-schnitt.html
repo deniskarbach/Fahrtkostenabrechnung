@@ -93,6 +93,8 @@ tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
   background: #16a34a; color: #fff;
 }
 .druckleiste button:hover { background: #15803d; border-color: #15803d; }
+.druckleiste button.sek { background: #fff; color: #16a34a; }
+.druckleiste button.sek:hover { background: #f0fdf4; }
 .druckleiste .info { color: #666; }
 
 @media print { .druckleiste { display: none !important; } }
@@ -101,7 +103,8 @@ tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
 <body>
 <div class="druckleiste">
   <button type="button" onclick="window.print()">Drucken</button>
-  <span class="info">Je Zeilenblock zwei Seiten: links Spalten 1–6, rechts 7–15.</span>
+  <button type="button" class="sek" id="neu-laden" hidden>Aktualisieren</button>
+  <span class="info" id="hinweis">Je Zeilenblock zwei Seiten: links Spalten 1–6, rechts 7–15.</span>
 </div>
 <div id="seiten"></div>
 
@@ -171,14 +174,21 @@ function kopfSeite2() {
     </thead>`;
 }
 
+/* Tabellenzellen werden als HTML zusammengesetzt. Das Präfix html`…` schiebt
+   jeden eingesetzten Wert durch esc(); Formulareingaben (Vermerk, Freitext-Orte,
+   Adressen) können so kein Markup einschleusen. Ohne Präfix kein Schutz. */
+const esc = s => String(s ?? "").replace(/[&<>"]/g,
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const html = (t, ...v) => t.reduce((a, s, i) => a + esc(v[i - 1]) + s);
+
 function zeileSeite1(f) {
-  return `<tr>
+  return html`<tr>
     <td>${f.nr ?? ""}</td><td>${f.monat}</td><td>${f.tag}</td>
     <td>${f.von}</td><td>${f.bis}</td><td class="weg">${f.weg}</td></tr>`;
 }
 
 function zeileSeite2(f) {
-  return `<tr>
+  return html`<tr>
     <td>${f.kmBeginn ?? ""}</td><td>${f.kmEnde ?? ""}</td>
     <td>${f.kmDienstlich ?? ""}</td><td>${f.kmPrivat ?? ""}</td>
     <td></td><td></td><td></td><td></td>
@@ -216,8 +226,20 @@ const monatTag = s => {
 const zeilen = t => t.id.map((_, i) =>
   Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
 
+/* Meldungen gehen in die Druckleiste, nicht in den <body>: ein ersetzter Body
+   nimmt die Tabellen mit, und der naechste onRecords-Lauf findet seine Zellen
+   dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
+const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
+const hinweis = t => { document.getElementById("hinweis").textContent = t; };
+
 async function ausGrist() {
   const [e] = zeilen(await grist.docApi.fetchTable("Einstellungen"));
+  if (!e) {
+    hinweis("Tabelle 'Einstellungen' ist leer -- setup.py laufen lassen, "
+            + "dann 'Aktualisieren'.");
+    return;
+  }
+  hinweis(HINWEIS_STANDARD);
   const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
 
   const fahrten = zeilen(await grist.docApi.fetchTable("Reisen"))
@@ -244,14 +266,35 @@ async function ausGrist() {
 if (window.self === window.top) {
   rendern(beispielFahrten);
 } else {
+  /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
+     Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
+     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy loescht
+     document.referrer, und ein fest verdrahtetes docs.getgrist.com waere dann
+     doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
+     Host bekaeme einen Request aus dem Dokument. Lieber nichts laden und es
+     sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
-                                   : "https://docs.getgrist.com";
+                : window.location.ancestorOrigins?.[0] || "";
+  if (!quelle) {
+    hinweis("Herkunft der Grist-Instanz nicht ermittelbar (Referrer-Policy) -- "
+            + "Widget kann die Plugin-API nicht laden.");
+    throw new Error("keine Grist-Herkunft");
+  }
   const s = document.createElement("script");
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
     grist.ready({ requiredAccess: "full" });
+    /* onRecords feuert beim Aufbau und danach nur bei Aenderungen an der
+       Tabelle, an der das Widget haengt -- das ist 'Einstellungen', also
+       praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder
+       korrigierte Reise erreicht das Widget NICHT.
+       ponytail: sichtbarer Knopf statt Polling -- die Plugin-API kennt
+       keinen Haken auf fremde Tabellen, und still veraltet drucken ist der
+       teurere Fehler. */
     grist.onRecords(ausGrist);
-    ausGrist();
+    const knopf = document.getElementById("neu-laden");
+    knopf.hidden = false;
+    knopf.onclick = ausGrist;
   };
   document.head.appendChild(s);
 }

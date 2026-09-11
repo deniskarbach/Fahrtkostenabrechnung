@@ -82,8 +82,9 @@ if "--fingerabdruecke" in sys.argv:
 
 STAERKE = {"thin": "var(--rahmen)", "medium": "var(--rahmen-breit)"}
 
-# Zellen, die das Skript im Widget füllt (Zeile, Spaltenindex) -> id
-IDS = {(5, 3): "k-s2-iban", (7, 3): "k-s2-bic"}
+# Das Widget füllt im S2-Block keine Zelle mehr: die Kontoverbindung wird
+# nicht erfasst, IBAN- und BIC-Kasten bleiben als Vordruck stehen. Daher
+# vergibt dieses Skript auch keine ids mehr.
 
 
 def breite(sp):
@@ -134,7 +135,7 @@ for s in SPALTEN:
     aus.append(f'      <col style="width:{breite(s) / gesamt * SATZ:.2f}mm">')
 aus.append("    </colgroup>")
 
-for r in range(1, 49):
+for r in range(1, WS.max_row + 1):
     aus.append(f'    <tr style="height:{hoehe(r) * PT_MM:.2f}mm">')
     for ci, sp in enumerate(SPALTEN, start=1):
         if (r, ci) in BELEGT:
@@ -185,8 +186,6 @@ for r in range(1, 49):
 
         inhalt = (wert.replace("&", "&amp;").replace("<", "&lt;")
                       .replace(">", "&gt;").replace("  ", "&nbsp;&nbsp;"))
-        if (r, ci) in IDS:
-            attr.insert(0, f'id="{IDS[(r, ci)]}"')
         offen = "<td" + ("".join(" " + x for x in attr))
         if stil:
             offen += ' style="' + ";".join(stil) + '"'
@@ -199,6 +198,15 @@ aus.append("  </table>")
 # Zelle erwischt haben (eine von einem Merge überdeckte Zelle besucht die
 # Schleife nie), und kein geschwärzter Originalwert darf anderswo im Blatt
 # stehen geblieben sein.
+# 297mm Blatt minus 10mm oberer Rand (.dok-s2 .blatt, unten kein Rand).
+SEITE_MM = 287
+gesamt_mm = sum(hoehe(r) for r in range(1, WS.max_row + 1)) * PT_MM
+if gesamt_mm > SEITE_MM:
+    sys.exit(f"S2-Block wäre {gesamt_mm:.1f}mm hoch, auf ein A4-Blatt passen "
+             f"{SEITE_MM}mm ({WS.max_row} Zeilen in der Vorlage). Die Zeilenzahl "
+             f"kommt aus der Vorlage -- stehen am Blattende formatierte "
+             f"Leerzeilen? Abbruch, sonst läuft S2 still auf Seite 2 über.")
+
 fehlend = sorted(SCHWAERZEN.keys() - GESCHWAERZT.keys())
 if fehlend:
     sys.exit(f"Schwärzungsregeln liefen ins Leere für Zellen {fehlend} — "

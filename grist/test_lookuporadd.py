@@ -8,8 +8,9 @@ Legt zwei Wegwerf-Tabellen an (ZZ_Test_Quelle, ZZ_Test_Ziel) und prüft:
   2. Kein Merge: ein zweiter Quelle-Datensatz mit demselben Text ergibt eine
      ZWEITE Ziel-Zeile (Schlüssel ist die Quelle-Zeilen-ID — wie im Vorhaben
      Reise-ID + Slot, dort ebenfalls immer eindeutig).
-  3. Kein Nachziehen: Text in Quelle nachträglich geändert -> Label in Ziel
-     bleibt beim Ursprungswert stehen (vermutete Schwäche, nur Beobachtung).
+  3. Nachziehen: Text in Quelle nachträglich geändert -> Label in Ziel zieht
+     nach. Die ursprüngliche Vermutung war das Gegenteil; der Lauf hat sie
+     widerlegt, Grist leitet die Zeile bei jeder Neuberechnung neu ab.
 
 Läuft gegen das echte Dokument aus grist/.env. Räumt am Ende automatisch auf.
 
@@ -70,14 +71,14 @@ api("POST", f"/tables/{QUELLE}/records",
 ziel = api("GET", f"/tables/{ZIEL}/records")["records"]
 ok &= pruefen(len(ziel) == 2, f"zwei Ziel-Zeilen, kein Merge (gefunden: {len(ziel)})")
 
-print("\nTest 3 — zieht eine spätere Korrektur des Texts ins Ziel nach? (Erwartung: nein)")
+print("\nTest 3 — zieht eine spätere Korrektur des Texts ins Ziel nach?")
 api("PATCH", f"/tables/{QUELLE}/records",
     {"records": [{"id": r1, "fields": {"Text": "korrigiert"}}]})
 q1 = next(r for r in api("GET", f"/tables/{QUELLE}/records")["records"] if r["id"] == r1)
 z1 = next(z for z in api("GET", f"/tables/{ZIEL}/records")["records"]
           if z["id"] == q1["fields"]["Ziel_Ref"])
-pruefen(z1["fields"]["Label"] == "Bürgerhaus Wirges",
-        f"Label bleibt beim Ursprungswert stehen, wie erwartet (gefunden: {z1['fields']['Label']!r})")
+ok &= pruefen(z1["fields"]["Label"] == "korrigiert",
+              f"Korrektur im Ziel angekommen (gefunden: {z1['fields']['Label']!r})")
 
 print(f"\n{'Kernannahme bestätigt' if ok else 'Kernannahme WIDERLEGT'} — lookupOrAddDerived "
       f"{'funktioniert' if ok else 'funktioniert NICHT'} gegen eine normale Tabelle.")

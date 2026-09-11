@@ -71,8 +71,8 @@ ORT_SLOTS = ["Ort_Beginn"] + [f"Ort_{i}" for i in range(1, ZWISCHENZIELE + 1)] +
 ORT_LABEL = {"Ort_Beginn": "Ort Reisebeginn", "Ort_Ende": "Ort Reiseende",
              **{f"Ort_{i}": f"Ort {i}" for i in range(1, ZWISCHENZIELE + 1)}}
 
-# Jeder Stopp ist ein Paar: Auswahl aus 'Orte' fuer die Stammorte, Freitext
-# fuer die Einmalziele. Ist die Auswahl gesetzt, gewinnt sie — stillschweigend.
+# Jeder Stopp ist ein Paar: Auswahl aus 'Orte' für die Stammorte, Freitext
+# für die Einmalziele. Ist die Auswahl gesetzt, gewinnt sie — stillschweigend.
 PAARE = "[" + ", ".join(f"(${s}, ${s}_Text)" for s in ORT_SLOTS) + "]"
 
 
@@ -89,15 +89,23 @@ a, b = minuten($Beginn), minuten($Ende)
 if a is None or b is None or not $Datum:
   return 0
 tage = ($Datum_bis - $Datum).days if $Datum_bis else 0
-return tage * 1440 + b - a
+if tage < 0:
+  return 0
+total = tage * 1440 + b - a
+if total < 0:
+  total += 1440
+return total
 '''.strip()
 
 STUFE = '''
 if not $Tagegeld_beantragt:
   return ""
-if $Abwesenheit_min - $Min_privat_Abzug < 481:   # Anspruch dem Grunde nach
+if ($Abwesenheit_min or 0) - ($Min_privat_Abzug or 0) < 481:   # Anspruch dem Grunde nach
   return ""
 r = $Rest_min
+if r <= 0:   return ""     # Abwesenheit ging vollstaendig fuer Dienststaette/
+                           # Dienstort/privaten Abzug drauf -- keine Stufe,
+                           # nicht die kleinste
 if r < 481:  return "anteilig"
 if r < 840:  return ">8h"
 if r < 1440: return ">=14h"
@@ -145,16 +153,32 @@ JA_NEIN = {"choices": ["Ja", "Nein"]}
 def SYNC(slot):
     """Legt bei ausgefülltem Freitext automatisch die zugehörige Zeile in
     Adressen an (Reise+Slot als Schlüssel -> nie ein Treffer auf eine fremde
-    Zeile, jede Fahrt bekommt ihre eigene). Siehe grist/test_lookuporadd.py
-    für den Nachweis, dass lookupOrAddDerived das leistet."""
+    Zeile, jede Fahrt bekommt ihre eigene). Label steht bewusst NICHT im
+    Schlüssel, sondern wird danach zugewiesen: der Schlüssel soll die Zeile
+    identifizieren, nicht ihren Inhalt tragen. Nachgezogen wird eine spätere
+    Freitext-Korrektur so oder so -- Grist leitet die Zeile bei jeder
+    Neuberechnung neu ab (nachgemessen in grist/test_lookuporadd.py, Test 3).
+    Gewinnt die Auswahl (wie in REISEWEG/MAPS), entsteht keine Adressen-Zeile
+    -- sonst taucht der ignorierte Freitext trotzdem im Dienstorte-Blatt auf."""
     return f'''
-if not ${slot}_Text:
+if ${slot} or not ${slot}_Text:
   return None
-return Adressen.lookupOrAddDerived(Reise=$id, Slot="{slot}", Label=${slot}_Text)
+rec = Adressen.lookupOrAddDerived(Reise=$id, Slot="{slot}")
+rec.Label = ${slot}_Text
+return rec
 '''.strip()
 
 # ---------------------------------------------------------------- Tabellen
 
+# Reiseziele mit vollständiger Adresse -- gepflegt wird ausschließlich hier,
+# für jeden Ort gleich, auch für WO (Wohnung) und KV (Dienststelle). Keine
+# Formel, kein Verweis auf 'Einstellungen': jeder Versuch, diese beiden Zeilen
+# automatisch aus 'Einstellungen' zu befüllen, hat mehr Verwirrung erzeugt als
+# die Dopplung, die er vermeiden sollte -- Ref-Spalten mit leerem Datenfeld,
+# eine Formel, die Strasse/PLZ/Ort editierbar aussehen aber wirkungslos bleiben
+# ließ. Bewusst zurückgebaut: bei einem Umzug ändert sich die Adresse an zwei
+# Stellen (hier und in 'Einstellungen'); vergisst man eine, ist der Ausdruck
+# einmal falsch -- ein Anruf bei der Abrechnungsstelle klärt das.
 ORTE = [
     spalte("Kuerzel",  "Kürzel", "Text"),
     spalte("Name",     "Name der Einrichtung", "Text"),
@@ -165,6 +189,11 @@ ORTE = [
            formel='", ".join(x for x in [$Strasse, ($PLZ + " " + $Ort).strip()] if x)'),
 ]
 
+# Speist die Formulare (S1/S2-Kopf, Vermerke, Dienstorte) -- unabhängig von
+# 'Orte' gepflegt, siehe Kommentar dort.
+#
+# IBAN/BIC werden bewusst nicht erfasst: die Kontoverbindung liegt bereits in
+# der Bezügeabrechnung, im S2-Vordruck bleiben die Felder leer.
 EINSTELLUNGEN = [
     spalte("Vorname", "Vorname", "Text"),
     spalte("Name", "Name", "Text"),
@@ -175,11 +204,15 @@ EINSTELLUNGEN = [
     spalte("Dienstort_Strasse", "Dienstort – Straße und Nr.", "Text"),
     spalte("Dienstort_PLZ", "Dienstort – PLZ", "Text"),
     spalte("Dienstort_Ort", "Dienstort – Ort", "Text"),
-    spalte("IBAN", "IBAN", "Text"),
-    spalte("BIC", "BIC", "Text"),
     spalte("Zeitraum_von", "Abrechnungszeitraum von", "Date"),
     spalte("Zeitraum_bis", "Abrechnungszeitraum bis", "Date"),
 ]
+
+# Die beiden Pflichtzeilen, die setup.py in 'Orte' anlegt (nur Kürzel und
+# Name) -- Reiseweg und Routenlink brauchen sie für fast jede Fahrt. Adresse
+# trägt die Abrechnungsstelle direkt in 'Orte' ein, wie bei jedem anderen Ort.
+FESTE_ORTE = [("WO", "Wohnung"), ("KV", "Dienststelle")]
+
 
 def ort_spalten():
     """Je Stopp zwei Felder: Auswahlliste und Freitext, im Formular nebeneinander."""
@@ -213,9 +246,10 @@ REISEN = [
     # --- berechnet ---
     spalte("Datum_bis",       "Reisedatum bis", "Date",  formel="$Datum_Ende or $Datum"),
     spalte("Lfd_Nr",          "Laufende Nummer", "Int",  formel=LFD_NR),
-    spalte("KM_gesamt",       "Kilometer gesamt", "Int", formel="($KM_Ende or 0) - ($KM_Beginn or 0)"),
+    spalte("KM_gesamt",       "Kilometer gesamt", "Int",
+           formel="max(0, ($KM_Ende or 0) - ($KM_Beginn or 0))"),
     spalte("KM_dienstlich",   "Kilometer dienstlich", "Int",
-           formel="$KM_gesamt - ($Umweg_privat or 0)"),
+           formel="max(0, $KM_gesamt - ($Umweg_privat or 0))"),
     spalte("Abwesenheit_min", "Abwesenheit (Minuten)", "Int", formel=ABWESENHEIT),
     spalte("Rest_min",        "Rest-Zeit (Minuten)", "Int",
            formel="$Abwesenheit_min - ($Min_privat_Abzug or 0) "
@@ -251,6 +285,22 @@ def adressen_sync_spalten():
     return [spalte(f"{sid}_Sync", f"{ORT_LABEL[sid]} – Adressen-Sync", "Ref:Adressen",
                     formel=SYNC(sid))
             for sid in ORT_SLOTS]
+
+def adressen_aufraeumen():
+    """Entfernt Adressen-Zeilen, deren Reise gelöscht, deren Freitext geleert
+    oder deren Auswahl nachträglich gesetzt wurde (Auswahl gewinnt dann, wie
+    in REISEWEG/MAPS). lookupOrAddDerived legt Zeilen an, räumt aber nie ab --
+    ohne das hier bleibt so eine Zeile für immer stehen."""
+    reisen = {r["id"]: r["fields"] for r in api("GET", "/tables/Reisen/records")["records"]}
+    adressen = api("GET", "/tables/Adressen/records")["records"]
+    weg = [a["id"] for a in adressen
+           if not reisen.get(a["fields"]["Reise"])
+           or reisen[a["fields"]["Reise"]].get(a["fields"]["Slot"])
+           or not reisen[a["fields"]["Reise"]].get(f"{a['fields']['Slot']}_Text")]
+    if weg:
+        api("POST", "/apply", [["BulkRemoveRecord", "Adressen", weg]])
+    print(f"  Adressen: {len(weg)} verwaiste Zeile(n) entfernt")
+
 
 # ---------------------------------------------------------------- Ausführung
 
@@ -376,6 +426,20 @@ def formeln_angleichen(tabelle, spalten):
     print(f"  Formeln {tabelle}: {len(patch)} angeglichen")
 
 
+def seiten_kinder(vid, ohne=()):
+    """Kind-Knoten des Seitenlayouts, ohne die Knoten der genannten Sections.
+    Verschachtelte Knoten (nebeneinander angeordnete Widgets) tragen keinen
+    eigenen 'leaf' und bleiben unangetastet stehen -- ein neues Widget wird
+    davor gehaengt, nie an ihre Stelle gesetzt. Eine frisch angelegte Seite
+    hat noch gar keine layoutSpec, daher das `or`.
+    ponytail: ein Container, der nur entfernte Sections enthielt, bleibt als
+    leerer Knoten stehen -- Grist blendet ihn aus; erst aufraeumen, wenn das
+    im Editor jemals stoert."""
+    roh = sql(f"select layoutSpec from _grist_Views where id = {vid}")[0]["layoutSpec"]
+    return [k for k in json.loads(roh or "{}").get("children") or []
+            if k.get("leaf") not in ohne]
+
+
 def zeitraum_widget():
     """Karten-Widget 'Abrechnungszeitraum' auf der Ausdruck-Seite: nur die zwei
     Datumsfelder aus Einstellungen, über dem Druck-Widget. Die Fachkraft setzt
@@ -399,10 +463,7 @@ def zeitraum_widget():
         f"select f.id from _grist_Views_section_field f "
         f"join _grist_Tables_column c on c.id = f.colRef "
         f"where f.parentId = {sec} and c.colId not in ('Zeitraum_von', 'Zeitraum_bis')")]
-    andere = [k["leaf"] for k in json.loads(
-        sql(f"select layoutSpec from _grist_Views where id = {vid}")[0]["layoutSpec"]
-    )["children"] if k.get("leaf") != sec]
-    layout = {"children": [{"leaf": sec}] + [{"leaf": x} for x in andere], "collapsed": []}
+    layout = {"children": [{"leaf": sec}] + seiten_kinder(vid), "collapsed": []}
     api("POST", "/apply", [
         ["BulkRemoveRecord", "_grist_Views_section_field", weg],
         ["UpdateRecord", "_grist_Views_section", sec, {"title": "Abrechnungszeitraum"}],
@@ -468,6 +529,57 @@ def ausgabe_widgets():
           f"{len(AUSGABE_WIDGETS) - angelegt} vorhanden")
 
 
+def feste_orte_anlegen():
+    """Stellt sicher, dass 'Orte' die Pflichtzeilen WO und KV enthält --
+    Reiseweg und Routenlink brauchen sie für fast jede Fahrt. Setzt nur
+    Kürzel und Name; Adresse trägt die Abrechnungsstelle wie bei jedem
+    anderen Ort direkt ein. Idempotent: ein vorhandenes Kürzel bleibt
+    unangetastet -- eine vorhandene Adresse wird nie überschrieben."""
+    da = {r["fields"].get("Kuerzel") for r in api("GET", "/tables/Orte/records")["records"]}
+    fehlend = [(k, n) for k, n in FESTE_ORTE if k not in da]
+    if fehlend:
+        api("POST", "/tables/Orte/records",
+            {"records": [{"fields": {"Kuerzel": k, "Name": n}} for k, n in fehlend]})
+        print(f"  Orte: {len(fehlend)} Pflichtzeile(n) angelegt "
+              f"({', '.join(k for k, _ in fehlend)}) -- Adresse dort nachtragen")
+
+
+def einstellungen_karte():
+    """Ersetzt die Tabellenansicht auf der eigenen 'Einstellungen'-Seite durch
+    ein Card-Widget: eine Zeile als Formular gelesen ist unmissverständlich,
+    als Tabellenzeile wirkt sie wie eine von vielen. Idempotent: existiert
+    bereits eine Card-Section auf der Seite, passiert nichts."""
+    seite = sql("select id from _grist_Views where name = 'Einstellungen'")
+    et = sql("select id from _grist_Tables where tableId = 'Einstellungen'")
+    if not (seite and et):
+        print("  Einstellungen-Karte: Seite oder Tabelle fehlt -- übersprungen")
+        return
+    vid, et = seite[0]["id"], et[0]["id"]
+
+    if sql(f"select id from _grist_Views_section "
+           f"where parentId = {vid} and tableRef = {et} and parentKey = 'single'"):
+        print("  Einstellungen-Karte: vorhanden")
+        return
+
+    alt = [s["id"] for s in sql(
+        f"select id from _grist_Views_section "
+        f"where parentId = {vid} and tableRef = {et} and parentKey <> 'custom'")]
+
+    sec = api("POST", "/apply",
+              [["CreateViewSection", et, vid, "single", None, None]])["retValues"][0]["sectionRef"]
+    # Nur die ersetzten Tabellen-Sections fallen aus dem Layout; alles andere
+    # auf der Seite bleibt stehen. Vorher wurde die layoutSpec plattgemacht --
+    # ein zweites Widget auf der Seite war danach unsichtbar (die Section blieb
+    # als Karteileiche im Dokument zurueck).
+    api("POST", "/apply", [
+        ["UpdateRecord", "_grist_Views", vid,
+         {"layoutSpec": json.dumps({"children": [{"leaf": sec}] + seiten_kinder(vid, alt),
+                                    "collapsed": []})}],
+        *[["RemoveRecord", "_grist_Views_section", a] for a in alt],
+    ])
+    print(f"  Einstellungen-Karte: angelegt (Section {sec}), Tabellenansicht entfernt")
+
+
 def selbsttest():
     """Führt REISEWEG und MAPS ohne Grist aus: Auswahl gewinnt, sonst Freitext."""
     class Ort:
@@ -486,17 +598,33 @@ def selbsttest():
     rec.Ort_2_Text = "darf nicht gewinnen"                      # beides gefüllt
     rec.Ort_Ende = Ort("BÜR", "Hauptstr. 1, Musterstadt")
 
-    def lauf(formel):
+    def lauf(formel, r=None):
         rumpf = "\n".join("  " + z for z in formel.replace("$", "rec.").splitlines())
         raum = {}
         exec("def f(rec):\n" + rumpf, raum)
-        return raum["f"](rec)
+        return raum["f"](rec if r is None else r)
 
     weg = lauf(REISEWEG)
     assert weg == "BÜR > Café Mokka, Bahnhofstr. 7, Musterstadt > KITA > BÜR", weg
     link = lauf(MAPS)
     assert "Bahnhofstr" in link and "Lindenweg" in link, link
     assert "darf%20nicht" not in link, link
+
+    # Tagegeldstaffel: die vier Grenzen und der Fall, in dem Dienststaette und
+    # Dienstort die Abwesenheit ganz aufbrauchen -- Rest <= 0 ergab vorher die
+    # kleinste Stufe statt gar keiner.
+    def stufe(abw, privat=0, dst=0, dort=0, beantragt=True):
+        return lauf(STUFE, type("R", (), dict(
+            Tagegeld_beantragt=beantragt, Abwesenheit_min=abw,
+            Min_privat_Abzug=privat, Min_Dienststaette=dst, Min_Dienstort=dort,
+            Rest_min=abw - privat - dst - dort))())
+
+    for args, soll in [((600, 0, 500, 200), ""), ((600, 0, 600, 0), ""),
+                       ((600, 0, 200, 0), "anteilig"), ((400,), ""),
+                       ((500,), ">8h"), ((900,), ">=14h"), ((1500,), "24h"),
+                       ((1500, 0, 0, 0, False), "")]:
+        assert stufe(*args) == soll, (args, stufe(*args), soll)
+
     print(f"Selbsttest ok ({ZWISCHENZIELE} Zwischenziele)\n  Reiseweg: {weg}")
 
 
@@ -520,10 +648,14 @@ if __name__ == "__main__":
 
     reihenfolge_ordnen()
     hilfsspalten_ausblenden()
+    adressen_aufraeumen()
 
     if not api("GET", "/tables/Einstellungen/records")["records"]:
         api("POST", "/tables/Einstellungen/records", {"records": [{"fields": {}}]})
         print("  Einstellungen: leere Zeile angelegt")
+
+    feste_orte_anlegen()    # fasst nur 'Orte' an, unabhängig von Einstellungen
+    einstellungen_karte()
 
     zeitraum_widget()      # braucht die Ausdruck-Seite — sonst übersprungen
     ausgabe_widgets()      # dito

@@ -256,6 +256,8 @@ body {
   background: #16a34a; color: #fff;
 }
 .druckleiste button:hover { background: #15803d; border-color: #15803d; }
+.druckleiste button.sek { background: #fff; color: #16a34a; }
+.druckleiste button.sek:hover { background: #f0fdf4; }
 .druckleiste .info { color: #666; }
 
 @media print { .druckleiste { display: none !important; } }
@@ -264,30 +266,13 @@ body {
 <body>
 <div class="druckleiste">
   <button type="button" onclick="window.print()">Drucken</button>
-  <span class="info">S1/S2, Vermerke, Dienstorte und Fahrtenbuch — alle Seiten in einem Druckauftrag.</span>
+  <button type="button" class="sek" id="neu-laden" hidden>Aktualisieren</button>
+  <span class="info" id="hinweis">S1/S2, Vermerke, Dienstorte und Fahrtenbuch — alle Seiten in einem Druckauftrag.</span>
 </div>
 
 <!-- ================================ S1 / S2 ================================ -->
 <div class="dok-s1">
 <div class="blatt">
-
-  <table class="kopf">
-    <colgroup>
-      <col style="width:20mm"><col style="width:11mm"><col style="width:11mm"><col style="width:50mm">
-      <col style="width:5mm"><col style="width:5mm"><col style="width:5mm"><col style="width:5mm">
-      <col style="width:11mm">
-      <col style="width:12mm"><col style="width:10mm"><col style="width:8mm"><col style="width:12mm">
-      <col style="width:15mm">
-    </colgroup>
-    <tr><td class="titel" colspan="4">REISEKOSTENRECHNUNG</td>
-        <td class="titel fett" colspan="10" style="font-size:var(--schrift);vertical-align:bottom">Eingangsdatum:</td></tr>
-    <tr><td class="label fett" colspan="4">Antragssteller/in:</td>
-        <td class="label fett" colspan="6">Wohnort:</td>
-        <td class="label fett" colspan="4">Dienstort:</td></tr>
-    <tr><td class="wert" colspan="4" id="k-s1-antragsteller"></td>
-        <td class="wert" colspan="6" id="k-s1-wohnort"></td>
-        <td class="wert" colspan="4" id="k-s1-dienstort"></td></tr>
-  </table>
 
   <table class="raster">
     <colgroup>
@@ -298,6 +283,17 @@ body {
       <col style="width:15mm">
     </colgroup>
     <thead>
+      <!-- Im thead statt in einer eigenen Tabelle davor -- so wiederholt der
+           Kopfblock sich beim Druck auf jeder Folgeseite (thead {display:
+           table-header-group} weiter unten), statt nur auf Seite 1 zu stehen. -->
+      <tr class="kopf"><td class="titel" colspan="4">REISEKOSTENRECHNUNG</td>
+          <td class="titel fett" colspan="10" style="font-size:var(--schrift);vertical-align:bottom">Eingangsdatum:</td></tr>
+      <tr class="kopf"><td class="label fett" colspan="4">Antragssteller/in:</td>
+          <td class="label fett" colspan="6">Wohnort:</td>
+          <td class="label fett" colspan="4">Dienstort:</td></tr>
+      <tr class="kopf"><td class="wert" colspan="4" id="k-s1-antragsteller"></td>
+          <td class="wert" colspan="6" id="k-s1-wohnort"></td>
+          <td class="wert" colspan="4" id="k-s1-dienstort"></td></tr>
       <tr>
         <th class="g1 spanne fett" rowspan="2">Reisedatum</th>
         <th class="g1 fett" colspan="2" rowspan="2">Beginn / Ende<br>(Uhrzeit)</th>
@@ -365,7 +361,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">IBAN:</td>
       <td></td>
-      <td id="k-s2-iban" colspan="3" style="border-bottom:var(--rahmen)"></td>
+      <td colspan="3" style="border-bottom:var(--rahmen)"></td>
       <td></td>
       <td style="border-right:var(--rahmen)"></td>
     </tr>
@@ -381,7 +377,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">BIC:</td>
       <td></td>
-      <td id="k-s2-bic" colspan="3" style="border-bottom:var(--rahmen)"></td>
+      <td colspan="3" style="border-bottom:var(--rahmen)"></td>
       <td></td>
       <td style="border-right:var(--rahmen)"></td>
     </tr>
@@ -725,7 +721,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     <thead>
       <tr>
         <th class="mitte">Nr.</th>
-        <th>Kürzel</th>
+        <th>Kürzel / Datum</th>
         <th>Kita, Einrichtung, Ort etc.</th>
         <th colspan="2">Adresse</th>
       </tr>
@@ -790,8 +786,6 @@ const beispielKopfS1 = {
   antragsteller: "Musterfrau Erika, Referat 42",
   wohnort:       "Beispielweg 7, 00000 Musterstadt",
   dienstort:     "Verwaltungsstraße 1, 00000 Musterstadt",
-  iban:          "DE00 0000 0000 0000 0000 00",
-  bic:           "MUSTERBIC000"
 };
 
 const beispielReisen = [
@@ -839,9 +833,12 @@ const beispielKopfDienstorte = {
   dienstort: "Verwaltungsstraße 1, 00000 Musterstadt",
 };
 const beispielDienstorte = [
-  { kuerzel:"KV",  name:"Kreisverwaltung", adresse:"Verwaltungsstraße 1, 00000 Musterstadt" },
-  { kuerzel:"",    name:"Café Mokka",      adresse:"Bahnhofstr. 7, 00000 Musterstadt" },
-  { kuerzel:"KITA",name:"Kita Sonnenschein", adresse:"Lindenweg 3, 00000 Musterstadt" },
+  { kuerzel:"WO",   name:"Wohnung",           adresse:"Beispielweg 7, 00000 Musterstadt" },
+  { kuerzel:"KV",   name:"Kreisverwaltung",   adresse:"Verwaltungsstraße 1, 00000 Musterstadt" },
+  { kuerzel:"KITA", name:"Kita Sonnenschein", adresse:"Lindenweg 3, 00000 Musterstadt" },
+  { kuerzel:"",     name:"Café Mokka",        adresse:"Bahnhofstr. 7, 00000 Musterstadt" },
+  { kuerzel:"03.02.2026", name:"Beispieldorf", adresse:"Dorfstr. 2, 00000 Beispieldorf" },
+  { kuerzel:"26.02.2026", name:"Hof Lindenau", adresse:"" },
 ];
 
 const beispielFahrten = [
@@ -852,6 +849,19 @@ const beispielFahrten = [
 ];
 
 /* ---------------------------------------------------------- Hilfsfunktionen */
+
+/* Tabellenzellen werden als HTML zusammengesetzt. Das Präfix html`…` schiebt
+   jeden eingesetzten Wert durch esc(); Formulareingaben (Vermerk, Freitext-Orte,
+   Adressen) können so kein Markup einschleusen. Ohne Präfix kein Schutz. */
+const esc = s => String(s ?? "").replace(/[&<>"]/g,
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const html = (t, ...v) => t.reduce((a, s, i) => a + esc(v[i - 1]) + s);
+
+/* Meldungen gehen in die Druckleiste, nicht in den <body>: ein ersetzter Body
+   nimmt die Tabellen mit, und der naechste onRecords-Lauf findet seine Zellen
+   dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
+const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
+const hinweis = t => { document.getElementById("hinweis").textContent = t; };
 
 /* Grist liefert Datumswerte als Sekunden seit 1970, UTC-Mitternacht. */
 const tag = s => s == null ? "" : new Date(s * 1000).toLocaleDateString("de-DE",
@@ -881,8 +891,6 @@ function renderS1S2(kopf, reisen) {
 document.getElementById("k-s1-antragsteller").textContent = kopf.antragsteller;
 document.getElementById("k-s1-wohnort").textContent       = kopf.wohnort;
 document.getElementById("k-s1-dienstort").textContent     = kopf.dienstort;
-document.getElementById("k-s2-iban").textContent          = kopf.iban || "";
-document.getElementById("k-s2-bic").textContent           = kopf.bic || "";
 
 const tb = document.getElementById("daten-s1");
 tb.innerHTML = "";
@@ -890,7 +898,7 @@ const summe = { oepnv:0, km:0, mitnahme:0, uebernachtung:0, neben:0 };
 
 for (const r of reisen) {
   for (const k in summe) summe[k] += r[k];
-  tb.insertAdjacentHTML("beforeend", `<tr>
+  tb.insertAdjacentHTML("beforeend", html`<tr>
     <td>${r.datum}</td>
     <td class="z-mitte">${r.von}</td>
     <td class="z-mitte">${r.bis}</td>
@@ -907,7 +915,7 @@ for (const r of reisen) {
     <td class="z-rechts">${eur(r.neben)}</td></tr>`);
 }
 
-tb.insertAdjacentHTML("beforeend", `<tr class="uebertrag">
+tb.insertAdjacentHTML("beforeend", html`<tr class="uebertrag">
   <td class="beschriftung" colspan="4">Übertrag:</td>
   <td colspan="5"></td>
   <td class="z-rechts">${eur(summe.oepnv)}</td>
@@ -928,7 +936,7 @@ document.getElementById("k-verm-dienstort").textContent     = kopf.dienstort;
 const tb = document.getElementById("daten-verm");
 tb.innerHTML = "";
 for (const v of vermerke) {
-  tb.insertAdjacentHTML("beforeend", `<tr>
+  tb.insertAdjacentHTML("beforeend", html`<tr>
     <td class="mitte">${v.nr}</td>
     <td>${v.label}</td>
     <td>${v.text}</td>
@@ -948,7 +956,7 @@ document.getElementById("k-dien-dienstort").textContent     = kopf.dienstort;
 const tb = document.getElementById("daten-dien");
 tb.innerHTML = "";
 orte.forEach((o, i) => {
-  tb.insertAdjacentHTML("beforeend", `<tr>
+  tb.insertAdjacentHTML("beforeend", html`<tr>
     <td class="mitte">${i + 1}</td>
     <td>${o.kuerzel}</td>
     <td>${o.name}</td>
@@ -962,7 +970,7 @@ function renderFahrtenbuch(fahrten) {
 const tb = document.getElementById("daten-fb");
 tb.innerHTML = "";
 for (const f of fahrten) {
-  tb.insertAdjacentHTML("beforeend", `<tr>
+  tb.insertAdjacentHTML("beforeend", html`<tr>
     <td>${f.nr ?? ""}</td>
     <td>${f.monat}</td>
     <td>${f.tag}</td>
@@ -984,6 +992,12 @@ const ORT_SLOTS = ["Ort_Beginn", "Ort_1", "Ort_2", "Ort_3", "Ort_4", "Ort_5", "O
 
 async function ausGrist() {
   const [e] = zeilen(await grist.docApi.fetchTable("Einstellungen"));
+  if (!e) {
+    hinweis("Tabelle 'Einstellungen' ist leer -- setup.py laufen lassen, "
+            + "dann 'Aktualisieren'.");
+    return;
+  }
+  hinweis(HINWEIS_STANDARD);
   const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
   const imZeitraum = d => d != null && (von == null || d >= von) && (bis == null || d <= bis);
 
@@ -1002,7 +1016,7 @@ async function ausGrist() {
     dienstort: anschrift(e.Dienstort_Strasse, e.Dienstort_PLZ, e.Dienstort_Ort),
   };
 
-  renderS1S2({ ...kopfAdresse, iban: e.IBAN || "", bic: e.BIC || "" },
+  renderS1S2(kopfAdresse,
     reisen.map(r => ({
       datum: r.Datum_bis && r.Datum_bis !== r.Datum
              ? `${tag(r.Datum)} - ${tag(r.Datum_bis)}` : tag(r.Datum),
@@ -1026,21 +1040,36 @@ async function ausGrist() {
       datum: tag(r.Datum),
     })));
 
-  const ausOrte = [];
-  for (const r of reisen) {
-    for (const slot of ORT_SLOTS) {
-      const id = r[slot];
-      if (id) {
-        const o = orteNachId[id];
-        if (o) ausOrte.push({ datum: r.Datum, kuerzel: o.Kuerzel || "", name: o.Name || "", adresse: o.Adresse || "" });
-      }
-    }
-  }
+  /* Die Dienstorte-Liste ist die Legende zum Reiseweg, kein Fahrtenprotokoll.
+     Stammorte stehen deshalb höchstens einmal darin -- sonst erscheint die
+     Wohnung bei zwei Reisen viermal, je einmal als Start und als Ziel.
+     Wohnung und Dienststätte führen die Liste fest an: sie erklären die
+     beiden Kürzel, die in fast jedem Reiseweg vorkommen. Danach die übrigen
+     Stammorte in der Reihenfolge ihres ersten Vorkommens im Zeitraum. */
+  const orteListe = Object.values(orteNachId);
+  const stammIds = ["WO", "KV"]
+    .map(k => orteListe.find(o => o.Kuerzel === k))
+    .filter(Boolean).map(o => o.id);
+  for (const r of reisen)
+    for (const slot of ORT_SLOTS)
+      if (r[slot] && orteNachId[r[slot]] && !stammIds.includes(r[slot]))
+        stammIds.push(r[slot]);
+
+  const ausOrte = stammIds.map(id => ({
+    kuerzel: orteNachId[id].Kuerzel || "",
+    name:    orteNachId[id].Name || "",
+    adresse: orteNachId[id].Adresse || "",
+  }));
+
+  /* Einmalziele aus den Freitextfeldern: jede Eintragung bleibt eine eigene
+     Zeile -- sie gehört zu genau einer Fahrt, und das Datum weist sie ihr zu.
+     Es steht in der Kürzel-Spalte, die bei diesen Zeilen ohnehin leer bleibt. */
   const ausAdressen = zeilen(await grist.docApi.fetchTable("Adressen"))
     .filter(a => imZeitraum(a.Datum))
-    .map(a => ({ datum: a.Datum, kuerzel: "", name: a.Label || "", adresse: a.Adresse || "" }));
-  renderDienstorte({ stand, ...kopfAdresse },
-    [...ausOrte, ...ausAdressen].sort((a, b) => a.datum - b.datum));
+    .sort((a, b) => a.Datum - b.Datum)
+    .map(a => ({ kuerzel: tag(a.Datum), name: a.Label || "", adresse: a.Adresse || "" }));
+
+  renderDienstorte({ stand, ...kopfAdresse }, [...ausOrte, ...ausAdressen]);
 
   renderFahrtenbuch(reisen.map(r => ({
       nr:   r.Lfd_Nr,
@@ -1063,15 +1092,34 @@ if (window.self === window.top) {
   renderFahrtenbuch(beispielFahrten);
 } else {
   /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
-     Adresse — so steht der Hostname der Instanz nicht in diesem offenen Repo. */
+     Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
+     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy loescht
+     document.referrer, und ein fest verdrahtetes docs.getgrist.com waere dann
+     doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
+     Host bekaeme einen Request aus dem Dokument. Lieber nichts laden und es
+     sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
-                                   : "https://docs.getgrist.com";
+                : window.location.ancestorOrigins?.[0] || "";
+  if (!quelle) {
+    hinweis("Herkunft der Grist-Instanz nicht ermittelbar (Referrer-Policy) -- "
+            + "Widget kann die Plugin-API nicht laden.");
+    throw new Error("keine Grist-Herkunft");
+  }
   const s = document.createElement("script");
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
     grist.ready({ requiredAccess: "full" });   // liest vier Tabellen
+    /* onRecords feuert beim Aufbau und danach nur bei Aenderungen an der
+       Tabelle, an der das Widget haengt -- das ist 'Einstellungen', also
+       praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder
+       korrigierte Reise erreicht das Widget NICHT.
+       ponytail: sichtbarer Knopf statt Polling -- die Plugin-API kennt
+       keinen Haken auf fremde Tabellen, und still veraltet drucken ist der
+       teurere Fehler. */
     grist.onRecords(ausGrist);
-    ausGrist();
+    const knopf = document.getElementById("neu-laden");
+    knopf.hidden = false;
+    knopf.onclick = ausGrist;
   };
   document.head.appendChild(s);
 }
