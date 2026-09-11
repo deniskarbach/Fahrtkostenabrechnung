@@ -363,6 +363,39 @@ def reihenfolge_ordnen():
     print(f"  Reihenfolge: {len(aktionen)} Spalten/Felder einsortiert")
 
 
+def ort_anzeige_setzen():
+    """Lässt die Ort-Auswahlspalten das Kürzel zeigen statt der Zeilennummer.
+    War bisher Punkt 1 der Handarbeit nach dem Lauf; aus dem eingerichteten
+    Dokument abgelesen und hierher gezogen.
+
+    Grist hängt dafür an jede Ref-Spalte eine Hilfsspalte
+    (gristHelper_DisplayN, Formel `$Ort_X.Kuerzel`) und merkt sich in
+    visibleCol, welche Spalte der Zieltabelle gemeint ist. SetDisplayFormula
+    legt beides an -- von Hand zusammengesetzt bliebe die Hilfsspalte aus und
+    die Zelle zeigte weiter die Zeilennummer. Idempotent: Spalten, die schon
+    auf Kürzel zeigen, bleiben unangetastet."""
+    ziel = sql("select c.id from _grist_Tables_column c join _grist_Tables t "
+               "on t.id = c.parentId where t.tableId = 'Orte' and c.colId = 'Kuerzel'")
+    if not ziel:
+        print("  Ort-Anzeige: Spalte Orte.Kuerzel fehlt -- übersprungen")
+        return
+    ziel = ziel[0]["id"]
+
+    aktionen = []
+    for c in sql("select c.id, c.colId, c.visibleCol from _grist_Tables_column c "
+                 "join _grist_Tables t on t.id = c.parentId "
+                 "where t.tableId = 'Reisen' and c.type = 'Ref:Orte'"):
+        if c["visibleCol"] == ziel:
+            continue
+        aktionen += [["SetDisplayFormula", "Reisen", None, c["id"],
+                      f"${c['colId']}.Kuerzel"],
+                     ["UpdateRecord", "_grist_Tables_column", c["id"],
+                      {"visibleCol": ziel}]]
+    if aktionen:
+        api("POST", "/apply", aktionen)
+    print(f"  Ort-Anzeige: {len(aktionen) // 2} Spalte(n) auf Kürzel gestellt")
+
+
 # Reine Zwischenwerte oder Verknüpfungs-Spalten ohne eigenständigen
 # Aussagewert für die Fachkraft -- bleiben im Datenmodell (Formeln greifen
 # weiter darauf zu), verschwinden nur aus der Tabellenansicht.
@@ -426,6 +459,33 @@ def formeln_angleichen(tabelle, spalten):
     print(f"  Formeln {tabelle}: {len(patch)} angeglichen")
 
 
+def blaetter(knoten):
+    """Alle Section-Ids, die in einem Seitenlayout vorkommen -- auch die in
+    verschachtelten Knoten (nebeneinander angeordnete Widgets)."""
+    for k in knoten:
+        if "leaf" in k:
+            yield k["leaf"]
+        yield from blaetter(k.get("children") or [])
+
+
+def ohne_blaetter(knoten, weg):
+    """Entfernt rekursiv alle Knoten, die auf eine der genannten Sections
+    zeigen. Nötig, weil das Entfernen einer Section ihr Blatt in der
+    layoutSpec stehen lässt -- ein solches Karteileichen-Blatt hat auf der
+    Reisen-Seite dieses Dokuments dazu geführt, dass dort eine fremde
+    Section referenziert wurde."""
+    raus = []
+    for k in knoten:
+        if k.get("leaf") in weg:
+            continue
+        if k.get("children"):
+            k = dict(k, children=ohne_blaetter(k["children"], weg))
+            if not k["children"]:
+                continue
+        raus.append(k)
+    return raus
+
+
 def seiten_kinder(vid, ohne=()):
     """Kind-Knoten des Seitenlayouts, ohne die Knoten der genannten Sections.
     Verschachtelte Knoten (nebeneinander angeordnete Widgets) tragen keinen
@@ -436,8 +496,7 @@ def seiten_kinder(vid, ohne=()):
     leerer Knoten stehen -- Grist blendet ihn aus; erst aufraeumen, wenn das
     im Editor jemals stoert."""
     roh = sql(f"select layoutSpec from _grist_Views where id = {vid}")[0]["layoutSpec"]
-    return [k for k in json.loads(roh or "{}").get("children") or []
-            if k.get("leaf") not in ohne]
+    return ohne_blaetter(json.loads(roh or "{}").get("children") or [], set(ohne))
 
 
 def zeitraum_widget():
@@ -509,7 +568,14 @@ def ausgabe_widgets():
 
     veraltet = [sec for url, sec in vorhanden.items() if url not in ziel_urls]
     if veraltet:
-        api("POST", "/apply", [["RemoveRecord", "_grist_Views_section", sec] for sec in veraltet])
+        # Blätter mitnehmen: eine entfernte Section liess ihren Knoten sonst in
+        # der layoutSpec stehen, und die Seite verwies auf eine Section, die es
+        # nicht mehr gibt (oder inzwischen zu einer anderen Seite gehoert).
+        api("POST", "/apply",
+            [["RemoveRecord", "_grist_Views_section", sec] for sec in veraltet]
+            + [["UpdateRecord", "_grist_Views", vid,
+                {"layoutSpec": json.dumps({"children": seiten_kinder(vid, veraltet),
+                                           "collapsed": []})}]])
 
     angelegt = 0
     for titel, datei in AUSGABE_WIDGETS:
@@ -527,6 +593,57 @@ def ausgabe_widgets():
         angelegt += 1
     print(f"  Ausgabe-Widgets: {angelegt} angelegt, {len(veraltet)} entfernt, "
           f"{len(AUSGABE_WIDGETS) - angelegt} vorhanden")
+
+
+def ausdruck_layout():
+    """Bringt die Ausdruck-Seite in die Anordnung des eingerichteten Dokuments:
+    der Abrechnungszeitraum als schmale Zeile oben, darunter die beiden
+    Druck-Widgets nebeneinander. Die Groessen sind die dort abgelesenen
+    Verhaeltniswerte -- Grist rechnet sie relativ, die absolute Zahl ist egal.
+
+    Fasst eine Seite nicht an, auf der bereits alle drei Widgets im Layout
+    stehen: wer sie von Hand umsortiert hat, behaelt seine Anordnung. Greift
+    also genau einmal, beim Einrichten eines frischen Dokuments."""
+    seite = sql("select id from _grist_Views where name = 'Ausdruck'")
+    if not seite:
+        print("  Ausdruck-Layout: Seite fehlt -- übersprungen")
+        return
+    vid = seite[0]["id"]
+
+    zeitraum = sql(f"select s.id from _grist_Views_section s "
+                   f"join _grist_Tables t on t.id = s.tableRef "
+                   f"where s.parentId = {vid} and t.tableId = 'Einstellungen' "
+                   f"and s.parentKey = 'single'")
+    druck = []
+    for _, datei in AUSGABE_WIDGETS:
+        url = AUSGABE_BASIS_URL + datei
+        for row in sql(f"select id, options from _grist_Views_section "
+                       f"where parentId = {vid} and parentKey = 'custom'"):
+            try:
+                cv = json.loads(json.loads(row["options"] or "{}").get("customView") or "{}")
+            except (ValueError, TypeError):
+                continue
+            if cv.get("url") == url:
+                druck.append(row["id"])
+
+    if not (zeitraum and druck):
+        print("  Ausdruck-Layout: Widgets unvollständig -- übersprungen")
+        return
+    zeitraum = zeitraum[0]["id"]
+
+    da = set(blaetter(json.loads(
+        sql(f"select layoutSpec from _grist_Views where id = {vid}")[0]["layoutSpec"] or "{}"
+    ).get("children") or []))
+    if {zeitraum, *druck} <= da:
+        print("  Ausdruck-Layout: vorhanden")
+        return
+
+    layout = {"children": [{"size": 16, "leaf": zeitraum},
+                           {"size": 118, "children": [{"leaf": d} for d in druck]}],
+              "collapsed": []}
+    api("POST", "/apply", [["UpdateRecord", "_grist_Views", vid,
+                            {"layoutSpec": json.dumps(layout)}]])
+    print(f"  Ausdruck-Layout: gesetzt (Zeitraum oben, {len(druck)} Druck-Widgets darunter)")
 
 
 def feste_orte_anlegen():
@@ -625,6 +742,17 @@ def selbsttest():
                        ((1500, 0, 0, 0, False), "")]:
         assert stufe(*args) == soll, (args, stufe(*args), soll)
 
+    # Layout-Knoten: verschachtelte Seiten (zwei Widgets nebeneinander) tragen
+    # kein eigenes 'leaf'. Beide Funktionen muessen da hineinsteigen, sonst
+    # bleibt beim Aufraeumen ein Blatt einer geloeschten Section stehen.
+    baum = [{"size": 16, "leaf": 15},
+            {"size": 118, "children": [{"leaf": 23}, {"leaf": 22}]}]
+    assert sorted(blaetter(baum)) == [15, 22, 23], list(blaetter(baum))
+    assert ohne_blaetter(baum, {22}) == [{"size": 16, "leaf": 15},
+                                         {"size": 118, "children": [{"leaf": 23}]}]
+    assert ohne_blaetter(baum, {22, 23}) == [{"size": 16, "leaf": 15}]   # leerer Ast faellt weg
+    assert ohne_blaetter(baum, set()) == baum
+
     print(f"Selbsttest ok ({ZWISCHENZIELE} Zwischenziele)\n  Reiseweg: {weg}")
 
 
@@ -647,6 +775,7 @@ if __name__ == "__main__":
     formeln_angleichen("Reisen", sync_spalten)
 
     reihenfolge_ordnen()
+    ort_anzeige_setzen()
     hilfsspalten_ausblenden()
     adressen_aufraeumen()
 
@@ -659,11 +788,10 @@ if __name__ == "__main__":
 
     zeitraum_widget()      # braucht die Ausdruck-Seite — sonst übersprungen
     ausgabe_widgets()      # dito
+    ausdruck_layout()      # dito; ordnet nur ein frisch eingerichtetes Dokument
 
     print(f"""
 Fertig. Rest in der Oberfläche:
-  1. Bei den {len(ORT_SLOTS)} Ort-Referenzspalten unter SHOW COLUMN 'Kuerzel' wählen
-     (ponytail: einmalige Klickarbeit — der API-Weg kostet mehr Code als er spart)
-  2. Formular-Widget auf 'Reisen' anlegen — das Layout setzt formular.py
-  3. Formular veröffentlichen, dann 'Duplicate Document' — das ist die Vorlage
+  1. Formular-Widget auf 'Reisen' anlegen — das Layout setzt formular.py
+  2. Formular veröffentlichen, dann 'Duplicate Document' — das ist die Vorlage
 """)
