@@ -30,8 +30,8 @@ Routenlink und die Legende auf dem Dienstorte-Blatt.
 **Ergebnis:** `Lindenweg 3, 00000 Musterstadt` — die Adresse, wie sie in
 `Maps_Link` und auf dem Dienstorte-Blatt erscheint.
 **Sonderfall:** Ist nur die Straße gefüllt, steht auch nur sie da; sind alle
-drei leer, bleibt die Zelle leer und der Ort fällt in `Maps_Link` auf den
-Freitext zurück (Muster B).
+drei leer, bleibt die Zelle leer — und jede Reise über diesen Ort bekommt
+**keinen** `Maps_Link`. `setup.py` nennt solche Orte bei jedem Lauf.
 
 Dieselbe Formel steht in [Adressen](adressen.md) — beide Tabellen sind bewusst
 gleich aufgebaut, damit die Abrechnungsstelle nicht zwei Schemata im Kopf haben

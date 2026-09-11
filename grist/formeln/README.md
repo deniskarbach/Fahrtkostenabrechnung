@@ -91,8 +91,9 @@ stillschweigend. Dieselbe Weiche steckt in `Reiseweg`, `Maps_Link` und in den
 Adresszeile anlegt und deshalb auch nicht im Dienstorte-Blatt auftaucht.
 
 **Zu beachten:** `Reiseweg` nimmt aus der Auswahl das **Kürzel**,
-`Maps_Link` die **Adresse**. Ein Stammort ohne Adresse fällt in `Maps_Link`
-deshalb auf den Freitext zurück, im `Reiseweg` nicht.
+`Maps_Link` die **Adresse**. Fehlt einem angefahrenen Ort die Adresse, bleibt
+`Maps_Link` leer — der `Reiseweg` steht trotzdem vollständig da. Ein Stopp
+verschwindet nie einzeln aus dem Link, sonst wäre die Route still zu kurz.
 
 ### Muster C – Ersatzwert 0 statt Leerwert
 

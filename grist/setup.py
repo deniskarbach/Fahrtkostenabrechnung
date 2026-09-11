@@ -75,6 +75,11 @@ ORT_LABEL = {"Ort_Beginn": "Ort Reisebeginn", "Ort_Ende": "Ort Reiseende",
 # für die Einmalziele. Ist die Auswahl gesetzt, gewinnt sie — stillschweigend.
 PAARE = "[" + ", ".join(f"(${s}, ${s}_Text)" for s in ORT_SLOTS) + "]"
 
+# Dasselbe fuer MAPS, aber mit der Adressen-Zeile als drittem Glied: die echte
+# Anschrift eines Einmalziels traegt die Abrechnungsstelle dort nach, nicht im
+# Freitext der Reise.
+PAARE_ADR = "[" + ", ".join(f"(${s}, ${s}_Text, ${s}_Sync)" for s in ORT_SLOTS) + "]"
+
 
 # ---------------------------------------------------------------- Formeln
 
@@ -128,8 +133,15 @@ return " > ".join(x for x in teile if x)
 
 MAPS = f'''
 import urllib.parse as u
-paare = {PAARE}
-adr = [x for x in [(o.Adresse if o else "") or t for o, t in paare] if x]
+paare = {PAARE_ADR}
+adr = []
+for o, t, s in paare:
+  if not (o or t):
+    continue                 # Slot nicht belegt -- faellt still heraus
+  a = o.Adresse if o else ((s.Adresse if s else "") or t)
+  if not a:
+    return ""                # belegter Stopp ohne Anschrift -> lieber kein Link
+  adr.append(a)
 if len(adr) < 2:
   return ""
 link = ("https://www.google.com/maps/dir/?api=1&origin=" + u.quote(adr[0])
@@ -753,13 +765,22 @@ def feste_orte_anlegen():
     Kürzel und Name; Adresse trägt die Abrechnungsstelle wie bei jedem
     anderen Ort direkt ein. Idempotent: ein vorhandenes Kürzel bleibt
     unangetastet -- eine vorhandene Adresse wird nie überschrieben."""
-    da = {r["fields"].get("Kuerzel") for r in api("GET", "/tables/Orte/records")["records"]}
+    zeilen = api("GET", "/tables/Orte/records")["records"]
+    da = {r["fields"].get("Kuerzel") for r in zeilen}
     fehlend = [(k, n) for k, n in FESTE_ORTE if k not in da]
     if fehlend:
         api("POST", "/tables/Orte/records",
             {"records": [{"fields": {"Kuerzel": k, "Name": n}} for k, n in fehlend]})
         print(f"  Orte: {len(fehlend)} Pflichtzeile(n) angelegt "
               f"({', '.join(k for k, _ in fehlend)}) -- Adresse dort nachtragen")
+
+    # Ein Ort ohne Anschrift laesst 'Maps_Link' jeder Reise leer, die ihn
+    # anfaehrt -- das war lange nur am fehlenden Routenlink zu merken.
+    ohne = sorted(r["fields"].get("Kuerzel") or f"Zeile {r['id']}" for r in zeilen
+                  if not (r["fields"].get("Adresse") or "").strip())
+    if ohne:
+        print(f"  Orte: OHNE ADRESSE ({', '.join(ohne)}) -- Reisen ueber diese "
+              f"Orte bekommen keinen Routenlink, Strasse/PLZ/Ort nachtragen")
 
 
 def einstellungen_karte():
@@ -806,10 +827,19 @@ def selbsttest():
         def __bool__(self):
             return bool(self.Kuerzel or self.Adresse)
 
-    rec = type("Rec", (), {})()
-    for s in ORT_SLOTS:                       # alles leer als Ausgangslage
-        setattr(rec, s, Ort())
-        setattr(rec, f"{s}_Text", "")
+    class Adr:                                # eine Zeile aus 'Adressen'
+        def __init__(self, a=""):
+            self.Adresse = a
+
+    def leer():
+        rec = type("Rec", (), {})()
+        for s in ORT_SLOTS:                   # alles leer als Ausgangslage
+            setattr(rec, s, Ort())
+            setattr(rec, f"{s}_Text", "")
+            setattr(rec, f"{s}_Sync", None)
+        return rec
+
+    rec = leer()
     rec.Ort_Beginn = Ort("BÜR", "Hauptstr. 1, Musterstadt")
     rec.Ort_1_Text = "Café Mokka, Bahnhofstr. 7, Musterstadt"   # Einmalziel
     rec.Ort_2 = Ort("KITA", "Lindenweg 3, Musterstadt")
@@ -827,6 +857,35 @@ def selbsttest():
     link = lauf(MAPS)
     assert "Bahnhofstr" in link and "Lindenweg" in link, link
     assert "darf%20nicht" not in link, link
+
+    # Einmalziel: die in 'Adressen' nachgetragene Anschrift schlaegt den
+    # Freitext -- vorher landete das blosse Label im Link.
+    r = leer()
+    r.Ort_Beginn = Ort("BÜR", "Hauptstr. 1, Musterstadt")
+    r.Ort_1_Text = "Kita Sonnenschein"
+    r.Ort_1_Sync = Adr("Lindenweg 3, 00000 Musterstadt")
+    r.Ort_Ende = Ort("BÜR", "Hauptstr. 1, Musterstadt")
+    link = lauf(MAPS, r)
+    assert "Lindenweg" in link and "Sonnenschein" not in link, link
+
+    # Noch nichts nachgetragen -> Freitext als Notbehelf, kein leerer Link.
+    r.Ort_1_Sync = None
+    assert "Sonnenschein" in lauf(MAPS, r)
+
+    # Stammort ohne Adresse (WO/KV frisch angelegt): frueher fiel der Stopp
+    # still aus dem Link und die Route war zu kurz -- jetzt gar kein Link.
+    r = leer()
+    r.Ort_Beginn = Ort("WO", "Beispielweg 7, Musterstadt")
+    r.Ort_1 = Ort("KV", "")                   # Adresse nicht nachgetragen
+    r.Ort_Ende = Ort("WO", "Beispielweg 7, Musterstadt")
+    assert lauf(MAPS, r) == "", lauf(MAPS, r)
+    r.Ort_1 = Ort("KV", "Verwaltungsstr. 1, Musterstadt")
+    assert "Verwaltungsstr" in lauf(MAPS, r)
+
+    # Unter zwei belegten Stopps gibt es keine Route.
+    r = leer()
+    r.Ort_Beginn = Ort("WO", "Beispielweg 7, Musterstadt")
+    assert lauf(MAPS, r) == ""
 
     # Tagegeldstaffel: die vier Grenzen und der Fall, in dem Dienststaette und
     # Dienstort die Abwesenheit ganz aufbrauchen -- Rest <= 0 ergab vorher die

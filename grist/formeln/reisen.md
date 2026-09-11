@@ -230,8 +230,15 @@ ist das Dienstorte-Blatt.
 
 ```python
 import urllib.parse as u
-paare = [($Ort_Beginn, $Ort_Beginn_Text), … , ($Ort_Ende, $Ort_Ende_Text)]
-adr = [x for x in [(o.Adresse if o else "") or t for o, t in paare] if x]
+paare = [($Ort_Beginn, $Ort_Beginn_Text, $Ort_Beginn_Sync), … ]
+adr = []
+for o, t, s in paare:
+  if not (o or t):
+    continue                 # Slot nicht belegt -- faellt still heraus
+  a = o.Adresse if o else ((s.Adresse if s else "") or t)
+  if not a:
+    return ""                # belegter Stopp ohne Anschrift -> lieber kein Link
+  adr.append(a)
 if len(adr) < 2:
   return ""
 link = ("https://www.google.com/maps/dir/?api=1&origin=" + u.quote(adr[0])
@@ -242,7 +249,14 @@ return link
 ```
 
 **Statement:**
-- `(o.Adresse if o else "") or t` – wie `Reiseweg`, aber mit der **Adresse** statt dem Kürzel
+- `if not (o or t)` – ein gar nicht ausgefülltes Ortsfeld ist kein Stopp
+- `o.Adresse if o else …` – wie `Reiseweg` gewinnt die Auswahl, hier aber mit
+  der **Adresse** statt dem Kürzel
+- `(s.Adresse if s else "") or t` – beim Freitext zählt die in
+  [Adressen](adressen.md) nachgetragene Anschrift; erst wenn dort noch nichts
+  steht, der Freitext selbst
+- `if not a: return ""` – ein belegter Stopp ohne Anschrift macht die ganze
+  Route unbrauchbar, nicht nur sich selbst
 - `if len(adr) < 2` – unter zwei Stationen gibt es keine Route
 - `u.quote(…)` – Adressen für die URL kodieren (Leerzeichen, Umlaute, Komma)
 - `adr[1:-1]` – alles zwischen Start und Ziel wird zu `waypoints`, mit `|` getrennt
@@ -250,10 +264,18 @@ return link
 **Ergebnis:** Klickbarer Google-Maps-Link über alle Stationen der Reise.
 **Rechenweg:** Erste Adresse als `origin`, letzte als `destination`, alles
 dazwischen als `waypoints`.
-**Sonderfall:** Ein Stammort **ohne** eingetragene Adresse fällt auf den
-Freitext zurück und, fehlt auch der, ganz heraus. Deshalb die Adressen von `WO`
-und `KV` nachtragen.
+**Sonderfall:** Fehlt einem angefahrenen Ort die Anschrift, bleibt die Zelle
+**ganz** leer. Früher fiel nur dieser eine Stopp aus dem Link — die Route sah
+vollständig aus, war aber zu kurz, und genau das fiel niemandem auf. Deshalb
+die Adressen von `WO` und `KV` nachtragen; `setup.py` nennt beim Lauf jeden
+Ort ohne Anschrift beim Kürzel.
 **Muster:** Auswahl gewinnt (B).
+
+Die Anschrift eines Einmalziels steht **nicht** im Freitext der Reise, sondern
+in der Zeile, die `Ort_*_Sync` in [Adressen](adressen.md) angelegt hat — dort
+trägt die Abrechnungsstelle Straße/PLZ/Ort nach. Deshalb liest die Formel die
+Sync-Spalte mit; ohne sie landete das blanke Label („Kita Sonnenschein") als
+Adresse im Link.
 
 Dient der Prüfung der gefahrenen Strecke, nicht der Abrechnung — der Link wird
 nicht gedruckt.

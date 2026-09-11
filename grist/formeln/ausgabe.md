@@ -250,8 +250,10 @@ klickbar). Deshalb Bildschirm-Maße statt A4/mm, kein „Drucken"-Knopf, nur
 
 **Ergebnis:** Ein „Route"-Link, der die Reise direkt in Google Maps öffnet,
 in einem neuen Tab (`target="_blank"`, das Widget-Iframe bleibt bestehen).
-**Sonderfall:** Weniger als zwei Orte → `Maps_Link` ist leer → keine Zelle
-mit Link, kein Fehler.
+**Sonderfall:** Weniger als zwei Orte **oder** ein angefahrener Ort ohne
+Anschrift → `Maps_Link` ist leer → keine Zelle mit Link, kein Fehler. Eine
+leere Route-Zelle bei gefülltem Reiseweg heißt also: in
+[Orte](orte.md) oder [Adressen](adressen.md) fehlt Straße/PLZ/Ort.
 
 Deutlich einfacher als die Sheets-Version: dort löst eine `BYROW`/`MAP`/
 `XMATCH`-Formel Formular-Kürzel gegen `Orte` auf, weil das Formular rohen
