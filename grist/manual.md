@@ -215,7 +215,10 @@ Freitextfeld im Formular da. Es landet automatisch in `Adressen`.
   sonst leer.
 - **Kilometer** plausibel? Ein Zahlendreher im Tachostand ergibt 0 dienstliche
   Kilometer, keine negative Zahl — er fällt also nicht durch einen Fehlerwert
-  auf, sondern durch eine auffällig niedrige Zahl.
+  auf, sondern durch eine auffällig niedrige Zahl. Eine `0` auf S1 ist nicht
+  zwangsläufig ein Fehler: bei einer Fahrt, die vollständig als „Privater
+  Umweg" erfasst wurde (z. B. eine reine Verwaltungsfahrt ohne
+  erstattungsfähige Strecke), ist sie das erwartete, gedruckte Ergebnis.
 - Eine Korrektur ist direkt in der Tabelle `Reisen` möglich. Alle
   Rechenspalten ziehen sofort nach.
 
