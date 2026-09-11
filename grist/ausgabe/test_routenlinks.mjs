@@ -21,7 +21,11 @@ const spaltig = rows => {
 };
 
 const TABELLEN = {
-  Einstellungen: [{ id: 1, Zeitraum_von: d(20000), Zeitraum_bis: d(20100) }],
+  Einstellungen: [{ id: 1, Name: "Musterfrau", Vorname: "Erika",
+                    Organisationseinheit: "Referat 42",
+                    Wohnort_Strasse: "Beispielweg 7", Wohnort_PLZ: "00000", Wohnort_Ort: "Musterstadt",
+                    Dienstort_Strasse: "Amtsstr. 1", Dienstort_PLZ: "00000", Dienstort_Ort: "Musterstadt",
+                    Zeitraum_von: d(20000), Zeitraum_bis: d(20100) }],
   Reisen: [
     // Normalfall mit Route.
     { id: 1, Datum: d(20010), Lfd_Nr: 1, Beginn: "07:15", Ende: "16:40",
@@ -114,8 +118,20 @@ vm.createContext(sandbox);
 vm.runInContext(quelle, sandbox);
 await sandbox.ausGrist();
 
+// Kopfblock: dieselbe Antragssteller/Wohnort/Dienstort-Logik wie ausdruck.html.
+assert.equal(knoten("k-antragsteller").html, "Musterfrau Erika, Referat 42");
+assert.equal(knoten("k-wohnort").html, "Beispielweg 7, 00000 Musterstadt");
+assert.equal(knoten("k-dienstort").html, "Amtsstr. 1, 00000 Musterstadt");
+assert.equal(knoten("k-stand").html, "04.10.2024 - 12.01.2025");
+
 const zeilen = tbody._zeilen;
 assert.equal(zeilen.length, 4, "vier Reisen erwartet");
+
+// Spaltenreihenfolge laut Vorlage (GoogleMapsExport-Blatt der XLSX):
+// Nr. | Datum | Reisebeginn | Reiseende | Wegstrecke | KM dienstlich | Routenlink.
+assert.equal(zeilen[0].tds[2].attrs.__text, "07:15", "Reisebeginn vor Wegstrecke");
+assert.equal(zeilen[0].tds[3].attrs.__text, "16:40", "Reiseende vor Wegstrecke");
+assert.equal(zeilen[0].tds[4].attrs.__text, "WO &gt; KV &gt; WO", "Wegstrecke an vierter Stelle");
 
 // Reise 1: Route-Zelle traegt ein <a>-Objekt mit dem richtigen href.
 const route1 = zeilen[0].tds[6].children[0];
@@ -131,7 +147,7 @@ assert.equal(zeilen[1].tds[5].attrs.__text, "0", "0 dienstliche km muessen sicht
 assert.equal(zeilen[2].tds[6].children.length, 0, "ohne Route kein <a>");
 
 // Reise 4: Markup im Freitext-Reiseweg darf nicht als Tag ankommen.
-const weg4 = zeilen[3].tds[2].attrs.__text;
+const weg4 = zeilen[3].tds[4].attrs.__text;
 assert.ok(!weg4.includes("<img"), "Reiseweg-Zelle enthaelt ungeschuetztes <img>: " + weg4);
 assert.ok(weg4.includes("&lt;img"), "Markup muss escaped sein: " + weg4);
 

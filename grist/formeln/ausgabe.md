@@ -203,22 +203,41 @@ Kante schneiden, einkleben, unterschreiben.
 
 Eigenes Widget, [`ausgabe/routenlinks.html`](../ausgabe/routenlinks.html ':ignore') --
 Gegenstück zum Sheets-Blatt
-[GoogleMapsExport](../../sheets/formeln/googlemapsexport.md ':ignore'): eine
-Arbeitsliste zum Durchklicken, kein Druckformular. Kein A4-Layout, keine
-Druckleiste -- nur eine Tabelle mit Aktualisieren-Knopf.
+[GoogleMapsExport](../../sheets/formeln/googlemapsexport.md ':ignore'). Die
+`.md`-Doku dort beschreibt nur die Formeln; Kopfblock, Tabellenkopf und
+Spaltenreihenfolge sind aus der **Vorlage selbst** übernommen
+(`ReisekostenabrechnungFINAL.xlsx`, Blatt „GoogleMapsExport" -- dieselbe Datei,
+aus der auch [S2](#s2) entsteht), nicht aus der Formeldoku nacherfunden.
 
-| Spalte | Quelle |
+**Kopfblock:** Titel, Antragssteller/Wohnort/Dienstort wie bei S1 -- in der
+Vorlage über zwei Zeilen gemergt. Der dortige Titel „REISEKOSTENRECHNUNG" ist
+erkennbar aus S1 kopiert (für eine Routenliste sachlich falsch) und hier durch
+„Routenlinks" ersetzt; der Rest des Kopfblocks (Antragssteller/Wohnort/
+Dienstort) ist unverändert übernommen, gebaut mit derselben `anschrift()`-Logik
+wie in [Einstellungen](einstellungen.md#kopfzeile-des-ausdrucks).
+
+**Tabellenkopf**, exakt in der Reihenfolge der Vorlage -- **abweichend** von
+der Reihenfolge in der Sheets-Formeldoku, die Reiseweg vor Beginn/Ende listet:
+
+| Spalte (Vorlage) | Quelle |
 |---|---|
 | Nr. | `Lfd_Nr` |
 | Datum | `Datum` |
-| Reiseweg | `Reiseweg` |
-| von / bis | `Beginn`, `Ende` |
-| km dienstlich | `KM_dienstlich` |
-| Route | `Maps_Link`, verlinkt als „Route" |
+| Reisebeginn | `Beginn` |
+| Reiseende | `Ende` |
+| Wegstrecke | `Reiseweg` |
+| KM dienstlich | `KM_dienstlich` |
+| Routenlink | `Maps_Link`, verlinkt als „Route" |
 
-**Statement:**
-- die Route-Zelle bekommt kein `html\`…\`` -- ein eingebettetes `<a>` würde
-  darin selbst escaped und der Link ginge kaputt
+Kein Druckformular wie ausdruck.html, trotz des formellen Kopfblocks: die
+Sheets-Vorlage nennt für dieses Blatt selbst keine Druckanweisung („Nichts.
+Routenlink bei Bedarf nutzen" -- ein Link ist auf Papier ohnehin nicht
+klickbar). Deshalb Bildschirm-Maße statt A4/mm, kein „Drucken"-Knopf, nur
+„Aktualisieren".
+
+**Statement (Route-Zelle):**
+- bekommt kein `html\`…\`` -- ein eingebettetes `<a>` würde darin selbst
+  escaped und der Link ginge kaputt
 - stattdessen steht der Link zunächst als `data-link`-Attribut (läuft dort
   ganz normal durch `esc()`) und wird erst danach per DOM-API
   (`a.href = …`) zum `<a>` -- der Wert wird nie als HTML geparst, das ist
