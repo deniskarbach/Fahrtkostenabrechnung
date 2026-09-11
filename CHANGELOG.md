@@ -3,6 +3,9 @@
 Alle nennenswerten Änderungen an diesem Projekt.
 
 ## [Unreleased]
+- Grist-Dokumentation vervollständigt, im Aufbau der Sheets-Doku: `grist/manual.md`
+  (Handbuch) und `grist/formeln/` mit Erklärschema, Mustern A–E und je einem
+  Dokument pro Tabelle
 
 ## 2026-09-01
 - Repo in zwei eigenständige Bereiche getrennt: `sheets/` und `grist/`

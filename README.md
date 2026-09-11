@@ -5,7 +5,7 @@ Dienstreisen erfassen, berechnen und standardisiert ausgeben.
 Zwei eigenständige Umsetzungen, jede für sich dokumentiert:
 
 - **[Google Sheets](sheets/manual.md)** — Handbuch und Formeldokumentation
-- **[Grist](grist/README.md)** — Handbuch
+- **[Grist](grist/README.md)** — Überblick, [Handbuch](grist/manual.md) und [Formeldokumentation](grist/formeln/README.md)
 
 ## Idee
 

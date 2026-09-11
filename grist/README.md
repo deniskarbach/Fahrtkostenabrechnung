@@ -1,34 +1,37 @@
-# Handbuch — Grist
-
-> **Status: Konzeptidee.**
+# Grist — Überblick
 
 Erfassung der Dienstreise über ein Formular, Aufbereitung in der Tabelle,
 standardisierte Ausgabe.
 
+- **[Handbuch](manual.md)** — Ablauf, Formular, Einstellungen, Drucken
+- **[Formeln](formeln/README.md)** — Datenfluss, Erklärschema, jede Spalte einzeln
+
+## Warum Grist
+
+Der Engpass war nie die Tabelle, sondern die Erfassung am Handy: sie muss
+**ohne Konto** funktionieren, direkt nach der Fahrt. Ein veröffentlichter
+Grist-Formularlink leistet genau das. Alles Weitere — Rechnen, Filtern,
+Drucken — steckt im selben Dokument, ohne zweite Datei und ohne Import.
+
 ## Ablauf
 
 1. **Vorlagendokument kopieren** — es wird in einer eigenen Kopie gearbeitet.
-2. **Einmalig einrichten** — Stammdaten und die eigene Adresse in `Einstellungen` eintragen (als Karte, ein Formular), Formular veröffentlichen, Link auf dem Handy ablegen.
+2. **Einmalig einrichten** — Stammdaten und die eigene Adresse in
+   `Einstellungen` eintragen, Adressen von `WO`/`KV` in `Orte` nachtragen,
+   Formular veröffentlichen, Link auf dem Handy ablegen.
 3. **Erfassen am Handy** — Formularlink öffnen, ausfüllen, absenden.
-4. **Abrechnen am PC** — Abrechnungszeitraum wählen, standardisierte Ausgabe rendern und drucken.
+4. **Abrechnen am PC** — Abrechnungszeitraum wählen, aktualisieren, drucken.
 
 ## Bausteine
 
 | Baustein | Inhalt |
 |---|---|
+| `Einstellungen` | Stammdaten und Abrechnungszeitraum — die einzige Stelle mit persönlichen Daten |
+| `Orte` | Stammziele mit vollständiger Adresse; speist Auswahlliste, Routenlink und Legende |
 | `Reisen` | eine Zeile je Dienstreise, gespeist aus dem veröffentlichten Formular |
-| `Orte` | Reiseziele mit vollständiger Adresse; speist die Auswahlliste im Formular und die Adressauflösung |
-| `Einstellungen` | Stammdaten und Abrechnungszeitraum |
+| `Adressen` | Einmalziele aus den Freitextfeldern; entsteht automatisch |
 | Formelspalten | Tagegeld-Staffel, bereinigte Kilometer, laufende Nummer, Reiseweg, Routenlink |
-| Ausgabe-Widget | rendert die standardisierte Ausgabe zum Drucken |
-
-## Ausgabe
-
-[`ausgabe/ausdruck.html`](ausgabe/ausdruck.html) — S1, S2, Vermerke, Dienstorte und Fahrtenbuch als druckbare Seiten, A4 hoch, eine Datei ohne Abhängigkeiten. Im Browser öffnen und über die Druckfunktion ausgeben. Die Beispielreisen darin sind erfunden.
-
-Im Grist-Widget hängt der Ausdruck an der Tabelle `Einstellungen`: er baut sich beim Öffnen und bei jeder Änderung am Abrechnungszeitraum neu auf. Eine neu erfasste oder korrigierte **Reise** erreicht ihn nicht von selbst — dafür der Knopf **Aktualisieren** in der Leiste über dem Ausdruck. Vor dem Drucken einmal drücken.
-
-Schriftgrößen, Innenabstände und Rahmenstärke stehen als CSS-Variablen am Kopf der Datei.
+| Ausgabe-Widget | rendert S1/S2, Vermerke, Dienstorte und Fahrtenbuch zum Drucken |
 
 ## Aufbau der Tabellen
 
@@ -37,8 +40,8 @@ entsteht von selbst.
 
 ```
 Einstellungen  (genau 1 Zeile, PC, Card-Widget)   Orte  (PC, selten)
-  Vorname, Name, Organisationseinheit                WO   Wohnung          Beispielweg 7 …    ← Formel
-  Wohnort-/Dienstort-Adresse  ──Formel──────────▶    KV   Dienststelle     Verwaltungsstr. 1 …  ← Formel
+  Vorname, Name, Organisationseinheit                WO   Wohnung          Beispielweg 7 …
+  Wohnort-/Dienstort-Adresse                         KV   Dienststelle     Verwaltungsstr. 1 …
   Abrechnungszeitraum                                KITA Kita Sonnensch.  Lindenweg 3 …
          │                                                  │
          │ Kopfzeile jedes Ausdrucks                        │ Auswahlliste im Formular
@@ -54,41 +57,22 @@ Einstellungen  (genau 1 Zeile, PC, Card-Widget)   Orte  (PC, selten)
                      Reise, welches Ortsfeld, der Text
 ```
 
-**Einstellungen** — eine einzige Zeile, einmal bei der Einrichtung ausgefüllt,
-als Card-Widget statt Tabelle: eine Zeile als Formular gelesen ist eindeutiger
-als eine Zeile in einer Tabelle. Diese Tabelle ist die **einzige** Stelle, an
-der persönliche Daten erfasst werden — auch die eigene Adresse steht hier als
-Straße/PLZ/Ort, nicht in `Orte`.
+Jedes der sieben Ortsfelder ist ein **Paar**: eine Auswahlliste aus `Orte` und
+daneben ein Freitextfeld für Ziele, die nicht in der Liste stehen. Ist die
+Auswahl gesetzt, gewinnt sie. Einmalziele sind der Normalfall, nicht die
+Ausnahme — eine reine Auswahlliste würde daran scheitern.
 
-Reiseweg und Routenlink brauchen die Wohnung und die Dienststelle trotzdem als
-Zeilen in `Orte` (Kürzel `WO`/`KV`, sonst wählbar wie jeder andere Ort).
-`setup.py` legt diese zwei Zeilen zwingend an; ihre Adresse tippt dort niemand
-ein — eine Formel liest sie automatisch aus `Einstellungen`. Wer umzieht,
-ändert die Adresse genau einmal, an der Stelle, an der er sie erwartet.
+Einzelheiten zu jeder Tabelle und jeder Formel:
+[Formeln](formeln/README.md).
 
-Eine Kontoverbindung wird **nicht** erfasst. IBAN- und BIC-Kasten bleiben im
-S2-Vordruck stehen und werden, falls die Abrechnungsstelle sie überhaupt
-braucht, von Hand ausgefüllt.
+## Ausgabe
 
-**Orte** — die wiederkehrenden Ziele mit Kürzel und Adresse. Diese Liste ist
-die Auswahlliste im Formular und die Legende auf dem Ausdruck. `WO` und `KV`
-stehen darin als Pflichtzeilen, ihre Adresse ist schreibgeschützt in dem Sinn,
-dass sie zwar bearbeitbar aussieht, aber überschrieben wird — die Formel liest
-`Kürzel = "WO"`/`"KV"` und ignoriert `Straße`/`PLZ`/`Ort` der Zeile dann.
-
-**Reisen** — pro Dienstreise eine Zeile, aus dem Formular. Jedes der sieben
-Ortsfelder ist ein **Paar**: eine Auswahlliste aus `Orte` und daneben ein
-Freitextfeld für Ziele, die nicht in der Liste stehen. Ist die Auswahl gesetzt,
-gewinnt sie. Dazu kommen berechnete Spalten — Reiseweg (`WO > KV > WO`),
-Tagegeldstufe, dienstliche Kilometer, Routenlink, laufende Nummer.
-
-**Adressen** — wird nie von Hand gefüllt. Sobald ein Ortsfeld als Freitext
-ausgefüllt ist, legt eine Formel hier eine Zeile an: welche Reise, welches
-Feld, welcher Text. Straße und PLZ kann die Abrechnungsstelle nachtragen.
-Bewusst eine Zeile je Fahrt — dasselbe Ziel auf zwei Fahrten ergibt zwei
-Zeilen, denn es sind zwei Vorgänge.
-
-### Was in welchen Ausdruck fließt
+[`ausgabe/ausdruck.html`](ausgabe/ausdruck.html) — S1, S2, Vermerke, Dienstorte
+und Fahrtenbuch als druckbare Seiten, A4 hoch, eine Datei ohne Abhängigkeiten.
+Im Browser geöffnet rendert sie erfundene Beispieldaten; als Grist-Widget die
+echten. Daneben
+[`ausgabe/fahrtenbuch-schnitt.html`](ausgabe/fahrtenbuch-schnitt.html) zum
+Ausschneiden und Einkleben.
 
 | Ausdruck | Kopf aus | Zeilen aus |
 |---|---|---|
@@ -97,7 +81,12 @@ Zeilen, denn es sind zwei Vorgänge.
 | Dienstorte | Einstellungen | Orte (je höchstens einmal) + Adressen (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 
-Die Dienstorte-Liste ist die Legende zum Reiseweg, kein Fahrtenprotokoll:
-Wohnung und Dienststätte stehen fest auf 1 und 2, danach die übrigen Stammorte
-nach ihrem ersten Vorkommen, danach die Einmalziele nach Datum. Deren Datum
-steht in der Kürzel-Spalte, die bei ihnen ohnehin leer bleibt.
+## Einrichten
+
+```
+cp grist/.env.beispiel grist/.env   # dort die drei Werte eintragen
+python3 grist/setup.py
+```
+
+Legt Tabellen, Spalten, Formeln, die Seite `Ausdruck` und beide Widgets an.
+Wiederholbar. Einzelheiten: [Einrichtung](formeln/setup.md).

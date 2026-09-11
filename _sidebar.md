@@ -16,5 +16,14 @@
 
 - **Grist**
   - [Überblick](grist/README.md)
+  - [Handbuch](grist/manual.md)
+  - [Formeln – Überblick](grist/formeln/README.md)
+    - [Einstellungen](grist/formeln/einstellungen.md)
+    - [Orte](grist/formeln/orte.md)
+    - [Reisen](grist/formeln/reisen.md)
+    - [Adressen](grist/formeln/adressen.md)
+    - [Ausgabe](grist/formeln/ausgabe.md)
+    - [Einrichtung (setup.py)](grist/formeln/setup.md)
+    - [Anhang](grist/formeln/anhang.md)
 
 - [Changelog](CHANGELOG.md)
