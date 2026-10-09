@@ -65,6 +65,15 @@ thead .klein { font-size: 5.6pt; }
 
 tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
 tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
+/* Spalte 11 trägt die Zeitwerte. 5,6pt und schmales Polster, weil die untere
+   Zeile bei 8pt rund 35mm bräuchte, die Spalte aber nur 28,91mm hat.
+   white-space: pre -- nur der feste Umbruch, kein automatischer: eine dritte
+   Zeile würde die Zeile höher machen als ihr Gegenstück auf Seite 1, und die
+   beiden Hälften passten beim Einkleben nicht mehr aneinander.
+   ponytail: reicht bis 99:59 je Wert; dreistellige Stunden in der unteren
+   Zeile würden abgeschnitten -- dann Schrift weiter verkleinern. */
+tbody td.zeit { font-size: 5.6pt; white-space: pre; line-height: 1.1;
+                padding-left: .4mm; padding-right: .4mm; }
 
 .schnitt-rechts { border-right: 1pt dashed #000; }
 .schnitt-links  { border-left: 1pt dashed #000; }
@@ -112,9 +121,11 @@ tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
 /* Erfundene Beispieldaten, nur für die Vorschau im Browser ohne Grist. */
 const beispielFahrten = [
   { nr:1, monat:"02", tag:"03", von:"07:15", bis:"16:40", weg:"Nr. 1 – WO > KV > Beispieldorf > WO",
-    kmBeginn:12000, kmEnde:12087, kmDienstlich:87, kmPrivat:0, vermerk:"" },
+    kmBeginn:12000, kmEnde:12087, kmDienstlich:87, kmPrivat:0, vermerk:"",
+    zeit:"Ges 9:25 | Rest 9:25\nDSt 0:00 | DO 0:00 | Pr 0:00" },
   { nr:2, monat:"02", tag:"05", von:"08:00", bis:"12:10", weg:"Nr. 2 – WO > KV > WO",
-    kmBeginn:12087, kmEnde:12111, kmDienstlich:24, kmPrivat:0, vermerk:"V26-01" },
+    kmBeginn:12087, kmEnde:12111, kmDienstlich:24, kmPrivat:0, vermerk:"V26-01",
+    zeit:"Ges 4:10 | Rest 2:25\nDSt 1:00 | DO 0:30 | Pr 0:15" },
 ];
 
 const ROWS_PRO_SEITE = 26;   // A4 quer, 190mm Nutzhöhe minus 16,4mm Kopf, bei 6,35mm/Zeile
@@ -191,7 +202,7 @@ function zeileSeite2(f) {
   return html`<tr>
     <td>${f.kmBeginn ?? ""}</td><td>${f.kmEnde ?? ""}</td>
     <td>${f.kmDienstlich ?? ""}</td><td>${f.kmPrivat ?? ""}</td>
-    <td></td><td></td><td></td><td></td>
+    <td class="zeit">${f.zeit}</td><td></td><td></td><td></td>
     <td>${f.vermerk}</td></tr>`;
 }
 
@@ -222,6 +233,22 @@ const monatTag = s => {
   const d = new Date(s * 1000);
   return { monat: zweistellig(d.getUTCMonth() + 1), tag: zweistellig(d.getUTCDate()) };
 };
+
+/* Minuten als Stunden:Minuten, auch über 24h hinaus -- wie in ausdruck.html. */
+const stunden = min => {
+  min = Math.round(min ?? 0);
+  const vz = min < 0 ? "-" : "";
+  min = Math.abs(min);
+  return `${vz}${Math.trunc(min / 60)}:${String(min % 60).padStart(2, "0")}`;
+};
+
+/* Spalte 11: dieselben Zeiten wie in der S1-Spalte "Reiseweg", hier aber
+   immer alle fünf (auch 0:00) und zweizeilig -- wie in der Sheets-Version
+   (Druck-Fahrtenbuch K4). */
+const fbZeit = r => !r.Lfd_Nr ? "" :
+    `Ges ${stunden(r.Abwesenheit_min)} | Rest ${stunden(r.Rest_min)}\n`
+  + `DSt ${stunden(r.Min_Dienststaette)} | DO ${stunden(r.Min_Dienstort)}`
+  + ` | Pr ${stunden(r.Min_privat_Abzug)}`;
 
 const zeilen = t => t.id.map((_, i) =>
   Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
@@ -260,6 +287,7 @@ async function ausGrist() {
       kmDienstlich: r.KM_dienstlich,
       kmPrivat:     r.Umweg_privat || 0,
       vermerk:      r.Vermerk_Label || "",
+      zeit:         fbZeit(r),
     }));
 
   rendern(fahrten);

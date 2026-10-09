@@ -41,7 +41,33 @@ Serienzahl 0 (30.12.1899) erscheint.
 **Ergebnis:** Monat bzw. Tag des Reisedatums als Zahl.
 
 
-## K4:N4 - händische Eintragung (keine Formel)
+## K4 - Zeitwerte
+
+```
+=ARRAYFORMULA(IFERROR(FILTER(
+  "Ges "&TEXT(BERECHNUNG!S3:S/24;"[H]:MM")
+  &" | Rest "&TEXT((BERECHNUNG!S3:S-BERECHNUNG!T3:T-BERECHNUNG!Q3:Q-BERECHNUNG!R3:R)/24;"[H]:MM")
+  &CHAR(10)
+  &"DSt "&TEXT(BERECHNUNG!Q3:Q/24;"[H]:MM")
+  &" | DO "&TEXT(BERECHNUNG!R3:R/24;"[H]:MM")
+  &" | Pr "&TEXT(BERECHNUNG!T3:T/24;"[H]:MM");
+  BERECHNUNG!C3:C<>"";
+  BERECHNUNG!C3:C>=Setup!$C$8;
+  BERECHNUNG!C3:C<=Setup!$C$10
+);""))
+```
+
+**Statement:** wie S1!D7, aber ohne laufende Nummer (steht in Spalte A);
+`CHAR(10)` setzt den Zeilenumbruch fest hinter Gesamt und Rest, ` | ` trennt die
+Blöcke.
+
+**Ergebnis:** Zwei Zeilen je Reise, z. B. `Ges 9:15 | Rest 3:15` über
+`DSt 1:00 | DO 4:30 | Pr 0:30`.
+**Sonderfall:** Anders als in S1 erscheint der private Abzug (Pr) immer, auch mit 0:00.
+**Muster:** Zeitraum-Auszug (B).
+
+
+## L4:N4 - händische Eintragung (keine Formel)
 
 
 ## O4 - Vermerk (Label)

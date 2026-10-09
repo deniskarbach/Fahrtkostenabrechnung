@@ -69,8 +69,8 @@ await sandbox.ausGrist();
 const zeilen = [...knoten("daten-s1").innerHTML.matchAll(/<tr(?: class="uebertrag")?>([\s\S]*?)<\/tr>/g)]
   .map(m => [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(z => z[1].trim()));
 
-const KM_SPALTE = 10;         // Datenzeile: Datum,von,bis,weg,4xKreuz,Verpflegung,ÖPNV,km
-const KM_SPALTE_UEBERTRAG = 3; // Übertrag-Zeile: zwei colspan-Zellen ersetzen die ersten neun
+const KM_SPALTE = 9;          // Datenzeile: Datum,von,bis,weg,3xKreuz,Verpflegung,ÖPNV,km
+const KM_SPALTE_UEBERTRAG = 3; // Übertrag-Zeile: zwei colspan-Zellen ersetzen die ersten acht
 
 assert.equal(zeilen[0][KM_SPALTE], "0", "0 dienstliche km müssen als '0' erscheinen, nicht leer");
 assert.equal(zeilen[1][KM_SPALTE], "24", "echte km müssen weiterhin als Zahl erscheinen");

@@ -64,12 +64,13 @@ Je Reise eine Zeile, darunter eine Übertragszeile mit den Summen.
 | Reisedatum | `Datum`, bei `Datum_bis` ≠ `Datum` als Spanne |
 | Beginn / Ende | `Beginn`, `Ende` |
 | Reiseweg | `s1Zeile(r)`, siehe unten |
-| vier Tagegeld-Spalten | Kreuz aus `Tagegeld_Stufe` |
+| drei Tagegeld-Spalten | Kreuz aus `Tagegeld_Stufe`; `anteilig` als `(X)` in „mehr als 8 Stunden" |
 | Verpflegung | `Verpflegung`, leer → `Nein` |
 | ÖPNV, km, Mitnahme, Übernachtung, Nebenkosten | `OePNV`, `KM_dienstlich`, `Mitnahme_Personen`, `Uebernachtung`, `Nebenkosten` |
 
 **Statement:**
 - `kreuz(stufe, s)` – setzt `X` in genau die Spalte, deren Name der Stufe entspricht
+- `kreuz8h(stufe)` – wie `kreuz` für `>8h`, zusätzlich `(X)` bei `anteilig`: der amtliche Vordruck hat keine eigene Spalte „Tagegeld anteilig"
 - `eur(n)` / `zahl(n)` – geben bei `0` einen **Leerstring** aus, nicht „0,00"
 - die Übertragszeile summiert dieselben fünf Felder über alle gedruckten Zeilen
 
@@ -197,12 +198,30 @@ Je Reise eine Zeile, Spalten 1–15 des amtlichen Fahrtenbuchs.
 | 7/8 Kilometerstand | `KM_Beginn`, `KM_Ende` |
 | 9 dienstlich | `KM_dienstlich` |
 | 10 außerdienstlich | `Umweg_privat` |
-| 11–14 Mitgenommene Bedienstete, Unterschrift | bleiben leer, von Hand |
+| 11 Name, Amtsbezeichnung | im Ausdruck leer; in der Schnittversion die Zeitwerte, siehe unten |
+| 12–14 Kilometer, Vergütungsbetrag, Unterschrift | bleiben leer, von Hand |
 | 15 Vermerke | `Vermerk_Label` |
 
 Die **Schnittversion** bricht dieselben Daten auf zwei Seiten je Zeilenblock um:
 links die Spalten 1–6, rechts 7–15. Bei **100 %** drucken, an der bezeichneten
 Kante schneiden, einkleben, unterschreiben.
+
+### Spalte 11 der Schnittversion
+
+```js
+const fbZeit = r => !r.Lfd_Nr ? "" :
+    `Ges ${stunden(r.Abwesenheit_min)} | Rest ${stunden(r.Rest_min)}\n`
+  + `DSt ${stunden(r.Min_Dienststaette)} | DO ${stunden(r.Min_Dienstort)}`
+  + ` | Pr ${stunden(r.Min_privat_Abzug)}`;
+```
+
+**Ergebnis:** `Ges 10:00 | Rest 7:45` über `DSt 1:00 | DO 0:30 | Pr 0:45` —
+dieselben Zeiten wie in der [S1-Spalte „Reiseweg"](#spalte-reiseweg), wie in
+der Sheets-Version (Druck-Fahrtenbuch K4).
+**Sonderfall:** Anders als auf S1 erscheint der private Abzug (Pr) immer, auch
+mit 0:00. Die Zelle ist in 5,6 pt gesetzt und bricht nur am festen Umbruch:
+eine dritte Zeile würde die Zeile höher machen als ihr Gegenstück auf der
+linken Seite, und die beiden Hälften passten nicht mehr aneinander.
 
 ## Routenlinks (Google Maps)
 

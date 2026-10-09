@@ -35,12 +35,12 @@ const TABELLEN = {
     { id: 1, Datum: d(20010), Ort_Beginn: 1, Ort_1: 2, Ort_Ende: 1, Lfd_Nr: 67,
       Beginn: "08:00", Ende: "16:55", Reiseweg: "WO > KV > WO",
       Abwesenheit_min: 535, Min_Dienststaette: 0, Min_Dienstort: 0,
-      Min_privat_Abzug: 0, Rest_min: 535 },
+      Min_privat_Abzug: 0, Rest_min: 535, Tagegeld_Stufe: ">8h" },
     // Mit privatem Zeitabzug -> Priv-Teil muss erscheinen, Rest entsprechend kleiner.
     { id: 2, Datum: d(20020), Ort_Beginn: 1, Ort_1: 2, Ort_Ende: 1, Lfd_Nr: 68,
       Beginn: "08:00", Ende: "18:00", Reiseweg: "WO > KV > WO",
       Abwesenheit_min: 600, Min_Dienststaette: 60, Min_Dienstort: 30,
-      Min_privat_Abzug: 45, Rest_min: 465 },
+      Min_privat_Abzug: 45, Rest_min: 465, Tagegeld_Stufe: "anteilig" },
   ],
   Adressen: [],
 };
@@ -76,6 +76,14 @@ assert.equal(zeilen[0][WEG_SPALTE],
 assert.equal(zeilen[1][WEG_SPALTE],
   "Nr. 68  –  (Ges.: 10:00 | DSt: 1:00 | DO: 0:30 | Priv: 0:45 | Rest: 7:45)",
   "Priv-Teil muss bei privatem Zeitabzug erscheinen");
+
+// Der Vordruck hat keine Spalte "Tagegeld anteilig": 13 Spalten, anteilig
+// steht eingeklammert in "mehr als 8 Stunden".
+const SPALTE_8H = 4;
+assert.equal(zeilen[0].length, 13, "S1 hat 13 Spalten, keine eigene für 'anteilig'");
+assert.equal(zeilen[0][SPALTE_8H], "X", ">8h muss ein X zeigen");
+assert.equal(zeilen[1][SPALTE_8H], "(X)", "anteilig muss als (X) in der >8h-Spalte stehen");
+assert.equal(zeilen[1][SPALTE_8H + 1], "", "anteilig darf nicht in die >=14h-Spalte rutschen");
 
 // Der echte Reiseweg bleibt exklusiv Sache des Fahrtenbuchs.
 const fbWeg = [...knoten("daten-fb").innerHTML.matchAll(/<td class="weg">([\s\S]*?)<\/td>/g)]

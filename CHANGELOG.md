@@ -3,6 +3,14 @@
 Alle nennenswerten Änderungen an diesem Projekt.
 
 ## [Unreleased]
+- Sheets S1: Spalte „Tagegeld Anteilig" entfernt (im Originalformular nicht
+  vorhanden) — anteiliges Tagegeld erscheint als `(X)` in „mehr als 8 Stunden",
+  S1 reicht jetzt von A bis M
+- Sheets Druck-Fahrtenbuch: Spalte K gibt die Zeitwerte der Reise aus
+  (Ges, Rest, DSt, DO, Pr), zweizeilig mit ` | ` als Trenner
+- Grist: dieselben beiden Anpassungen — S1 im Ausdruck ohne Spalte „Tagegeld
+  Anteilig" (`(X)` in „mehr als 8 Stunden"), Fahrtenbuch-Schnittversion mit
+  den Zeitwerten in Spalte 11
 - Grist-Dokumentation vervollständigt, im Aufbau der Sheets-Doku: `grist/manual.md`
   (Handbuch) und `grist/formeln/` mit Erklärschema, Mustern A–E und je einem
   Dokument pro Tabelle

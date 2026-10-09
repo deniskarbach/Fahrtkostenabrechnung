@@ -15,6 +15,9 @@ Rest-Zeit `S−T−Q−R`:
 | 14 h bis unter 24 h | O | ≥14h |
 | ab 24 h | P | 24h |
 
+In S1 hat die Stufe „anteilig" keine eigene Spalte: M erscheint dort als `(X)`
+in der Spalte „mehr als 8 Stunden", N als `X`.
+
 ## Wartung bei Formularänderung
 
 Jede neue Formularfrage verschiebt alle folgenden Spalten. Danach die

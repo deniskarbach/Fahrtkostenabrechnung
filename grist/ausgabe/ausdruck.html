@@ -284,8 +284,8 @@ body {
 
   <table class="raster">
     <colgroup>
-      <col style="width:20mm"><col style="width:11mm"><col style="width:11mm"><col style="width:50mm">
-      <col style="width:5mm"><col style="width:5mm"><col style="width:5mm"><col style="width:5mm">
+      <col style="width:20mm"><col style="width:11mm"><col style="width:11mm"><col style="width:55mm">
+      <col style="width:5mm"><col style="width:5mm"><col style="width:5mm">
       <col style="width:11mm">
       <col style="width:12mm"><col style="width:10mm"><col style="width:8mm"><col style="width:12mm">
       <col style="width:15mm">
@@ -295,12 +295,12 @@ body {
            Kopfblock sich beim Druck auf jeder Folgeseite (thead {display:
            table-header-group} weiter unten), statt nur auf Seite 1 zu stehen. -->
       <tr class="kopf"><td class="titel" colspan="4">REISEKOSTENRECHNUNG</td>
-          <td class="titel fett" colspan="10" style="font-size:var(--schrift);vertical-align:bottom">Eingangsdatum:</td></tr>
+          <td class="titel fett" colspan="9" style="font-size:var(--schrift);vertical-align:bottom">Eingangsdatum:</td></tr>
       <tr class="kopf"><td class="label fett" colspan="4">Antragssteller/in:</td>
-          <td class="label fett" colspan="6">Wohnort:</td>
+          <td class="label fett" colspan="5">Wohnort:</td>
           <td class="label fett" colspan="4">Dienstort:</td></tr>
       <tr class="kopf"><td class="wert" colspan="4" id="k-s1-antragsteller"></td>
-          <td class="wert" colspan="6" id="k-s1-wohnort"></td>
+          <td class="wert" colspan="5" id="k-s1-wohnort"></td>
           <td class="wert" colspan="4" id="k-s1-dienstort"></td></tr>
       <tr>
         <th class="g1 spanne fett" rowspan="2">Reisedatum</th>
@@ -308,14 +308,13 @@ body {
         <th class="g1 weg" rowspan="2"><span class="weg-titel">Reiseweg</span><span class="weg-zusatz">bei Führung eines Fahrtenbuches lediglich die lfd. Nummer
 
 Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstgeschäftes</span></th>
-        <th class="g1 fett" colspan="4">Tagegeld für</th>
+        <th class="g1 fett" colspan="3">Tagegeld für</th>
         <th class="g1"></th>
         <th class="g1 fett" colspan="3">Fahrtkosten</th>
         <th class="g1"></th>
         <th class="g1 fett">Nebenkosten</th>
       </tr>
       <tr>
-        <th class="g2"><div class="hoch">Tagegeld Anteilig</div></th>
         <th class="g2"><div class="hoch">mehr als 8 Stunden</div></th>
         <th class="g2"><div class="hoch">mindestens 14 Stunden</div></th>
         <th class="g2"><div class="hoch">24 Stunden</div></th>
@@ -328,7 +327,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       </tr>
       <tr>
         <th class="g3"></th><th class="g3">Beginn</th><th class="g3">Ende</th><th class="g3"></th>
-        <th class="g3" colspan="4">bitte ankreuzen</th>
+        <th class="g3" colspan="3">bitte ankreuzen</th>
         <th class="g3">Ja/Nein</th>
         <th class="g3">EUR</th><th class="g3">km</th><th class="g3">km</th><th class="g3">EUR</th>
         <th class="g3">EUR</th>
@@ -919,6 +918,10 @@ const anschrift = (strasse, plz, ort) =>
 const eur = n => n > 0 ? n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}) : "";
 const zahl = n => n > 0 ? String(n) : "";
 const kreuz = (stufe, s) => stufe === s ? "X" : "";
+/* Der amtliche Vordruck kennt keine Spalte "Tagegeld anteilig". Die Stufe
+   steht deshalb eingeklammert in "mehr als 8 Stunden" -- wie in der
+   Sheets-Version. */
+const kreuz8h = stufe => stufe === "anteilig" ? "(X)" : kreuz(stufe, ">8h");
 
 /* Minuten als Stunden:Minuten, auch über 24h hinaus (mehrtägige Reisen) --
    dasselbe Format wie in der Sheets-Version, ohne deren 24h-Deckel. */
@@ -968,8 +971,7 @@ for (const r of reisen) {
     <td class="z-mitte">${r.von}</td>
     <td class="z-mitte">${r.bis}</td>
     <td>${r.weg}</td>
-    <td class="z-mitte">${kreuz(r.stufe,"anteilig")}</td>
-    <td class="z-mitte">${kreuz(r.stufe,">8h")  }</td>
+    <td class="z-mitte">${kreuz8h(r.stufe)}</td>
     <td class="z-mitte">${kreuz(r.stufe,">=14h")}</td>
     <td class="z-mitte">${kreuz(r.stufe,"24h")  }</td>
     <td class="z-mitte">${r.verpflegung}</td>
@@ -982,7 +984,7 @@ for (const r of reisen) {
 
 tb.insertAdjacentHTML("beforeend", html`<tr class="uebertrag">
   <td class="beschriftung" colspan="4">Übertrag:</td>
-  <td colspan="5"></td>
+  <td colspan="4"></td>
   <td class="z-rechts">${eur(summe.oepnv)}</td>
   <td class="z-rechts">${summe.km}</td>
   <td class="z-rechts">${zahl(summe.mitnahme)}</td>
