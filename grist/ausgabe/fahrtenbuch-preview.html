@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Fahrtenbuch</title>
+<style>
+/* ---------------------------------------------------------------
+   Das Fahrtenbuch, aus ausdruck.html herausgelöst (Layout, Render und
+   Grist-Anbindung 1:1 übernommen). Vorbereitung -- noch kein Grist-Widget.
+   --------------------------------------------------------------- */
+@page { size: A4 landscape; margin: 10mm; }
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000;
+  background: #f0f0f0;
+}
+
+.dok-fahrtenbuch {
+  --rahmen: 0.4pt solid #000;
+  --schrift: 8pt;
+  --schrift-kopf: 7pt;
+  --h-daten: 6.35mm;
+  --polster-x: 0.8mm;
+}
+
+.dok-fahrtenbuch .blatt { width: 297mm; margin: 10mm auto; padding: 10mm;
+                           background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25);
+                           font-size: var(--schrift); }
+
+.dok-fahrtenbuch table { width: 277mm; border-collapse: collapse; table-layout: fixed; }
+.dok-fahrtenbuch th, .dok-fahrtenbuch td { border: var(--rahmen); padding: .4mm var(--polster-x); overflow: hidden; }
+
+.dok-fahrtenbuch thead th { font-weight: bold; font-size: var(--schrift-kopf); text-align: center;
+           vertical-align: middle; white-space: pre-line; line-height: 1.1;
+           overflow-wrap: anywhere; }
+.dok-fahrtenbuch thead .h1 { height: 6.35mm; }
+.dok-fahrtenbuch thead .h2 { height: 6.09mm; }
+.dok-fahrtenbuch thead .h3 { height: 3.97mm; }
+.dok-fahrtenbuch thead .weg { text-align: left; }
+.dok-fahrtenbuch thead .klein { font-size: 5.6pt; }
+
+.dok-fahrtenbuch tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
+.dok-fahrtenbuch tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
+
+@media print {
+  body { background: #fff; }
+  .blatt { width: auto !important; margin: 0 !important; padding: 0 !important;
+           box-shadow: none !important; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+}
+
+.druckleiste {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px 12px; background: #f0f0f0;
+  border-bottom: 1px solid #ccc; font-size: 13px;
+}
+.druckleiste button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: 6px 14px; border: 1px solid #16a34a; border-radius: 4px;
+  background: #16a34a; color: #fff;
+}
+.druckleiste button:hover { background: #15803d; border-color: #15803d; }
+.druckleiste button.sek { background: #fff; color: #16a34a; }
+.druckleiste button.sek:hover { background: #f0fdf4; }
+.druckleiste .info { color: #666; }
+
+@media print { .druckleiste { display: none !important; } }
+</style>
+</head>
+<body>
+<div class="druckleiste">
+  <button type="button" id="drucken">Drucken</button>
+  <button type="button" class="sek" id="neu-laden" hidden>Aktualisieren</button>
+  <span class="info" id="hinweis">Fahrtenbuch</span>
+</div>
+
+<div class="dok-fahrtenbuch">
+<div class="blatt">
+
+  <table>
+    <colgroup>
+      <col style="width:6.90mm"><col style="width:17.86mm"><col style="width:17.86mm">
+      <col style="width:13.61mm"><col style="width:17.86mm"><col style="width:72.99mm">
+      <col style="width:15.55mm"><col style="width:13.61mm"><col style="width:9.54mm">
+      <col style="width:17.86mm"><col style="width:22.26mm"><col style="width:6.90mm">
+      <col style="width:8.48mm"><col style="width:17.86mm"><col style="width:17.86mm">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="h1" rowspan="2">Lfd Nr.</th>
+        <th class="h1" rowspan="2">Monat</th>
+        <th class="h1" rowspan="2">Tag</th>
+        <th class="h1" colspan="2">Dauer der Reise</th>
+        <th class="h1 weg" rowspan="2">Reiseweg (Umwege sind zu begründen)&#10;&#10;&#10;Kurze Angabe des Reisezweckes</th>
+        <th class="h1" colspan="2">Stand des Kilometerzählers bei</th>
+        <th class="h1" colspan="2">Zurückgelegte Kilometer</th>
+        <th class="h1" colspan="3">Mitgenommende Bedienstete</th>
+        <th class="h1" rowspan="2">Unterschrift d. Fahrerin/Fahrers</th>
+        <th class="h1" rowspan="2">Vermerke</th>
+      </tr>
+      <tr>
+        <th class="h2">von</th>
+        <th class="h2">bis</th>
+        <th class="h2">Beginn&#10;der Reise</th>
+        <th class="h2">Ende&#10;der Reise</th>
+        <th class="h2">dienstlich</th>
+        <th class="h2">außer-&#10;dienstlich</th>
+        <th class="h2">Name, Amtsbezeichnung</th>
+        <th class="h2">Kilo-&#10;meter</th>
+        <th class="h2 klein">Vergütungsbetrag</th>
+      </tr>
+      <tr>
+        <th class="h3">1</th><th class="h3">2</th><th class="h3">3</th><th class="h3">4</th>
+        <th class="h3">5</th><th class="h3">6</th><th class="h3">7</th><th class="h3">8</th>
+        <th class="h3">9</th><th class="h3">10</th><th class="h3">11</th><th class="h3">12</th>
+        <th class="h3">13</th><th class="h3">14</th><th class="h3">15</th>
+      </tr>
+    </thead>
+    <tbody id="daten-fb"></tbody>
+  </table>
+</div>
+</div>
+
+<script>
+/* Erfundene Beispieldaten für die direkt im Browser geöffnete Datei. */
+const beispielFahrten = [
+  { nr:1, monat:"02", tag:"03", von:"07:15", bis:"16:40", weg:"Nr. 1 – WO > KV > Beispieldorf > WO",
+    kmBeginn:12000, kmEnde:12087, kmDienstlich:87, kmPrivat:0, vermerk:"" },
+  { nr:2, monat:"02", tag:"05", von:"08:00", bis:"12:10", weg:"Nr. 2 – WO > KV > WO",
+    kmBeginn:12087, kmEnde:12111, kmDienstlich:24, kmPrivat:0, vermerk:"V26-01" },
+];
+
+/* Formulareingaben (Vermerk, Freitext-Orte) dürfen kein Markup einschleusen. */
+const esc = s => String(s ?? "").replace(/[&<>"]/g,
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const html = (t, ...v) => t.reduce((a, s, i) => a + esc(v[i - 1]) + s);
+
+const hinweis = t => { document.getElementById("hinweis").textContent = t; };
+
+/* Druck im eigenen Fenster statt aus dem Grist-Iframe -- dort greift @page
+   unter Edge nicht (Begründung in ausdruck.html bei drucken()). */
+function drucken() {
+  const w = window.open("", "_blank");
+  if (!w) {
+    hinweis("Zum Drucken wird ein neues Fenster gebraucht -- bitte Popups "
+            + "für diese Seite erlauben.");
+    return;
+  }
+  w.document.write('<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
+    + "<title>Fahrtenbuch</title><style>"
+    + document.querySelector("style").textContent
+    + "</style></head><body>"
+    + document.querySelector(".dok-fahrtenbuch").outerHTML
+    + "</body></html>");
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 200);
+}
+document.getElementById("drucken").onclick = drucken;
+
+const zeilen = t => t.id.map((_, i) =>
+  Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
+
+const zweistellig = n => n == null ? "" : String(n).padStart(2, "0");
+const monatTag = s => {
+  if (s == null) return { monat: "", tag: "" };
+  const d = new Date(s * 1000);
+  return { monat: zweistellig(d.getUTCMonth() + 1), tag: zweistellig(d.getUTCDate()) };
+};
+
+function renderFahrtenbuch(fahrten) {
+const tb = document.getElementById("daten-fb");
+tb.innerHTML = "";
+for (const f of fahrten) {
+  tb.insertAdjacentHTML("beforeend", html`<tr>
+    <td>${f.nr ?? ""}</td>
+    <td>${f.monat}</td>
+    <td>${f.tag}</td>
+    <td>${f.von}</td>
+    <td>${f.bis}</td>
+    <td class="weg">${f.weg}</td>
+    <td>${f.kmBeginn ?? ""}</td>
+    <td>${f.kmEnde ?? ""}</td>
+    <td>${f.kmDienstlich ?? ""}</td>
+    <td>${f.kmPrivat ?? ""}</td>
+    <td></td><td></td><td></td><td></td>
+    <td>${f.vermerk}</td></tr>`);
+}
+}
+
+async function ausGrist() {
+  const [e] = zeilen(await grist.docApi.fetchTable("Einstellungen"));
+  if (!e) {
+    hinweis("Tabelle 'Einstellungen' ist leer -- setup.py laufen lassen, "
+            + "dann 'Aktualisieren'.");
+    return;
+  }
+  hinweis("Fahrtenbuch");
+  const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
+  /* Maßgeblich ist der Reisebeginn -- wie in ausdruck.html. */
+  const imZeitraum = d => d != null && (von == null || d >= von) && (bis == null || d <= bis);
+
+  const reisen = zeilen(await grist.docApi.fetchTable("Reisen"))
+    .filter(r => imZeitraum(r.Datum))
+    .sort((a, b) => a.Datum - b.Datum);
+
+  renderFahrtenbuch(reisen.map(r => ({
+      nr:   r.Lfd_Nr,
+      ...monatTag(r.Datum),
+      von:  r.Beginn || "",
+      bis:  r.Ende || "",
+      weg:  r.Reiseweg || "",
+      kmBeginn:     r.KM_Beginn,
+      kmEnde:       r.KM_Ende,
+      kmDienstlich: r.KM_dienstlich,
+      kmPrivat:     r.Umweg_privat || 0,
+      vermerk:      r.Vermerk_Label || "",
+    })));
+}
+
+if (window.self === window.top) {
+  renderFahrtenbuch(beispielFahrten);
+} else {
+  /* Plugin-API von der einbettenden Instanz laden (Begründung in ausdruck.html). */
+  const quelle = document.referrer ? new URL(document.referrer).origin
+                : window.location.ancestorOrigins?.[0] || "";
+  if (!quelle) {
+    hinweis("Herkunft der Grist-Instanz nicht ermittelbar (Referrer-Policy) -- "
+            + "Widget kann die Plugin-API nicht laden.");
+    throw new Error("keine Grist-Herkunft");
+  }
+  const s = document.createElement("script");
+  s.src = quelle + "/grist-plugin-api.js";
+  s.onload = () => {
+    grist.ready({ requiredAccess: "full" });
+    /* onRecords feuert nur bei Änderungen an 'Einstellungen' -- neue Reisen
+       holt der Knopf. */
+    grist.onRecords(ausGrist);
+    const knopf = document.getElementById("neu-laden");
+    knopf.hidden = false;
+    knopf.onclick = ausGrist;
+  };
+  document.head.appendChild(s);
+}
+</script>
+</body>
+</html>

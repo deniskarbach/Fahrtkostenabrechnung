@@ -589,12 +589,12 @@ def zeitraum_widget():
 # Reihenfolge = Reihenfolge auf der Ausdruck-Seite. S1/S2, Vermerke und
 # Ortsverzeichnis stecken zusammen in einer Datei (ausdruck.html) -- ein
 # Widget statt drei, ein Grist-Fetch statt drei. Das Fahrtenbuch steht in
-# fahrtenbuch.html (Vorbereitung, noch kein Widget). Schnittversion und
+# fahrtenbuch-preview.html (Vorbereitung, noch kein Widget). Schnittversion und
 # Routenlinks bleiben eigenständig, sie sind kein Bestandteil der
 # Standardausgabe (Arbeitswerkzeuge, keine Druckformulare).
 AUSGABE_WIDGETS = [
     ("Reisekostenabrechnung",        "ausdruck.html"),
-    ("Fahrtenbuch (Schnittversion)", "fahrtenbuch-schnitt.html"),
+    ("Fahrtenbuch (Schnittversion)", "fahrtenbuch.html"),
     ("Routenlinks (Google Maps)",    "routenlinks.html"),
 ]
 

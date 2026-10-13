@@ -71,7 +71,7 @@ Einzelheiten zu jeder Tabelle und jeder Formel:
 Ortsverzeichnis als druckbare Seiten, A4 hoch, eine Datei ohne Abhängigkeiten.
 Im Browser geöffnet rendert sie erfundene Beispieldaten; als Grist-Widget die
 echten. Daneben
-[`ausgabe/fahrtenbuch-schnitt.html`](ausgabe/fahrtenbuch-schnitt.html ':ignore') zum
+[`ausgabe/fahrtenbuch.html`](ausgabe/fahrtenbuch.html ':ignore') zum
 Ausschneiden und Einkleben, und
 [`ausgabe/routenlinks.html`](ausgabe/routenlinks.html ':ignore') — klickbare
 Google-Maps-Routen je Reise, zur Prüfung der gefahrenen Strecke. Auf einer

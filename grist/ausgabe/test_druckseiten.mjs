@@ -32,7 +32,7 @@ for (const [, dok, regeln] of doks) {
   assert.ok(seite === "auto" || benannt.has(seite), `${dok}: @page ${seite} fehlt`);
 }
 
-// 3. Alle Blätter sind hoch -- das Fahrtenbuch (quer) steht in fahrtenbuch.html.
+// 3. Alle Blätter sind hoch -- das Fahrtenbuch (quer) steht in fahrtenbuch-preview.html.
 assert.ok(!/landscape/.test(css), "Querformat im Ausdruck, obwohl alle Blätter hoch sind");
 assert.ok(/@page\s*\{[^}]*portrait/.test(css), "namenlose @page ist nicht portrait");
 

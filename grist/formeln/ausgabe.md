@@ -9,13 +9,13 @@ Ortsverzeichnis, A4 hoch, eine Datei ohne Abhängigkeiten. Ein Widget
 statt vier, ein Grist-Zugriff statt vier. In Grist heißt es „Reisekostenabrechnung“.
 
 Das Fahrtenbuch (quer) ist herausgelöst und steht in
-[`ausgabe/fahrtenbuch.html`](../ausgabe/fahrtenbuch.html ':ignore') — eine
+[`ausgabe/fahrtenbuch-preview.html`](../ausgabe/fahrtenbuch-preview.html ':ignore') — eine
 Vorbereitung, noch kein Widget. Der Abschnitt [Fahrtenbuch](#fahrtenbuch)
 beschreibt diese Datei.
 
 Daneben stehen zwei eigenständige Widgets, kein Bestandteil der
 Standardausgabe:
-[`ausgabe/fahrtenbuch-schnitt.html`](../ausgabe/fahrtenbuch-schnitt.html ':ignore')
+[`ausgabe/fahrtenbuch.html`](../ausgabe/fahrtenbuch.html ':ignore')
 (das Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt) und
 [`ausgabe/routenlinks.html`](../ausgabe/routenlinks.html ':ignore') (Gegenstück
 zum Sheets-Blatt „GoogleMapsExport", siehe [unten](#routenlinks-google-maps)).

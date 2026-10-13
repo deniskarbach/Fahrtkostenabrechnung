@@ -35,7 +35,7 @@ const zellen = {};
 const knoten = id => (zellen[id] ??= { textContent: "", innerHTML: "", appendChild(k) { this.kinder.push(k); },
                                        kinder: [] });
 
-const quelle = [...readFileSync("grist/ausgabe/fahrtenbuch-schnitt.html", "utf8")
+const quelle = [...readFileSync("grist/ausgabe/fahrtenbuch.html", "utf8")
   .matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]).join("\n");
 
 const sandbox = {

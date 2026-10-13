@@ -2,24 +2,27 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<title>Fahrtenbuch</title>
+<title>Fahrtenbuch – Schnittversion</title>
 <style>
 /* ---------------------------------------------------------------
-   Das Fahrtenbuch, aus ausdruck.html herausgelöst (Layout, Render und
-   Grist-Anbindung 1:1 übernommen). Vorbereitung -- noch kein Grist-Widget.
+   Ausschneidbare Version des Fahrtenbuchs (Vorschau: fahrtenbuch-preview.html): die 15 Spalten passen
+   bei echter (nicht gestauchter) Größe nicht auf eine A4-Querseite,
+   daher zwei Seiten je Zeilenblock -- Seite 1 Spalten A-F, Seite 2
+   Spalten G-O, exakt am Original-Spaltenumbruch der Vorlage (Grist
+   kennt keinen Spaltenumbruch, das Original-XLSX schon: manueller
+   Umbruch nach Spalte F). Breiten sind aus dem tatsächlichen
+   PDF-Druckergebnis der Vorlage gemessen (LibreOffice, Skalierung
+   100%), nicht aus der Spaltenbreiten-Einheit zurückgerechnet -- die
+   beiden Blöcke werden unterschiedlich skaliert (168,08mm bzw.
+   168,71mm), das lässt sich aus den Excel-Einheiten allein nicht
+   herleiten. Innerhalb jedes Blocks bleiben die Originalproportionen.
+   Zum Zusammenfügen: rechte Kante von Seite 1 und linke Kante von
+   Seite 2 (gestrichelt markiert) an der Tischkante ausschneiden,
+   Zeilenhöhe ist auf beiden Seiten identisch (6,35mm = 18pt Original).
    --------------------------------------------------------------- */
 @page { size: A4 landscape; margin: 10mm; }
 
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #000;
-  background: #f0f0f0;
-}
-
-.dok-fahrtenbuch {
+:root {
   --rahmen: 0.4pt solid #000;
   --schrift: 8pt;
   --schrift-kopf: 7pt;
@@ -27,33 +30,66 @@ body {
   --polster-x: 0.8mm;
 }
 
-.dok-fahrtenbuch .blatt { width: 297mm; margin: 10mm auto; padding: 10mm;
-                           background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25);
-                           font-size: var(--schrift); }
+* { box-sizing: border-box; }
 
-.dok-fahrtenbuch table { width: 277mm; border-collapse: collapse; table-layout: fixed; }
-.dok-fahrtenbuch th, .dok-fahrtenbuch td { border: var(--rahmen); padding: .4mm var(--polster-x); overflow: hidden; }
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--schrift);
+  color: #000;
+  background: #f0f0f0;
+}
 
-.dok-fahrtenbuch thead th { font-weight: bold; font-size: var(--schrift-kopf); text-align: center;
+.blatt {
+  width: 297mm;
+  margin: 10mm auto;
+  padding: 10mm;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,.25);
+  position: relative;
+}
+
+.hinweis { position: absolute; top: 2mm; left: 10mm; font-size: 7pt; color: #777; }
+
+table { border-collapse: collapse; table-layout: fixed; }
+th, td { border: var(--rahmen); padding: .4mm var(--polster-x); overflow: hidden; }
+
+thead th { font-weight: bold; font-size: var(--schrift-kopf); text-align: center;
            vertical-align: middle; white-space: pre-line; line-height: 1.1;
            overflow-wrap: anywhere; }
-.dok-fahrtenbuch thead .h1 { height: 6.35mm; }
-.dok-fahrtenbuch thead .h2 { height: 6.09mm; }
-.dok-fahrtenbuch thead .h3 { height: 3.97mm; }
-.dok-fahrtenbuch thead .weg { text-align: left; }
-.dok-fahrtenbuch thead .klein { font-size: 5.6pt; }
+thead .h1 { height: 6.35mm; }
+thead .h2 { height: 6.09mm; }
+thead .h3 { height: 3.97mm; }
+thead .weg { text-align: left; }
+thead .klein { font-size: 5.6pt; }
 
-.dok-fahrtenbuch tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
-.dok-fahrtenbuch tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
+tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
+tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
+/* Spalte 11 trägt die Zeitwerte. 5,6pt und schmales Polster, weil die untere
+   Zeile bei 8pt rund 35mm bräuchte, die Spalte aber nur 28,91mm hat.
+   white-space: pre -- nur der feste Umbruch, kein automatischer: eine dritte
+   Zeile würde die Zeile höher machen als ihr Gegenstück auf Seite 1, und die
+   beiden Hälften passten beim Einkleben nicht mehr aneinander.
+   ponytail: reicht bis 99:59 je Wert; dreistellige Stunden in der unteren
+   Zeile würden abgeschnitten -- dann Schrift weiter verkleinern. */
+tbody td.zeit { font-size: 5.6pt; white-space: pre; line-height: 1.1;
+                padding-left: .4mm; padding-right: .4mm; }
+
+.schnitt-rechts { border-right: 1pt dashed #000; }
+.schnitt-links  { border-left: 1pt dashed #000; }
 
 @media print {
   body { background: #fff; }
-  .blatt { width: auto !important; margin: 0 !important; padding: 0 !important;
-           box-shadow: none !important; }
+  .blatt { width: auto; margin: 0; padding: 10mm; box-shadow: none; break-after: page; }
+  .blatt:last-child { break-after: auto; }
+  .hinweis { display: none; }
   thead { display: table-header-group; }
   tr { break-inside: avoid; }
 }
+/* ---------------------------------------------------------- Druckleiste
 
+   Grist versteckt "Widget drucken" hinter dem Drei-Punkte-Menü. Dieser Knopf
+   liegt sichtbar im Widget selbst; im Ausdruck ist er ausgeblendet. */
 .druckleiste {
   position: sticky; top: 0; z-index: 10;
   display: flex; gap: 8px; align-items: center;
@@ -75,21 +111,29 @@ body {
 </head>
 <body>
 <div class="druckleiste">
-  <button type="button" id="drucken">Drucken</button>
+  <button type="button" onclick="window.print()">Drucken</button>
   <button type="button" class="sek" id="neu-laden" hidden>Aktualisieren</button>
-  <span class="info" id="hinweis">Fahrtenbuch</span>
+  <span class="info" id="hinweis">Je Zeilenblock zwei Seiten: links Spalten 1–6, rechts 7–15.</span>
 </div>
+<div id="seiten"></div>
 
-<div class="dok-fahrtenbuch">
-<div class="blatt">
+<script>
+/* Erfundene Beispieldaten, nur für die Vorschau im Browser ohne Grist. */
+const beispielFahrten = [
+  { nr:1, monat:"02", tag:"03", von:"07:15", bis:"16:40", weg:"Nr. 1 – WO > KV > Beispieldorf > WO",
+    kmBeginn:12000, kmEnde:12087, kmDienstlich:87, kmPrivat:0, vermerk:"",
+    zeit:"Ges 9:25 | Rest 9:25\nDSt 0:00 | DO 0:00 | Pr 0:00" },
+  { nr:2, monat:"02", tag:"05", von:"08:00", bis:"12:10", weg:"Nr. 2 – WO > KV > WO",
+    kmBeginn:12087, kmEnde:12111, kmDienstlich:24, kmPrivat:0, vermerk:"V26-01",
+    zeit:"Ges 4:10 | Rest 2:25\nDSt 1:00 | DO 0:30 | Pr 0:15" },
+];
 
-  <table>
-    <colgroup>
-      <col style="width:6.90mm"><col style="width:17.86mm"><col style="width:17.86mm">
-      <col style="width:13.61mm"><col style="width:17.86mm"><col style="width:72.99mm">
-      <col style="width:15.55mm"><col style="width:13.61mm"><col style="width:9.54mm">
-      <col style="width:17.86mm"><col style="width:22.26mm"><col style="width:6.90mm">
-      <col style="width:8.48mm"><col style="width:17.86mm"><col style="width:17.86mm">
+const ROWS_PRO_SEITE = 26;   // A4 quer, 190mm Nutzhöhe minus 16,4mm Kopf, bei 6,35mm/Zeile
+
+function kopfSeite1() {
+  return `<colgroup>
+      <col style="width:7.88mm"><col style="width:20.41mm"><col style="width:20.41mm">
+      <col style="width:15.56mm"><col style="width:20.41mm"><col style="width:83.41mm">
     </colgroup>
     <thead>
       <tr>
@@ -98,6 +142,26 @@ body {
         <th class="h1" rowspan="2">Tag</th>
         <th class="h1" colspan="2">Dauer der Reise</th>
         <th class="h1 weg" rowspan="2">Reiseweg (Umwege sind zu begründen)&#10;&#10;&#10;Kurze Angabe des Reisezweckes</th>
+      </tr>
+      <tr>
+        <th class="h2">von</th>
+        <th class="h2">bis</th>
+      </tr>
+      <tr>
+        <th class="h3">1</th><th class="h3">2</th><th class="h3">3</th>
+        <th class="h3">4</th><th class="h3">5</th><th class="h3">6</th>
+      </tr>
+    </thead>`;
+}
+
+function kopfSeite2() {
+  return `<colgroup>
+      <col style="width:20.19mm"><col style="width:17.68mm"><col style="width:12.39mm">
+      <col style="width:23.19mm"><col style="width:28.91mm"><col style="width:8.96mm">
+      <col style="width:11.01mm"><col style="width:23.19mm"><col style="width:23.19mm">
+    </colgroup>
+    <thead>
+      <tr>
         <th class="h1" colspan="2">Stand des Kilometerzählers bei</th>
         <th class="h1" colspan="2">Zurückgelegte Kilometer</th>
         <th class="h1" colspan="3">Mitgenommende Bedienstete</th>
@@ -105,8 +169,6 @@ body {
         <th class="h1" rowspan="2">Vermerke</th>
       </tr>
       <tr>
-        <th class="h2">von</th>
-        <th class="h2">bis</th>
         <th class="h2">Beginn&#10;der Reise</th>
         <th class="h2">Ende&#10;der Reise</th>
         <th class="h2">dienstlich</th>
@@ -116,56 +178,54 @@ body {
         <th class="h2 klein">Vergütungsbetrag</th>
       </tr>
       <tr>
-        <th class="h3">1</th><th class="h3">2</th><th class="h3">3</th><th class="h3">4</th>
-        <th class="h3">5</th><th class="h3">6</th><th class="h3">7</th><th class="h3">8</th>
-        <th class="h3">9</th><th class="h3">10</th><th class="h3">11</th><th class="h3">12</th>
-        <th class="h3">13</th><th class="h3">14</th><th class="h3">15</th>
+        <th class="h3">7</th><th class="h3">8</th><th class="h3">9</th><th class="h3">10</th>
+        <th class="h3">11</th><th class="h3">12</th><th class="h3">13</th><th class="h3">14</th>
+        <th class="h3">15</th>
       </tr>
-    </thead>
-    <tbody id="daten-fb"></tbody>
-  </table>
-</div>
-</div>
+    </thead>`;
+}
 
-<script>
-/* Erfundene Beispieldaten für die direkt im Browser geöffnete Datei. */
-const beispielFahrten = [
-  { nr:1, monat:"02", tag:"03", von:"07:15", bis:"16:40", weg:"Nr. 1 – WO > KV > Beispieldorf > WO",
-    kmBeginn:12000, kmEnde:12087, kmDienstlich:87, kmPrivat:0, vermerk:"" },
-  { nr:2, monat:"02", tag:"05", von:"08:00", bis:"12:10", weg:"Nr. 2 – WO > KV > WO",
-    kmBeginn:12087, kmEnde:12111, kmDienstlich:24, kmPrivat:0, vermerk:"V26-01" },
-];
-
-/* Formulareingaben (Vermerk, Freitext-Orte) dürfen kein Markup einschleusen. */
+/* Tabellenzellen werden als HTML zusammengesetzt. Das Präfix html`…` schiebt
+   jeden eingesetzten Wert durch esc(); Formulareingaben (Vermerk, Freitext-Orte,
+   Adressen) können so kein Markup einschleusen. Ohne Präfix kein Schutz. */
 const esc = s => String(s ?? "").replace(/[&<>"]/g,
   c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const html = (t, ...v) => t.reduce((a, s, i) => a + esc(v[i - 1]) + s);
 
-const hinweis = t => { document.getElementById("hinweis").textContent = t; };
-
-/* Druck im eigenen Fenster statt aus dem Grist-Iframe -- dort greift @page
-   unter Edge nicht (Begründung in ausdruck.html bei drucken()). */
-function drucken() {
-  const w = window.open("", "_blank");
-  if (!w) {
-    hinweis("Zum Drucken wird ein neues Fenster gebraucht -- bitte Popups "
-            + "für diese Seite erlauben.");
-    return;
-  }
-  w.document.write('<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
-    + "<title>Fahrtenbuch</title><style>"
-    + document.querySelector("style").textContent
-    + "</style></head><body>"
-    + document.querySelector(".dok-fahrtenbuch").outerHTML
-    + "</body></html>");
-  w.document.close();
-  w.focus();
-  setTimeout(() => w.print(), 200);
+function zeileSeite1(f) {
+  return html`<tr>
+    <td>${f.nr ?? ""}</td><td>${f.monat}</td><td>${f.tag}</td>
+    <td>${f.von}</td><td>${f.bis}</td><td class="weg">${f.weg}</td></tr>`;
 }
-document.getElementById("drucken").onclick = drucken;
 
-const zeilen = t => t.id.map((_, i) =>
-  Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
+function zeileSeite2(f) {
+  return html`<tr>
+    <td>${f.kmBeginn ?? ""}</td><td>${f.kmEnde ?? ""}</td>
+    <td>${f.kmDienstlich ?? ""}</td><td>${f.kmPrivat ?? ""}</td>
+    <td class="zeit">${f.zeit}</td><td></td><td></td><td></td>
+    <td>${f.vermerk}</td></tr>`;
+}
+
+function rendern(fahrten) {
+  const wrap = document.getElementById("seiten");
+  wrap.innerHTML = "";
+  for (let i = 0; i < fahrten.length; i += ROWS_PRO_SEITE) {
+    const block = fahrten.slice(i, i + ROWS_PRO_SEITE);
+    const seite = document.createElement("div");
+    seite.className = "blatt";
+    seite.innerHTML = `<div class="hinweis">Seite ${i / ROWS_PRO_SEITE * 2 + 1} von ${Math.ceil(fahrten.length / ROWS_PRO_SEITE) * 2} — Spalten 1–6, rechte Kante ausschneiden</div>
+      <table class="schnitt-rechts">${kopfSeite1()}<tbody>${block.map(zeileSeite1).join("")}</tbody></table>`;
+    wrap.appendChild(seite);
+
+    const seite2 = document.createElement("div");
+    seite2.className = "blatt";
+    seite2.innerHTML = `<div class="hinweis">Seite ${i / ROWS_PRO_SEITE * 2 + 2} von ${Math.ceil(fahrten.length / ROWS_PRO_SEITE) * 2} — Spalten 7–15, linke Kante ausschneiden, an Seite ${i / ROWS_PRO_SEITE * 2 + 1} ankleben</div>
+      <table class="schnitt-links">${kopfSeite2()}<tbody>${block.map(zeileSeite2).join("")}</tbody></table>`;
+    wrap.appendChild(seite2);
+  }
+}
+
+/* ---------------------------------------------------------- Grist-Anbindung */
 
 const zweistellig = n => n == null ? "" : String(n).padStart(2, "0");
 const monatTag = s => {
@@ -174,25 +234,30 @@ const monatTag = s => {
   return { monat: zweistellig(d.getUTCMonth() + 1), tag: zweistellig(d.getUTCDate()) };
 };
 
-function renderFahrtenbuch(fahrten) {
-const tb = document.getElementById("daten-fb");
-tb.innerHTML = "";
-for (const f of fahrten) {
-  tb.insertAdjacentHTML("beforeend", html`<tr>
-    <td>${f.nr ?? ""}</td>
-    <td>${f.monat}</td>
-    <td>${f.tag}</td>
-    <td>${f.von}</td>
-    <td>${f.bis}</td>
-    <td class="weg">${f.weg}</td>
-    <td>${f.kmBeginn ?? ""}</td>
-    <td>${f.kmEnde ?? ""}</td>
-    <td>${f.kmDienstlich ?? ""}</td>
-    <td>${f.kmPrivat ?? ""}</td>
-    <td></td><td></td><td></td><td></td>
-    <td>${f.vermerk}</td></tr>`);
-}
-}
+/* Minuten als Stunden:Minuten, auch über 24h hinaus -- wie in ausdruck.html. */
+const stunden = min => {
+  min = Math.round(min ?? 0);
+  const vz = min < 0 ? "-" : "";
+  min = Math.abs(min);
+  return `${vz}${Math.trunc(min / 60)}:${String(min % 60).padStart(2, "0")}`;
+};
+
+/* Spalte 11: dieselben Zeiten wie in der S1-Spalte "Reiseweg", hier aber
+   immer alle fünf (auch 0:00) und zweizeilig -- wie in der Sheets-Version
+   (Druck-Fahrtenbuch K4). */
+const fbZeit = r => !r.Lfd_Nr ? "" :
+    `Ges ${stunden(r.Abwesenheit_min)} | Rest ${stunden(r.Rest_min)}\n`
+  + `DSt ${stunden(r.Min_Dienststaette)} | DO ${stunden(r.Min_Dienstort)}`
+  + ` | Pr ${stunden(r.Min_privat_Abzug)}`;
+
+const zeilen = t => t.id.map((_, i) =>
+  Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
+
+/* Meldungen gehen in die Druckleiste, nicht in den <body>: ein ersetzter Body
+   nimmt die Tabellen mit, und der naechste onRecords-Lauf findet seine Zellen
+   dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
+const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
+const hinweis = t => { document.getElementById("hinweis").textContent = t; };
 
 async function ausGrist() {
   const [e] = zeilen(await grist.docApi.fetchTable("Einstellungen"));
@@ -201,16 +266,17 @@ async function ausGrist() {
             + "dann 'Aktualisieren'.");
     return;
   }
-  hinweis("Fahrtenbuch");
+  hinweis(HINWEIS_STANDARD);
   const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
-  /* Maßgeblich ist der Reisebeginn -- wie in ausdruck.html. */
-  const imZeitraum = d => d != null && (von == null || d >= von) && (bis == null || d <= bis);
 
-  const reisen = zeilen(await grist.docApi.fetchTable("Reisen"))
-    .filter(r => imZeitraum(r.Datum))
-    .sort((a, b) => a.Datum - b.Datum);
-
-  renderFahrtenbuch(reisen.map(r => ({
+  /* Gefiltert wird ueber den Reisebeginn -- siehe ausdruck.html: eine Reise,
+     die vor `von` beginnt, gehoert in die vorige Abrechnung. */
+  const fahrten = zeilen(await grist.docApi.fetchTable("Reisen"))
+    .filter(r => r.Datum != null
+                 && (von == null || r.Datum >= von)
+                 && (bis == null || r.Datum <= bis))
+    .sort((a, b) => a.Datum - b.Datum)
+    .map(r => ({
       nr:   r.Lfd_Nr,
       ...monatTag(r.Datum),
       von:  r.Beginn || "",
@@ -221,13 +287,22 @@ async function ausGrist() {
       kmDienstlich: r.KM_dienstlich,
       kmPrivat:     r.Umweg_privat || 0,
       vermerk:      r.Vermerk_Label || "",
-    })));
+      zeit:         fbZeit(r),
+    }));
+
+  rendern(fahrten);
 }
 
 if (window.self === window.top) {
-  renderFahrtenbuch(beispielFahrten);
+  rendern(beispielFahrten);
 } else {
-  /* Plugin-API von der einbettenden Instanz laden (Begründung in ausdruck.html). */
+  /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
+     Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
+     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy loescht
+     document.referrer, und ein fest verdrahtetes docs.getgrist.com waere dann
+     doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
+     Host bekaeme einen Request aus dem Dokument. Lieber nichts laden und es
+     sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
                 : window.location.ancestorOrigins?.[0] || "";
   if (!quelle) {
@@ -239,8 +314,13 @@ if (window.self === window.top) {
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
     grist.ready({ requiredAccess: "full" });
-    /* onRecords feuert nur bei Änderungen an 'Einstellungen' -- neue Reisen
-       holt der Knopf. */
+    /* onRecords feuert beim Aufbau und danach nur bei Aenderungen an der
+       Tabelle, an der das Widget haengt -- das ist 'Einstellungen', also
+       praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder
+       korrigierte Reise erreicht das Widget NICHT.
+       ponytail: sichtbarer Knopf statt Polling -- die Plugin-API kennt
+       keinen Haken auf fremde Tabellen, und still veraltet drucken ist der
+       teurere Fehler. */
     grist.onRecords(ausGrist);
     const knopf = document.getElementById("neu-laden");
     knopf.hidden = false;
