@@ -6,7 +6,7 @@
 <style>
 /* ---------------------------------------------------------------
    Prüfblatt für die Zeiterfassungsstelle: alles, was sonst auf fünf
-   Blättern verteilt liegt (S1, Vermerke, Dienstorte, Fahrtenbuch,
+   Blättern verteilt liegt (S1, Vermerke, Ortsverzeichnis, Fahrtenbuch,
    Routenlinks), kompakt in EINER Zeile je Reise -- damit die Stelle,
    die den Antrag final bearbeitet, nicht zwischen Blättern blättern
    muss.
@@ -14,7 +14,7 @@
    Spaltenbegriffe absichtlich aus S1 übernommen (Tagegeld für /
    Unentgeltliche Verpflegung / ÖPNV / Wegstrecke / Mitnahme von
    Personen / Übernachtungskosten / Nebenkosten), Kopfblock und
-   Orte-Legende aus dem Dienstorte-Blatt -- die Stelle soll die
+   Orte-Legende aus dem Ortsverzeichnis -- die Stelle soll die
    gewohnte Ansicht wiedererkennen, nicht eine neue lernen.
 
    A4 quer: 22 Spalten passen nicht auf Hochformat. Die Spaltenbreiten
@@ -57,7 +57,7 @@ body {
 
 table { border-collapse: collapse; table-layout: fixed; width: 266mm; }
 
-/* -------------------------------------------------- Kopfblock (wie Dienstorte) */
+/* -------------------------------------------------- Kopfblock (wie Ortsverzeichnis) */
 .kopf { margin-bottom: 3mm; }
 .kopf td { border: var(--rahmen); padding: 0 1mm; vertical-align: top; }
 .kopf .titel { height: 12mm; font-size: var(--schrift-titel); font-weight: bold;
@@ -202,7 +202,7 @@ a { color: #1a73e8; }
   </table>
 
   <table class="legende">
-    <caption>Dienstorte — Legende zu den Kürzeln im Reiseweg</caption>
+    <caption>Ortsverzeichnis — Legende zu den Kürzeln im Reiseweg</caption>
     <colgroup>
       <col style="width:8mm"><col style="width:24mm"><col style="width:56mm"><col style="width:82mm">
     </colgroup>
@@ -402,7 +402,7 @@ async function ausGrist() {
   };
 
   const orteNachId = Object.fromEntries(
-    zeilen(await grist.docApi.fetchTable("Orte")).map(o => [o.id, o]));
+    zeilen(await grist.docApi.fetchTable("Stammziele")).map(o => [o.id, o]));
 
   /* Gefiltert wird ueber den Reisebeginn -- siehe ausdruck.html: eine Reise,
      die vor `von` beginnt, gehoert in die vorige Abrechnung. */
@@ -410,9 +410,9 @@ async function ausGrist() {
     .filter(r => imZeitraum(r.Datum))
     .sort((a, b) => a.Datum - b.Datum);
 
-  /* Orte-Legende: identische Reihenfolge wie im Dienstorte-Blatt von
+  /* Orte-Legende: identische Reihenfolge wie im Ortsverzeichnis von
      ausdruck.html -- Wohnung und Dienststaette fest vorn, dann die uebrigen
-     Stammorte nach erstem Vorkommen, dann die Einmalziele nach Datum.
+     Stammziele nach erstem Vorkommen, dann die Einzelziele nach Datum.
      Gegen ein Auseinanderlaufen der beiden Kopien prueft
      test_pruefliste.mjs beide Blaetter auf dieselbe Liste. */
   const orteListe = Object.values(orteNachId);
@@ -430,7 +430,7 @@ async function ausGrist() {
     adresse: orteNachId[id].Adresse || "",
   }));
 
-  const ausAdressen = zeilen(await grist.docApi.fetchTable("Adressen"))
+  const ausEinzelziele = zeilen(await grist.docApi.fetchTable("Einzelziele"))
     .filter(a => imZeitraum(a.Datum))
     .sort((a, b) => a.Datum - b.Datum)
     .map(a => ({ kuerzel: tag(a.Datum), name: a.Label || "", adresse: a.Adresse || "" }));
@@ -459,7 +459,7 @@ async function ausGrist() {
       neben:         r.Nebenkosten || 0,
       vermerk: r.Vermerk_Label || "",
       link:    r.Maps_Link || "",
-    })), [...ausOrte, ...ausAdressen]);
+    })), [...ausOrte, ...ausEinzelziele]);
 }
 
 if (window.self === window.top) {

@@ -29,19 +29,19 @@ Reisen           Eingabespalten + Rechenspalten
    │
    │  Ortsfeld als Freitext ausgefüllt, ohne Auswahl?
    ▼
-Adressen         eine Zeile je Fahrt und Ortsfeld — Straße/PLZ/Ort
+Einzelziele      eine Zeile je Fahrt und Ortsfeld — Straße/PLZ/Ort
                  trägt die Abrechnungsstelle nach
 
 Einstellungen    Stammdaten + Abrechnungszeitraum  ──┐
-Orte             Stammziele mit Adresse            ──┤
+Stammziele       Stammziele mit Adresse            ──┤
                                                      ▼
                                    Ausgabe-Widget (ausdruck.html)
                                    auf Abrechnungszeitraum gefiltert
-                                   S1/S2 · Vermerke · Dienstorte · Fahrtenbuch
+                                   S1/S2 · Vermerke · Ortsverzeichnis
 ```
 
-Gearbeitet wird ausschließlich im Formular sowie in `Einstellungen` und `Orte`;
-in `Adressen` wird die Anschrift nachgetragen. Alle Rechenspalten sind reine
+Gearbeitet wird ausschließlich im Formular sowie in `Einstellungen` und `Stammziele`;
+in `Einzelziele` wird die Anschrift nachgetragen. Alle Rechenspalten sind reine
 Formelergebnisse.
 
 ## Erklärschema
@@ -80,15 +80,15 @@ teile = [(o.Kuerzel if o else "") or t for o, t in paare]
 ```
 
 **Statement:**
-- `paare` – die sieben Ortsfelder als Paar aus Auswahl (`Ref:Orte`) und Freitext
+- `paare` – die sieben Ortsfelder als Paar aus Auswahl (`Ref:Stammziele`) und Freitext
 - `o.Kuerzel if o else ""` – ist eine Auswahl gesetzt, ihren Wert nehmen
 - `… or t` – sonst den Freitext
 
-Jeder Stopp ist ein Paar: Auswahlliste für die Stammorte, Freitext für die
-Einmalziele. Sind versehentlich beide gefüllt, gewinnt die Auswahl —
+Jeder Stopp ist ein Paar: Auswahlliste für die Stammziele, Freitext für die
+Einzelziele. Sind versehentlich beide gefüllt, gewinnt die Auswahl —
 stillschweigend. Dieselbe Weiche steckt in `Reiseweg`, `Maps_Link` und in den
 `_Sync`-Spalten; dort sorgt sie dafür, dass ein ignorierter Freitext **keine**
-Adresszeile anlegt und deshalb auch nicht im Dienstorte-Blatt auftaucht.
+Adresszeile anlegt und deshalb auch nicht im Ortsverzeichnis auftaucht.
 
 **Zu beachten:** `Reiseweg` nimmt aus der Auswahl das **Kürzel**,
 `Maps_Link` die **Adresse**. Fehlt einem angefahrenen Ort die Adresse, bleibt
@@ -154,9 +154,9 @@ Nummernkreise, die beide bei 1 beginnen.
 Je ein eigenes Dokument, in Datenfluss-Reihenfolge:
 
 1. [Einstellungen](einstellungen.md)
-2. [Orte](orte.md)
+2. [Stammziele](stammziele.md)
 3. [Reisen](reisen.md)
-4. [Adressen](adressen.md)
+4. [Einzelziele](einzelziele.md)
 5. [Ausgabe](ausgabe.md)
 6. [Einrichtung (setup.py)](setup.md)
 7. [Anhang](anhang.md)

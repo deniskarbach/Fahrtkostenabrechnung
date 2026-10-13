@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testet die tragende Annahme hinter der geplanten Adressen-Tabelle: kann
+"""Testet die tragende Annahme hinter der geplanten Einzelziele-Tabelle: kann
 eine Formelspalte per Table.lookupOrAddDerived() automatisch Zeilen in einer
 ANDEREN, normal angelegten Tabelle anlegen (nicht nur in Summary-Tabellen)?
 

@@ -1,8 +1,8 @@
 [← Formeln-Übersicht](README.md)
 
-# Adressen
+# Einzelziele
 
-Die Einmalziele. Wird **nie von Hand angelegt**: sobald ein Ortsfeld im
+Die Einzelziele. Wird **nie von Hand angelegt**: sobald ein Ortsfeld im
 Formular als Freitext ausgefüllt ist und keine Auswahl daneben steht, legt die
 zugehörige `_Sync`-Spalte in [Reisen](reisen.md) hier eine Zeile an.
 
@@ -20,7 +20,7 @@ diese drei Felder nie an.
 | `Adresse` | Vollständige Adresse | Text | **Formel** |
 | `Datum` | Reisedatum | Date | **Formel** |
 
-Aufbau bewusst analog zu [Orte](orte.md): gleiche Spalten `Strasse`/`PLZ`/`Ort`,
+Aufbau bewusst analog zu [Stammziele](stammziele.md): gleiche Spalten `Strasse`/`PLZ`/`Ort`,
 gleiche `Adresse`-Formel. Die Abrechnungsstelle trägt in beiden Tabellen
 dasselbe ein, an derselben Stelle.
 
@@ -32,8 +32,8 @@ dasselbe ein, an derselben Stelle.
 
 **Ergebnis:** `Dorfstr. 2, 00000 Beispieldorf`
 **Sonderfall:** Solange nichts nachgetragen ist, bleibt die Zelle leer — auf
-dem Dienstorte-Blatt steht dann der Name ohne Adresse.
-**Muster:** identisch zu [Orte → Adresse](orte.md#adresse).
+dem Ortsverzeichnis steht dann der Name ohne Adresse.
+**Muster:** identisch zu [Stammziele → Adresse](stammziele.md#adresse).
 
 ## Datum
 
@@ -45,7 +45,7 @@ $Reise.Datum
 - `$Reise` – die Referenz auf die Reise, die diese Zeile ausgelöst hat
 - `.Datum` – deren Reisedatum, durchgereicht
 
-**Ergebnis:** Das Datum der Fahrt, zu der dieses Einmalziel gehört.
+**Ergebnis:** Das Datum der Fahrt, zu der dieses Einzelziel gehört.
 **Rechenweg:** Direkter Durchgriff über die Referenz, kein Nachschlagen.
 **Sonderfall:** Ist die Reise gelöscht, liefert der Zugriff keinen Wert und die
 Zeile fällt aus dem Zeitraumfilter — sie wird beim nächsten `setup.py`-Lauf
@@ -53,7 +53,7 @@ entfernt.
 **Muster:** Spaltenformel (A).
 
 Das Datum hat zwei Aufgaben: es filtert die Zeile auf den Abrechnungszeitraum,
-und es erscheint auf dem Dienstorte-Blatt in der Spalte *Kürzel / Datum* — dort
+und es erscheint im Ortsverzeichnis in der Spalte *Kürzel / Datum* — dort
 weist es den Eintrag seiner Fahrt zu.
 
 ## Eine Zeile je Fahrt
@@ -67,7 +67,7 @@ eindeutig, ein Treffer auf eine fremde Zeile also ausgeschlossen.
 
 `lookupOrAddDerived` legt Zeilen an, räumt aber nie ab. Verwaist eine Zeile,
 bleibt sie ohne Zutun für immer stehen. `setup.py` entfernt bei jedem Lauf
-(`adressen_aufraeumen`) alle Zeilen, deren
+(`einzelziele_aufraeumen`) alle Zeilen, deren
 
 - Reise gelöscht wurde,
 - Freitext geleert wurde, oder

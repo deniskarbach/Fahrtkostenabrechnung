@@ -19,7 +19,7 @@ Tabelle nur lesend zugreift. Alle Rechenspalten ziehen sofort nach.
 | `KM_Beginn` / `KM_Ende` | Kilometerstand Beginn / Ende | Int |
 | `Tacho_Fotos` | Tachofotos (Beginn und Ende) | Attachments |
 | `Umweg_privat` | Privater Umweg (km) | Int |
-| `Ort_Beginn`, `Ort_1` … `Ort_5`, `Ort_Ende` | Ort-Auswahl | Ref:Orte |
+| `Ort_Beginn`, `Ort_1` … `Ort_5`, `Ort_Ende` | Ort-Auswahl | Ref:Stammziele |
 | `Ort_Beginn_Text` … `Ort_Ende_Text` | Ort-Freitext | Text |
 | `Tagegeld_beantragt` | Tagegeld beantragen? | Bool |
 | `Min_Dienststaette` | Aufenthalt Dienststätte (Minuten) | Int |
@@ -222,7 +222,7 @@ return " > ".join(x for x in teile if x)
 
 Erscheint auf S1 (hinter der laufenden Nummer) und in Spalte 6 des
 Fahrtenbuchs. Aus der Auswahl wird das **Kürzel** genommen — die Legende dazu
-ist das Dienstorte-Blatt.
+ist das Ortsverzeichnis.
 
 ---
 
@@ -253,7 +253,7 @@ return link
 - `o.Adresse if o else …` – wie `Reiseweg` gewinnt die Auswahl, hier aber mit
   der **Adresse** statt dem Kürzel
 - `(s.Adresse if s else "") or t` – beim Freitext zählt die in
-  [Adressen](adressen.md) nachgetragene Anschrift; erst wenn dort noch nichts
+  [Einzelziele](einzelziele.md) nachgetragene Anschrift; erst wenn dort noch nichts
   steht, der Freitext selbst
 - `if not a: return ""` – ein belegter Stopp ohne Anschrift macht die ganze
   Route unbrauchbar, nicht nur sich selbst
@@ -271,8 +271,8 @@ die Adressen von `WO` und `KV` nachtragen; `setup.py` nennt beim Lauf jeden
 Ort ohne Anschrift beim Kürzel.
 **Muster:** Auswahl gewinnt (B).
 
-Die Anschrift eines Einmalziels steht **nicht** im Freitext der Reise, sondern
-in der Zeile, die `Ort_*_Sync` in [Adressen](adressen.md) angelegt hat — dort
+Die Anschrift eines Einzelziels steht **nicht** im Freitext der Reise, sondern
+in der Zeile, die `Ort_*_Sync` in [Einzelziele](einzelziele.md) angelegt hat — dort
 trägt die Abrechnungsstelle Straße/PLZ/Ort nach. Deshalb liest die Formel die
 Sync-Spalte mit; ohne sie landete das blanke Label („Kita Sonnenschein") als
 Adresse im Link.
@@ -308,15 +308,15 @@ ersten Vermerk tragen.
 
 ---
 
-## Ort_*_Sync — Adressen-Sync
+## Ort_*_Sync — Einzelziel-Sync
 
 Sieben unsichtbare Formelspalten, eine je Ortsfeld. Sie legen die Zeilen in
-[Adressen](adressen.md) an. Beispiel `Ort_Beginn_Sync`:
+[Einzelziele](einzelziele.md) an. Beispiel `Ort_Beginn_Sync`:
 
 ```python
 if $Ort_Beginn or not $Ort_Beginn_Text:
   return None
-rec = Adressen.lookupOrAddDerived(Reise=$id, Slot="Ort_Beginn")
+rec = Einzelziele.lookupOrAddDerived(Reise=$id, Slot="Ort_Beginn")
 rec.Label = $Ort_Beginn_Text
 return rec
 ```
@@ -329,7 +329,7 @@ return rec
 
 **Ergebnis:** Ein Verweis auf die zugehörige Adresszeile.
 **Sonderfall:** Gewinnt die Auswahl (Muster B), entsteht keine Zeile — sonst
-stünde der ignorierte Freitext trotzdem im Dienstorte-Blatt.
+stünde der ignorierte Freitext trotzdem im Ortsverzeichnis.
 **Muster:** Auswahl gewinnt (B).
 
 **Zu beachten:**
@@ -345,7 +345,7 @@ stünde der ignorierte Freitext trotzdem im Dienstorte-Blatt.
 - `lookupOrAddDerived` legt Zeilen an, räumt aber nie ab. Wird eine Reise
   gelöscht, der Freitext geleert oder nachträglich eine Auswahl gesetzt, bleibt
   die Adresszeile stehen. `setup.py` entfernt sie bei jedem Lauf
-  (`adressen_aufraeumen`).
+  (`einzelziele_aufraeumen`).
 
 Die sieben Spalten sind in der Tabellenansicht ausgeblendet — sie haben keinen
 eigenen Aussagewert. Im Editor über *Hidden columns* jederzeit wieder

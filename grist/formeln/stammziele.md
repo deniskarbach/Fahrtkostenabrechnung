@@ -1,15 +1,15 @@
 [← Formeln-Übersicht](README.md)
 
-# Orte
+# Stammziele
 
 Stammdaten der wiederkehrenden Reiseziele. Eine Formel, sonst Eingabetabelle.
 Diese Liste ist zugleich die Auswahlliste im Formular, die Quelle für den
-Routenlink und die Legende auf dem Dienstorte-Blatt.
+Routenlink und die Legende im Ortsverzeichnis.
 
 | Spalte | Beschriftung | Typ | Inhalt |
 |---|---|---|---|
 | `Kuerzel` | Kürzel | Text | erscheint im `Reiseweg` (`WO > KV > KITA > WO`) |
-| `Name` | Name der Einrichtung | Text | erscheint auf dem Dienstorte-Blatt |
+| `Name` | Name der Einrichtung | Text | erscheint im Ortsverzeichnis |
 | `Strasse` | Straße und Hausnummer | Text | speist `Adresse` |
 | `PLZ` | PLZ | Text | " |
 | `Ort` | Ort | Text | " |
@@ -28,12 +28,12 @@ Routenlink und die Legende auf dem Dienstorte-Blatt.
 - `", ".join(…)` – die verbliebenen Teile mit Komma verbinden
 
 **Ergebnis:** `Lindenweg 3, 00000 Musterstadt` — die Adresse, wie sie in
-`Maps_Link` und auf dem Dienstorte-Blatt erscheint.
+`Maps_Link` und im Ortsverzeichnis erscheint.
 **Sonderfall:** Ist nur die Straße gefüllt, steht auch nur sie da; sind alle
 drei leer, bleibt die Zelle leer — und jede Reise über diesen Ort bekommt
 **keinen** `Maps_Link`. `setup.py` nennt solche Orte bei jedem Lauf.
 
-Dieselbe Formel steht in [Adressen](adressen.md) — beide Tabellen sind bewusst
+Dieselbe Formel steht in [Einzelziele](einzelziele.md) — beide Tabellen sind bewusst
 gleich aufgebaut, damit die Abrechnungsstelle nicht zwei Schemata im Kopf haben
 muss.
 
@@ -61,6 +61,6 @@ eingetragene Adresse wird nie überschrieben.
 ## Was nicht hierher gehört
 
 Ein Ziel, das nur einmal vorkommt. Dafür ist das Freitextfeld im Formular da;
-es legt automatisch eine Zeile in [Adressen](adressen.md) an. Einmalorte sind
+es legt automatisch eine Zeile in [Einzelziele](einzelziele.md) an. Einmalorte sind
 der Normalfall, nicht die Ausnahme — eine reine Auswahlliste würde daran
 scheitern.

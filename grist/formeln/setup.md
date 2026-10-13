@@ -25,13 +25,13 @@ python3 grist/setup.py --selbsttest   # prüft die Formeln ohne Grist
 |---|---|
 | `anlegen` je Tabelle | fehlende Tabellen und Spalten ergänzen, Beschriftungen nachziehen |
 | `formeln_angleichen` | Rechenspalten auf den Stand des Codes bringen |
-| Sync-Spalten | die sieben `Ort_*_Sync` anlegen (brauchen `Adressen`, deshalb zuletzt) |
+| Sync-Spalten | die sieben `Ort_*_Sync` anlegen (brauchen `Einzelziele`, deshalb zuletzt) |
 | `reihenfolge_ordnen` | jede `_Text`-Spalte direkt hinter ihre Auswahlspalte setzen |
 | `ort_anzeige_setzen` | die Ort-Auswahlspalten zeigen das **Kürzel** statt der Zeilennummer |
 | `hilfsspalten_ausblenden` | Zwischenwerte aus den Tabellenansichten nehmen |
-| `adressen_aufraeumen` | verwaiste Adresszeilen entfernen |
+| `einzelziele_aufraeumen` | verwaiste Adresszeilen entfernen |
 | leere `Einstellungen`-Zeile | anlegen, falls die Tabelle leer ist |
-| `feste_orte_anlegen` | `WO` und `KV` als Pflichtzeilen in `Orte` (ohne Adresse) |
+| `feste_orte_anlegen` | `WO` und `KV` als Pflichtzeilen in `Stammziele` (ohne Adresse) |
 | `einstellungen_karte` | Tabellenansicht der Einstellungen durch ein Card-Widget ersetzen |
 | `zeitraum_widget` | Seite `Ausdruck` anlegen (falls nötig) und die Zeitraum-Karte darauf |
 | `ausgabe_widgets` | die beiden Custom-Widgets mit ihren URLs abgleichen |
@@ -54,7 +54,7 @@ Das Skript ist wiederholbar. Es unterscheidet dabei bewusst:
 | Beschriftungen | werden nachgezogen, `colId` bleibt unverändert |
 | Spaltentyp, Daten | bleiben unangetastet |
 | Von Hand sortierte Seitenlayouts | bleiben, solange alle Widgets darin vorkommen |
-| Eingetragene Adressen in `Orte` | werden nie überschrieben |
+| Eingetragene Adressen in `Stammziele` | werden nie überschrieben |
 
 Rechenspalten werden zurückgesetzt, weil sie nicht im Editor getunt werden —
 das fängt unter anderem ab, dass ein Snapshot-Restore `Reiseweg` oder
@@ -96,7 +96,7 @@ Weitere Tests im Repo:
 
 | Datei | Prüft |
 |---|---|
-| [`ausgabe/test_dienstorte.mjs`](../ausgabe/test_dienstorte.mjs) | Dienstorte-Liste: Stammorte höchstens einmal, Reihenfolge, Einmalziele mit Datum |
+| [`ausgabe/test_ortsverzeichnis.mjs`](../ausgabe/test_ortsverzeichnis.mjs) | Ortsverzeichnis: Stammziele höchstens einmal, Reihenfolge, Einzelziele mit Datum |
 | [`ausgabe/test_escaping.py`](../ausgabe/test_escaping.py) | kein Zeilen-Template ohne `html\`\``-Präfix |
 | [`ausgabe/test_schwaerzung.py`](../ausgabe/test_schwaerzung.py) | S2-Erzeugung schwärzt und bricht bei Abweichung ab |
 | [`test_lookuporadd.py`](../test_lookuporadd.py) | `lookupOrAddDerived` gegen eine normale Tabelle |

@@ -4,14 +4,19 @@
 
 Was in der Google-Sheets-Umsetzung eigene Blätter mit Formeln sind, ist hier
 **ein Widget**, das die vier Tabellen liest und daraus die Druckseiten baut:
-[`ausgabe/ausdruck.html`](../ausgabe/ausdruck.html ':ignore') — S1, S2, Vermerke,
-Dienstorte und Fahrtenbuch, A4 hoch, eine Datei ohne Abhängigkeiten. Ein Widget
-statt vier, ein Grist-Zugriff statt vier.
+[`ausgabe/ausdruck.html`](../ausgabe/ausdruck.html ':ignore') — S1, S2, Vermerke und
+Ortsverzeichnis, A4 hoch, eine Datei ohne Abhängigkeiten. Ein Widget
+statt vier, ein Grist-Zugriff statt vier. In Grist heißt es „Reisekostenabrechnung“.
+
+Das Fahrtenbuch (quer) ist herausgelöst und steht in
+[`ausgabe/fahrtenbuch.html`](../ausgabe/fahrtenbuch.html ':ignore') — eine
+Vorbereitung, noch kein Widget. Der Abschnitt [Fahrtenbuch](#fahrtenbuch)
+beschreibt diese Datei.
 
 Daneben stehen zwei eigenständige Widgets, kein Bestandteil der
 Standardausgabe:
 [`ausgabe/fahrtenbuch-schnitt.html`](../ausgabe/fahrtenbuch-schnitt.html ':ignore')
-(dasselbe Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt) und
+(das Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt) und
 [`ausgabe/routenlinks.html`](../ausgabe/routenlinks.html ':ignore') (Gegenstück
 zum Sheets-Blatt „GoogleMapsExport", siehe [unten](#routenlinks-google-maps)).
 
@@ -29,10 +34,10 @@ Grist.
 |---|---|---|
 | S1 / S2 | Einstellungen | Reisen im Zeitraum |
 | Vermerke | Einstellungen | Reisen im Zeitraum **mit** `Vermerk` |
-| Dienstorte | Einstellungen | Orte (je höchstens einmal) + Adressen (je Eintrag, mit Datum) |
+| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 | Routenlinks | — | Reisen im Zeitraum |
-| Prüfliste | Einstellungen | Reisen im Zeitraum + Orte/Adressen als Legende |
+| Prüfliste | Einstellungen | Reisen im Zeitraum + Stammziele/Einzelziele als Legende |
 
 ## Zeitraumfilter
 
@@ -41,7 +46,7 @@ const imZeitraum = d => d != null
   && (von == null || d >= von) && (bis == null || d <= bis);
 ```
 
-Angewandt auf `Reisen.Datum` und auf `Adressen.Datum`. Maßgeblich ist der
+Angewandt auf `Reisen.Datum` und auf `Einzelziele.Datum`. Maßgeblich ist der
 **Reisebeginn** — Begründung siehe [Einstellungen](einstellungen.md#abrechnungszeitraum).
 
 Grist liefert Datumswerte als Sekunden seit 1970, UTC-Mitternacht. Die Anzeige
@@ -155,10 +160,10 @@ Nur Reisen mit ausgefülltem Feld `Vermerk`.
 | Text | `Vermerk` |
 | Datum | `Datum` |
 
-## Dienstorte
+## Ortsverzeichnis
 
-Die Legende zum Reiseweg, **kein Fahrtenprotokoll**. Deshalb steht jeder
-Stammort höchstens einmal darin.
+Die Legende zum Reiseweg, **kein Fahrtenprotokoll**. Deshalb steht jedes
+Stammziel höchstens einmal darin.
 
 ```js
 const stammIds = ["WO", "KV"]
@@ -172,16 +177,16 @@ for (const r of reisen)
 
 **Statement:**
 - `["WO", "KV"]` – Wohnung und Dienststätte führen die Liste fest an
-- die Doppelschleife hängt die übrigen Stammorte in der Reihenfolge ihres **ersten Vorkommens** im Zeitraum an
+- die Doppelschleife hängt die übrigen Stammziele in der Reihenfolge ihres **ersten Vorkommens** im Zeitraum an
 - `!stammIds.includes(…)` – jeder Ort nur einmal
 
 **Ergebnis:** Nummerierte Liste — 1 Wohnung, 2 Dienststätte, danach die
-übrigen Stammorte, danach die Einmalziele nach Datum.
+übrigen Stammziele, danach die Einzelziele nach Datum.
 **Sonderfall:** Ohne diese Entdopplung erschiene die Wohnung bei zwei Reisen
 viermal, je einmal als Start und als Ziel. Das war ein stiller Fehler; dagegen
-läuft [`test_dienstorte.mjs`](../ausgabe/test_dienstorte.mjs).
+läuft [`test_ortsverzeichnis.mjs`](../ausgabe/test_ortsverzeichnis.mjs).
 
-Die Einmalziele aus `Adressen` folgen danach, jede Eintragung als eigene Zeile,
+Die Einzelziele aus `Einzelziele` folgen danach, jede Eintragung als eigene Zeile,
 nach Datum sortiert. Das Datum steht in der Kürzel-Spalte — die bleibt bei
 diesen Zeilen ohnehin leer. Daher die Überschrift *Kürzel / Datum*.
 
@@ -272,11 +277,11 @@ in einem neuen Tab (`target="_blank"`, das Widget-Iframe bleibt bestehen).
 **Sonderfall:** Weniger als zwei Orte **oder** ein angefahrener Ort ohne
 Anschrift → `Maps_Link` ist leer → keine Zelle mit Link, kein Fehler. Eine
 leere Route-Zelle bei gefülltem Reiseweg heißt also: in
-[Orte](orte.md) oder [Adressen](adressen.md) fehlt Straße/PLZ/Ort.
+[Stammziele](stammziele.md) oder [Einzelziele](einzelziele.md) fehlt Straße/PLZ/Ort.
 
 Deutlich einfacher als die Sheets-Version: dort löst eine `BYROW`/`MAP`/
-`XMATCH`-Formel Formular-Kürzel gegen `Orte` auf, weil das Formular rohen
-Text liefert. In Grist ist ein Ortsfeld eine echte `Ref:Orte`-Referenz --
+`XMATCH`-Formel Formular-Kürzel gegen `Stammziele` auf, weil das Formular rohen
+Text liefert. In Grist ist ein Ortsfeld eine echte `Ref:Stammziele`-Referenz --
 die Auflösung passiert schon in `Maps_Link` selbst (siehe
 [Reisen](reisen.md#maps_link--routenlink)), hier wird nur noch gelesen.
 
@@ -284,7 +289,7 @@ die Auflösung passiert schon in `Maps_Link` selbst (siehe
 
 Eigenes Widget, [`ausgabe/pruefliste.html`](../ausgabe/pruefliste.html ':ignore') --
 **ohne Vorbild in der Sheets-Umsetzung.** Dort muss die Stelle, die den Antrag
-final bearbeitet, zwischen S1, Vermerken, Dienstorten, Fahrtenbuch und
+final bearbeitet, zwischen S1, Vermerken, Ortsverzeichnis, Fahrtenbuch und
 GoogleMapsExport hin- und herblättern, um eine Reise vollständig zu beurteilen.
 Hier steht alles davon in **einer Zeile je Reise**, A4 quer, 22 Spalten:
 
@@ -301,7 +306,7 @@ Hier steht alles davon in **einer Zeile je Reise**, A4 quer, 22 Spalten:
 | — | Vermerk, Route | `Vermerk_Label`, `Maps_Link` |
 
 Darunter die **Orte-Legende** — dieselben Zeilen wie das
-[Dienstorte-Blatt](#dienstorte), damit die Kürzel im Reiseweg ohne Blattwechsel
+[Ortsverzeichnis](#ortsverzeichnis), damit die Kürzel im Reiseweg ohne Blattwechsel
 auflösbar sind.
 
 ### Drucken: eigenes Fenster, und warum nicht 277mm
@@ -311,9 +316,10 @@ Zwei Fallen, beide aufgetreten:
 - **`window.print()` aus dem Widget öffnete den Dialog in Hochformat.**
   Beobachtet, Ursache **nicht abschließend geklärt**: eine naheliegende
   Erklärung wäre, dass der Dialog die `@page`-Regel aus dem iframe nicht
-  übernimmt — die ist aber widerlegt, denn `ausdruck.html` druckt sein
-  Fahrtenbuch (`@page fahrtenbuch { size: A4 landscape }`) aus demselben
-  iframe korrekt quer. `drucken()` schreibt das fertige Blatt deshalb in ein
+  übernimmt — die galt zunächst als widerlegt, weil `ausdruck.html` sein
+  damaliges Fahrtenbuch (`@page fahrtenbuch { size: A4 landscape }`) unter
+  macOS/Chrome korrekt quer druckte; unter Windows/Edge fiel es später
+  genauso auf Hochformat zurück. `drucken()` schreibt das fertige Blatt deshalb in ein
   **eigenes Fenster**, wo es Top-Level-Dokument ist und `@page` in jedem Fall
   greift — das umgeht die offene Frage, statt sie zu beantworten.
 - **Auch im Querformat wurde rechts abgeschnitten.** A4 quer misst 297mm;
@@ -407,7 +413,7 @@ aus dem Dokument.
 
 Schriftgrößen, Innenabstände und Rahmenstärke stehen als CSS-Variablen am Kopf
 von `ausdruck.html`, je Dokument ein eigener Namensraum (`.dok-s1`,
-`.dok-s2`, `.dok-vermerke`, `.dok-dienstorte`, `.dok-fahrtenbuch`), damit
+`.dok-s2`, `.dok-vermerke`, `.dok-ortsverzeichnis`), damit
 gleichnamige Klassen sich nicht in die Quere kommen.
 
 Die Widgets werden über GitHub Pages ausgeliefert. Eine Änderung wirkt erst

@@ -71,12 +71,12 @@ ORT_SLOTS = ["Ort_Beginn"] + [f"Ort_{i}" for i in range(1, ZWISCHENZIELE + 1)] +
 ORT_LABEL = {"Ort_Beginn": "Ort Reisebeginn", "Ort_Ende": "Ort Reiseende",
              **{f"Ort_{i}": f"Ort {i}" for i in range(1, ZWISCHENZIELE + 1)}}
 
-# Jeder Stopp ist ein Paar: Auswahl aus 'Orte' für die Stammorte, Freitext
-# für die Einmalziele. Ist die Auswahl gesetzt, gewinnt sie — stillschweigend.
+# Jeder Stopp ist ein Paar: Auswahl aus 'Stammziele' für die Stammziele, Freitext
+# für die Einzelziele. Ist die Auswahl gesetzt, gewinnt sie — stillschweigend.
 PAARE = "[" + ", ".join(f"(${s}, ${s}_Text)" for s in ORT_SLOTS) + "]"
 
-# Dasselbe fuer MAPS, aber mit der Adressen-Zeile als drittem Glied: die echte
-# Anschrift eines Einmalziels traegt die Abrechnungsstelle dort nach, nicht im
+# Dasselbe fuer MAPS, aber mit der Einzelziel-Zeile als drittem Glied: die echte
+# Anschrift eines Einzelziels traegt die Abrechnungsstelle dort nach, nicht im
 # Freitext der Reise.
 PAARE_ADR = "[" + ", ".join(f"(${s}, ${s}_Text, ${s}_Sync)" for s in ORT_SLOTS) + "]"
 
@@ -164,24 +164,24 @@ JA_NEIN = {"choices": ["Ja", "Nein"]}
 
 def SYNC(slot):
     """Legt bei ausgefülltem Freitext automatisch die zugehörige Zeile in
-    Adressen an (Reise+Slot als Schlüssel -> nie ein Treffer auf eine fremde
+    Einzelziele an (Reise+Slot als Schlüssel -> nie ein Treffer auf eine fremde
     Zeile, jede Fahrt bekommt ihre eigene). Label steht bewusst NICHT im
     Schlüssel, sondern wird danach zugewiesen: der Schlüssel soll die Zeile
     identifizieren, nicht ihren Inhalt tragen. Nachgezogen wird eine spätere
     Freitext-Korrektur so oder so -- Grist leitet die Zeile bei jeder
     Neuberechnung neu ab (nachgemessen in grist/test_lookuporadd.py, Test 3).
-    Gewinnt die Auswahl (wie in REISEWEG/MAPS), entsteht keine Adressen-Zeile
-    -- sonst taucht der ignorierte Freitext trotzdem im Dienstorte-Blatt auf.
+    Gewinnt die Auswahl (wie in REISEWEG/MAPS), entsteht keine Einzelziel-Zeile
+    -- sonst taucht der ignorierte Freitext trotzdem im Ortsverzeichnis auf.
 
     Die lokale Variable heisst bewusst NICHT 'rec': Grist ersetzt jedes $Feld
     durch rec.Feld und uebergibt die eigene Zeile als Parameter 'rec'. Eine
     Zuweisung an 'rec' im Formelrumpf macht daraus einen SyntaxError -- und
     zwar in allen sieben Sync-Spalten gleichzeitig, womit lautlos nie wieder
-    eine Adressen-Zeile entstand."""
+    eine Einzelziel-Zeile entstand."""
     return f'''
 if ${slot} or not ${slot}_Text:
   return None
-zeile = Adressen.lookupOrAddDerived(Reise=$id, Slot="{slot}")
+zeile = Einzelziele.lookupOrAddDerived(Reise=$id, Slot="{slot}")
 zeile.Label = ${slot}_Text
 return zeile
 '''.strip()
@@ -197,7 +197,7 @@ return zeile
 # ließ. Bewusst zurückgebaut: bei einem Umzug ändert sich die Adresse an zwei
 # Stellen (hier und in 'Einstellungen'); vergisst man eine, ist der Ausdruck
 # einmal falsch -- ein Anruf bei der Abrechnungsstelle klärt das.
-ORTE = [
+STAMMZIELE = [
     spalte("Kuerzel",  "Kürzel", "Text"),
     spalte("Name",     "Name der Einrichtung", "Text"),
     spalte("Strasse",  "Straße und Hausnummer", "Text"),
@@ -207,8 +207,8 @@ ORTE = [
            formel='", ".join(x for x in [$Strasse, ($PLZ + " " + $Ort).strip()] if x)'),
 ]
 
-# Speist die Formulare (S1/S2-Kopf, Vermerke, Dienstorte) -- unabhängig von
-# 'Orte' gepflegt, siehe Kommentar dort.
+# Speist die Formulare (S1/S2-Kopf, Vermerke, Ortsverzeichnis) -- unabhängig von
+# 'Stammziele' gepflegt, siehe Kommentar dort.
 #
 # IBAN/BIC werden bewusst nicht erfasst: die Kontoverbindung liegt bereits in
 # der Bezügeabrechnung, im S2-Vordruck bleiben die Felder leer.
@@ -226,16 +226,16 @@ EINSTELLUNGEN = [
     spalte("Zeitraum_bis", "Abrechnungszeitraum bis", "Date"),
 ]
 
-# Die beiden Pflichtzeilen, die setup.py in 'Orte' anlegt (nur Kürzel und
+# Die beiden Pflichtzeilen, die setup.py in 'Stammziele' anlegt (nur Kürzel und
 # Name) -- Reiseweg und Routenlink brauchen sie für fast jede Fahrt. Adresse
-# trägt die Abrechnungsstelle direkt in 'Orte' ein, wie bei jedem anderen Ort.
+# trägt die Abrechnungsstelle direkt in 'Stammziele' ein, wie bei jedem anderen Ort.
 FESTE_ORTE = [("WO", "Wohnung"), ("KV", "Dienststelle")]
 
 
 def ort_spalten():
     """Je Stopp zwei Felder: Auswahlliste und Freitext, im Formular nebeneinander."""
     for sid in ORT_SLOTS:
-        yield spalte(sid, ORT_LABEL[sid], "Ref:Orte")
+        yield spalte(sid, ORT_LABEL[sid], "Ref:Stammziele")
         yield spalte(f"{sid}_Text", f"{ORT_LABEL[sid]} (Freitext)", "Text")
 
 
@@ -282,9 +282,9 @@ REISEN = [
 # unten befüllt -- keine Dropdown-Auswahl, keine Zusammenführung gleicher
 # Texte (jede Fahrt bleibt eine eigene Zeile). Strasse/PLZ/Ort bleiben leer,
 # bis die Abrechnungsstelle sie beim Prüfen einer Fahrt nachträgt; der
-# Sync-Mechanismus fasst diese Felder nie an. Aufbau bewusst analog zu ORTE
+# Sync-Mechanismus fasst diese Felder nie an. Aufbau bewusst analog zu STAMMZIELE
 # (gleiche Spalten Strasse/PLZ/Ort + zusammengesetzte Adresse-Formel).
-ADRESSEN = [
+EINZELZIELE = [
     spalte("Reise",   "Reise", "Ref:Reisen"),
     spalte("Slot",    "Ort-Feld", "Text"),
     spalte("Label",   "Freitext (wie erfasst)", "Text"),
@@ -296,28 +296,28 @@ ADRESSEN = [
     spalte("Datum",   "Reisedatum", "Date", formel="$Reise.Datum"),
 ]
 
-def adressen_sync_spalten():
+def einzelziele_sync_spalten():
     """Je Ort-Slot eine unsichtbare Formelspalte auf Reisen (kein Eingabefeld,
-    taucht daher nie im Formular auf). Braucht die Tabelle Adressen -- erst
+    taucht daher nie im Formular auf). Braucht die Tabelle Einzelziele -- erst
     nach deren Anlage aufrufen."""
-    return [spalte(f"{sid}_Sync", f"{ORT_LABEL[sid]} – Adressen-Sync", "Ref:Adressen",
+    return [spalte(f"{sid}_Sync", f"{ORT_LABEL[sid]} – Einzelziel-Sync", "Ref:Einzelziele",
                     formel=SYNC(sid))
             for sid in ORT_SLOTS]
 
-def adressen_aufraeumen():
-    """Entfernt Adressen-Zeilen, deren Reise gelöscht, deren Freitext geleert
+def einzelziele_aufraeumen():
+    """Entfernt Einzelziel-Zeilen, deren Reise gelöscht, deren Freitext geleert
     oder deren Auswahl nachträglich gesetzt wurde (Auswahl gewinnt dann, wie
     in REISEWEG/MAPS). lookupOrAddDerived legt Zeilen an, räumt aber nie ab --
     ohne das hier bleibt so eine Zeile für immer stehen."""
     reisen = {r["id"]: r["fields"] for r in api("GET", "/tables/Reisen/records")["records"]}
-    adressen = api("GET", "/tables/Adressen/records")["records"]
+    adressen = api("GET", "/tables/Einzelziele/records")["records"]
     weg = [a["id"] for a in adressen
            if not reisen.get(a["fields"]["Reise"])
            or reisen[a["fields"]["Reise"]].get(a["fields"]["Slot"])
            or not reisen[a["fields"]["Reise"]].get(f"{a['fields']['Slot']}_Text")]
     if weg:
-        api("POST", "/apply", [["BulkRemoveRecord", "Adressen", weg]])
-    print(f"  Adressen: {len(weg)} verwaiste Zeile(n) entfernt")
+        api("POST", "/apply", [["BulkRemoveRecord", "Einzelziele", weg]])
+    print(f"  Einzelziele: {len(weg)} verwaiste Zeile(n) entfernt")
 
 
 # ---------------------------------------------------------------- Ausführung
@@ -393,16 +393,16 @@ def ort_anzeige_setzen():
     die Zelle zeigte weiter die Zeilennummer. Idempotent: Spalten, die schon
     auf Kürzel zeigen, bleiben unangetastet."""
     ziel = sql("select c.id from _grist_Tables_column c join _grist_Tables t "
-               "on t.id = c.parentId where t.tableId = 'Orte' and c.colId = 'Kuerzel'")
+               "on t.id = c.parentId where t.tableId = 'Stammziele' and c.colId = 'Kuerzel'")
     if not ziel:
-        print("  Ort-Anzeige: Spalte Orte.Kuerzel fehlt -- übersprungen")
+        print("  Ort-Anzeige: Spalte Stammziele.Kuerzel fehlt -- übersprungen")
         return
     ziel = ziel[0]["id"]
 
     aktionen = []
     for c in sql("select c.id, c.colId, c.visibleCol from _grist_Tables_column c "
                  "join _grist_Tables t on t.id = c.parentId "
-                 "where t.tableId = 'Reisen' and c.type = 'Ref:Orte'"):
+                 "where t.tableId = 'Reisen' and c.type = 'Ref:Stammziele'"):
         if c["visibleCol"] == ziel:
             continue
         aktionen += [["SetDisplayFormula", "Reisen", None, c["id"],
@@ -420,10 +420,10 @@ def ort_anzeige_setzen():
 HILFSSPALTEN = {
     "Reisen": ["Datum_bis", "KM_gesamt", "Abwesenheit_min", "Rest_min"]
               + [f"{s}_Sync" for s in ORT_SLOTS],
-    "Adressen": ["Reise", "Slot", "Adresse"],
-    # Adresse ist wie in Orte nur die zusammengesetzte Formel aus
+    "Einzelziele": ["Reise", "Slot", "Adresse"],
+    # Adresse ist wie in Stammziele nur die zusammengesetzte Formel aus
     # Strasse/PLZ/Ort -- die Fachkraft trägt in den Einzelfeldern ein.
-    "Orte": ["Adresse"],
+    "Stammziele": ["Adresse"],
 }
 
 
@@ -443,7 +443,7 @@ def hilfsspalten_ausblenden():
         # rawViewSectionRef ist die interne "Raw Data"-Ansicht -- Grist
         # verweigert das Entfernen von Feldern dort (jede Spalte muss dort
         # vollständig bleiben); ausgeblendet wird nur in echten Grid-/
-        # Card-Ansichten (Reisen-Seite, Adressen-Seite, Record-Card-Popup).
+        # Card-Ansichten (Reisen-Seite, Einzelziele-Seite, Record-Card-Popup).
         for sek in sql(f"select id from _grist_Views_section "
                        f"where tableRef = {tid} and parentKey <> 'form' and id <> {raw}"):
             felder = sql(f"select f.id, c.colId from _grist_Views_section_field f "
@@ -465,7 +465,7 @@ def formeln_angleichen(tabelle, spalten):
     live = {c["id"]: (c.get("fields") or {})
             for c in api("GET", f"/tables/{tabelle}/columns")["columns"]}
     # isFormula wird mitgeschickt, nicht nur formula -- fängt auch den Fall
-    # ab, dass eine Spalte (wie Adressen!Adresse) von einer Eingabe- zu einer
+    # ab, dass eine Spalte (wie Einzelziele!Adresse) von einer Eingabe- zu einer
     # Rechenspalte umgewidmet wird, nicht nur ihr Formeltext sich ändert.
     patch = [{"id": s["id"], "fields": {"isFormula": True, "formula": s["fields"]["formula"]}}
              for s in spalten
@@ -586,13 +586,14 @@ def zeitraum_widget():
     print(f"  Zeitraum-Widget: angelegt (Section {sec})")
 
 
-# Reihenfolge = Reihenfolge auf der Ausdruck-Seite. S1/S2, Vermerke, Dienstorte
-# und Fahrtenbuch stecken zusammen in einer Datei (ausdruck.html) -- ein
-# Widget statt vier, ein Grist-Fetch statt vier. Schnittversion und
+# Reihenfolge = Reihenfolge auf der Ausdruck-Seite. S1/S2, Vermerke und
+# Ortsverzeichnis stecken zusammen in einer Datei (ausdruck.html) -- ein
+# Widget statt drei, ein Grist-Fetch statt drei. Das Fahrtenbuch steht in
+# fahrtenbuch.html (Vorbereitung, noch kein Widget). Schnittversion und
 # Routenlinks bleiben eigenständig, sie sind kein Bestandteil der
 # Standardausgabe (Arbeitswerkzeuge, keine Druckformulare).
 AUSGABE_WIDGETS = [
-    ("Ausdruck",                     "ausdruck.html"),
+    ("Reisekostenabrechnung",        "ausdruck.html"),
     ("Fahrtenbuch (Schnittversion)", "fahrtenbuch-schnitt.html"),
     ("Routenlinks (Google Maps)",    "routenlinks.html"),
 ]
@@ -766,18 +767,18 @@ def ausdruck_layout():
 
 
 def feste_orte_anlegen():
-    """Stellt sicher, dass 'Orte' die Pflichtzeilen WO und KV enthält --
+    """Stellt sicher, dass 'Stammziele' die Pflichtzeilen WO und KV enthält --
     Reiseweg und Routenlink brauchen sie für fast jede Fahrt. Setzt nur
     Kürzel und Name; Adresse trägt die Abrechnungsstelle wie bei jedem
     anderen Ort direkt ein. Idempotent: ein vorhandenes Kürzel bleibt
     unangetastet -- eine vorhandene Adresse wird nie überschrieben."""
-    zeilen = api("GET", "/tables/Orte/records")["records"]
+    zeilen = api("GET", "/tables/Stammziele/records")["records"]
     da = {r["fields"].get("Kuerzel") for r in zeilen}
     fehlend = [(k, n) for k, n in FESTE_ORTE if k not in da]
     if fehlend:
-        api("POST", "/tables/Orte/records",
+        api("POST", "/tables/Stammziele/records",
             {"records": [{"fields": {"Kuerzel": k, "Name": n}} for k, n in fehlend]})
-        print(f"  Orte: {len(fehlend)} Pflichtzeile(n) angelegt "
+        print(f"  Stammziele: {len(fehlend)} Pflichtzeile(n) angelegt "
               f"({', '.join(k for k, _ in fehlend)}) -- Adresse dort nachtragen")
 
     # Ein Ort ohne Anschrift laesst 'Maps_Link' jeder Reise leer, die ihn
@@ -785,7 +786,7 @@ def feste_orte_anlegen():
     ohne = sorted(r["fields"].get("Kuerzel") or f"Zeile {r['id']}" for r in zeilen
                   if not (r["fields"].get("Adresse") or "").strip())
     if ohne:
-        print(f"  Orte: OHNE ADRESSE ({', '.join(ohne)}) -- Reisen ueber diese "
+        print(f"  Stammziele: OHNE ADRESSE ({', '.join(ohne)}) -- Reisen ueber diese "
               f"Orte bekommen keinen Routenlink, Strasse/PLZ/Ort nachtragen")
 
 
@@ -798,7 +799,7 @@ def formelfehler_melden():
     Sync-Spalten lange kaputt. /tables/X/data reicht den Rohwert
     ["E", "SyntaxError"] durch -- daher dieser Endpunkt."""
     fehler = []
-    for name in ("Orte", "Einstellungen", "Reisen", "Adressen"):
+    for name in ("Stammziele", "Einstellungen", "Reisen", "Einzelziele"):
         for spalte_id, werte in api("GET", f"/tables/{name}/data").items():
             art = {w[1] for w in werte if isinstance(w, list) and w and w[0] == "E"}
             if art:
@@ -855,7 +856,7 @@ def selbsttest():
         def __bool__(self):
             return bool(self.Kuerzel or self.Adresse)
 
-    class Adr:                                # eine Zeile aus 'Adressen'
+    class Adr:                                # eine Zeile aus 'Einzelziele'
         def __init__(self, a=""):
             self.Adresse = a
 
@@ -869,7 +870,7 @@ def selbsttest():
 
     rec = leer()
     rec.Ort_Beginn = Ort("BÜR", "Hauptstr. 1, Musterstadt")
-    rec.Ort_1_Text = "Café Mokka, Bahnhofstr. 7, Musterstadt"   # Einmalziel
+    rec.Ort_1_Text = "Café Mokka, Bahnhofstr. 7, Musterstadt"   # Einzelziel
     rec.Ort_2 = Ort("KITA", "Lindenweg 3, Musterstadt")
     rec.Ort_2_Text = "darf nicht gewinnen"                      # beides gefüllt
     rec.Ort_Ende = Ort("BÜR", "Hauptstr. 1, Musterstadt")
@@ -886,7 +887,7 @@ def selbsttest():
     assert "Bahnhofstr" in link and "Lindenweg" in link, link
     assert "darf%20nicht" not in link, link
 
-    # Einmalziel: die in 'Adressen' nachgetragene Anschrift schlaegt den
+    # Einzelziel: die in 'Einzelziele' nachgetragene Anschrift schlaegt den
     # Freitext -- vorher landete das blosse Label im Link.
     r = leer()
     r.Ort_Beginn = Ort("BÜR", "Hauptstr. 1, Musterstadt")
@@ -900,7 +901,7 @@ def selbsttest():
     r.Ort_1_Sync = None
     assert "Sonnenschein" in lauf(MAPS, r)
 
-    # Stammort ohne Adresse (WO/KV frisch angelegt): frueher fiel der Stopp
+    # Stammziel ohne Adresse (WO/KV frisch angelegt): frueher fiel der Stopp
     # still aus dem Link und die Route war zu kurz -- jetzt gar kein Link.
     r = leer()
     r.Ort_Beginn = Ort("WO", "Beispielweg 7, Musterstadt")
@@ -950,29 +951,45 @@ if __name__ == "__main__" and SELBSTTEST:
     selbsttest()
     sys.exit(0)
 
+# Frühere Tabellennamen. Ein Dokument von vor der Umbenennung bekäme sonst
+# leere neue Tabellen neben den alten. RenameTable zieht Formeln, Ref-Typen
+# und gleichnamige Seiten selbst nach.
+ALTE_TABELLEN = {"Orte": "Stammziele", "Adressen": "Einzelziele"}
+
+
+def tabellen_umbenennen():
+    da = {t["tableId"] for t in sql("select tableId from _grist_Tables")}
+    aktionen = [["RenameTable", alt, neu] for alt, neu in ALTE_TABELLEN.items()
+                if alt in da and neu not in da]
+    if aktionen:
+        api("POST", "/apply", aktionen)
+    print(f"  Tabellen: {len(aktionen)} umbenannt")
+
+
 if __name__ == "__main__":
     print(f"Dokument {DOC} auf {URL}")
-    for name, spalten in (("Orte", ORTE), ("Einstellungen", EINSTELLUNGEN), ("Reisen", REISEN)):
-        anlegen(name, spalten)      # Orte zuerst — Reisen verweist darauf
+    tabellen_umbenennen()       # vor allem anderen -- sonst entstehen Doppel
+    for name, spalten in (("Stammziele", STAMMZIELE), ("Einstellungen", EINSTELLUNGEN), ("Reisen", REISEN)):
+        anlegen(name, spalten)      # Stammziele zuerst — Reisen verweist darauf
         formeln_angleichen(name, spalten)
 
-    anlegen("Adressen", ADRESSEN)              # braucht Reisen (Ref-Spalte)
-    formeln_angleichen("Adressen", ADRESSEN)
-    sync_spalten = adressen_sync_spalten()
-    anlegen("Reisen", sync_spalten)            # braucht Adressen (Ref-Spalte)
+    anlegen("Einzelziele", EINZELZIELE)              # braucht Reisen (Ref-Spalte)
+    formeln_angleichen("Einzelziele", EINZELZIELE)
+    sync_spalten = einzelziele_sync_spalten()
+    anlegen("Reisen", sync_spalten)            # braucht Einzelziele (Ref-Spalte)
     formeln_angleichen("Reisen", sync_spalten)
 
     reihenfolge_ordnen()
     ort_anzeige_setzen()
     hilfsspalten_ausblenden()
-    adressen_aufraeumen()
+    einzelziele_aufraeumen()
     formelfehler_melden()
 
     if not api("GET", "/tables/Einstellungen/records")["records"]:
         api("POST", "/tables/Einstellungen/records", {"records": [{"fields": {}}]})
         print("  Einstellungen: leere Zeile angelegt")
 
-    feste_orte_anlegen()    # fasst nur 'Orte' an, unabhängig von Einstellungen
+    feste_orte_anlegen()    # fasst nur 'Stammziele' an, unabhängig von Einstellungen
     einstellungen_karte()
 
     zeitraum_widget()      # braucht die Ausdruck-Seite — sonst übersprungen

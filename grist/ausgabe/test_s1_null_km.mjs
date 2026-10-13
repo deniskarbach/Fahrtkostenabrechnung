@@ -27,7 +27,7 @@ const spaltig = rows => {
 const TABELLEN = {
   Einstellungen: [{ id: 1, Name: "Musterfrau", Vorname: "Erika",
                     Zeitraum_von: d(20000), Zeitraum_bis: d(20100) }],
-  Orte: [
+  Stammziele: [
     { id: 1, Kuerzel: "WO", Name: "Wohnung",    Adresse: "Beispielweg 7" },
     { id: 2, Kuerzel: "KV", Name: "Verwaltung", Adresse: "Amtsstr. 1" },
   ],
@@ -42,7 +42,7 @@ const TABELLEN = {
       Beginn: "08:00", Ende: "09:00", Reiseweg: "WO > KV > WO",
       KM_Beginn: 1020, KM_Ende: 1044, Umweg_privat: 0, KM_dienstlich: 24 },
   ],
-  Adressen: [],
+  Einzelziele: [],
 };
 
 const zellen = {};

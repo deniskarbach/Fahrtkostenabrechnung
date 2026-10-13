@@ -5,7 +5,7 @@
 <title>Reisekostenabrechnung – Ausdruck</title>
 <style>
 /* ---------------------------------------------------------------
-   Zusammenführung von S1/S2, Vermerke und Dienstorte in
+   Zusammenführung von S1/S2, Vermerke und Ortsverzeichnis in
    EIN Custom-Widget -- vorher separate Widgets auf der Ausdruck-
    Seite (je eigene Grist-Fetches und iframes). Jedes Dokument bleibt
    inhaltlich exakt wie in seiner eigenständigen Datei, nur unter einem
@@ -23,7 +23,7 @@
 @page            { size: A4 portrait;  margin: 15mm; }              /* S1 */
 @page s2         { size: A4 portrait;  margin: 10mm 17.78mm 0; }
 @page vermerke   { size: A4 portrait;  margin: 19.05mm 17.78mm; }
-@page dienstorte { size: A4 portrait;  margin: 19.05mm 17.78mm; }
+@page ortsverzeichnis { size: A4 portrait;  margin: 19.05mm 17.78mm; }
 
 * { box-sizing: border-box; }
 
@@ -34,7 +34,7 @@ body {
   background: #f0f0f0;
 
   /* Kopfblock "Antragssteller/in / Wohnort / Dienstort" -- Beschriftung wie
-     Wert -- sieht in S1, Vermerke und Dienstorte identisch aus
+     Wert -- sieht in S1, Vermerke und Ortsverzeichnis identisch aus
      (Nutzerentscheid; die Vorlage hätte hier je Blatt 12pt). Deshalb EIN Wert
      für alle drei Blätter statt sechs einzelne Stellen. Titel und
      Zeitraum-Angabe bleiben davon unberührt. */
@@ -165,9 +165,9 @@ body {
 .dok-vermerke .raster td { height: 5.56mm; vertical-align: top; }
 .dok-vermerke .raster .mitte { text-align: center; }
 
-/* ============================================================ Dienstorte */
+/* ============================================================ Ortsverzeichnis */
 
-.dok-dienstorte {
+.dok-ortsverzeichnis {
   --rahmen: 0.4pt solid #000;
   --schrift: 8.5pt;
   --schrift-kopf: 12pt;
@@ -176,25 +176,25 @@ body {
   --polster-x: 1mm;
 }
 
-.dok-dienstorte .blatt { page: dienstorte; width: 210mm; margin: 10mm auto; padding: 19.05mm 17.78mm;
+.dok-ortsverzeichnis .blatt { page: ortsverzeichnis; width: 210mm; margin: 10mm auto; padding: 19.05mm 17.78mm;
                           background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25);
                           font-size: var(--schrift); }
 
-.dok-dienstorte table { width: 174.44mm; border-collapse: collapse; table-layout: fixed; }
+.dok-ortsverzeichnis table { width: 174.44mm; border-collapse: collapse; table-layout: fixed; }
 
-.dok-dienstorte .kopf td { border: var(--rahmen); padding: 0 var(--polster-x); vertical-align: top; }
-.dok-dienstorte .kopf .titel { height: 15.88mm; font-size: var(--schrift-titel); font-weight: bold; vertical-align: middle; }
-.dok-dienstorte .kopf .stand { font-size: var(--schrift-kopf); font-weight: bold; text-align: right; vertical-align: bottom; }
-.dok-dienstorte .kopf .label { height: 5.56mm; font-size: var(--schrift-kopfblock); font-weight: bold; vertical-align: bottom; }
-.dok-dienstorte .kopf .wert  { height: 18.79mm; font-size: var(--schrift-kopfblock);
+.dok-ortsverzeichnis .kopf td { border: var(--rahmen); padding: 0 var(--polster-x); vertical-align: top; }
+.dok-ortsverzeichnis .kopf .titel { height: 15.88mm; font-size: var(--schrift-titel); font-weight: bold; vertical-align: middle; }
+.dok-ortsverzeichnis .kopf .stand { font-size: var(--schrift-kopf); font-weight: bold; text-align: right; vertical-align: bottom; }
+.dok-ortsverzeichnis .kopf .label { height: 5.56mm; font-size: var(--schrift-kopfblock); font-weight: bold; vertical-align: bottom; }
+.dok-ortsverzeichnis .kopf .wert  { height: 18.79mm; font-size: var(--schrift-kopfblock);
                                font-weight: normal; vertical-align: middle; }
 
-.dok-dienstorte .raster th, .dok-dienstorte .raster td { border: var(--rahmen); padding: .6mm var(--polster-x); overflow: hidden; }
-.dok-dienstorte .raster th { height: 5.56mm; font-size: var(--schrift-kopfspalten); font-weight: bold;
+.dok-ortsverzeichnis .raster th, .dok-ortsverzeichnis .raster td { border: var(--rahmen); padding: .6mm var(--polster-x); overflow: hidden; }
+.dok-ortsverzeichnis .raster th { height: 5.56mm; font-size: var(--schrift-kopfspalten); font-weight: bold;
              vertical-align: bottom; text-align: left; }
-.dok-dienstorte .raster th.mitte { text-align: center; }
-.dok-dienstorte .raster td { height: 5.56mm; vertical-align: middle; }
-.dok-dienstorte .raster .mitte { text-align: center; }
+.dok-ortsverzeichnis .raster th.mitte { text-align: center; }
+.dok-ortsverzeichnis .raster td { height: 5.56mm; vertical-align: middle; }
+.dok-ortsverzeichnis .raster .mitte { text-align: center; }
 
 /* ============================================================ Druck allgemein */
 
@@ -245,7 +245,7 @@ body {
 <div class="druckleiste">
   <button type="button" id="drucken">Drucken</button>
   <button type="button" class="sek" id="neu-laden" hidden>Aktualisieren</button>
-  <span class="info" id="hinweis">S1/S2, Vermerke und Dienstorte — alle Seiten in einem Druckauftrag.</span>
+  <span class="info" id="hinweis">S1/S2, Vermerke und Ortsverzeichnis — alle Seiten in einem Druckauftrag.</span>
 </div>
 
 <!-- ================================ S1 / S2 ================================ -->
@@ -671,8 +671,8 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
 </div>
 </div>
 
-<!-- ================================ Dienstorte ================================ -->
-<div class="dok-dienstorte">
+<!-- ================================ Ortsverzeichnis ================================ -->
+<div class="dok-ortsverzeichnis">
 <div class="blatt">
 
   <table class="kopf">
@@ -681,13 +681,13 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <col style="width:46.89mm"><col style="width:55.63mm">
     </colgroup>
     <tr><td class="titel" colspan="3">REISEKOSTENRECHNUNG</td>
-        <td class="stand" colspan="2" id="k-dien-stand"></td></tr>
+        <td class="stand" colspan="2" id="k-ov-stand"></td></tr>
     <tr><td class="label" colspan="3">Antragssteller/in:</td>
         <td class="label">Wohnort:</td>
         <td class="label">Dienstort:</td></tr>
-    <tr><td class="wert" colspan="3" id="k-dien-antragsteller"></td>
-        <td class="wert" id="k-dien-wohnort"></td>
-        <td class="wert" id="k-dien-dienstort"></td></tr>
+    <tr><td class="wert" colspan="3" id="k-ov-antragsteller"></td>
+        <td class="wert" id="k-ov-wohnort"></td>
+        <td class="wert" id="k-ov-dienstort"></td></tr>
   </table>
 
   <table class="raster">
@@ -703,7 +703,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
         <th colspan="2">Adresse</th>
       </tr>
     </thead>
-    <tbody id="daten-dien"></tbody>
+    <tbody id="daten-ov"></tbody>
   </table>
 </div>
 </div>
@@ -755,13 +755,13 @@ const beispielVermerke = [
   { nr:"02", label:"V26-02", text:"Zweiter PKW genutzt, da Mitnahme von zwei Kolleginnen nötig war.", datum:"19.02.2026" },
 ];
 
-const beispielKopfDienstorte = {
+const beispielKopfOrtsverzeichnis = {
   stand: "01.01.2026 - 31.03.2026",
   antragsteller: "Musterfrau Erika, Referat 42",
   wohnort:   "Beispielweg 7, 00000 Musterstadt",
   dienstort: "Verwaltungsstraße 1, 00000 Musterstadt",
 };
-const beispielDienstorte = [
+const beispielOrtsverzeichnis = [
   { kuerzel:"WO",   name:"Wohnung",           adresse:"Beispielweg 7, 00000 Musterstadt" },
   { kuerzel:"KV",   name:"Kreisverwaltung",   adresse:"Verwaltungsstraße 1, 00000 Musterstadt" },
   { kuerzel:"KITA", name:"Kita Sonnenschein", adresse:"Lindenweg 3, 00000 Musterstadt" },
@@ -920,15 +920,15 @@ for (const v of vermerke) {
 }
 }
 
-/* ---------------------------------------------------------- Render: Dienstorte */
+/* ---------------------------------------------------------- Render: Ortsverzeichnis */
 
-function renderDienstorte(kopf, orte) {
-document.getElementById("k-dien-stand").textContent         = kopf.stand;
-document.getElementById("k-dien-antragsteller").textContent = kopf.antragsteller;
-document.getElementById("k-dien-wohnort").textContent       = kopf.wohnort;
-document.getElementById("k-dien-dienstort").textContent     = kopf.dienstort;
+function renderOrtsverzeichnis(kopf, orte) {
+document.getElementById("k-ov-stand").textContent         = kopf.stand;
+document.getElementById("k-ov-antragsteller").textContent = kopf.antragsteller;
+document.getElementById("k-ov-wohnort").textContent       = kopf.wohnort;
+document.getElementById("k-ov-dienstort").textContent     = kopf.dienstort;
 
-const tb = document.getElementById("daten-dien");
+const tb = document.getElementById("daten-ov");
 tb.innerHTML = "";
 orte.forEach((o, i) => {
   tb.insertAdjacentHTML("beforeend", html`<tr>
@@ -959,7 +959,7 @@ async function ausGrist() {
   const imZeitraum = d => d != null && (von == null || d >= von) && (bis == null || d <= bis);
 
   const orteNachId = Object.fromEntries(
-    zeilen(await grist.docApi.fetchTable("Orte")).map(o => [o.id, o]));
+    zeilen(await grist.docApi.fetchTable("Stammziele")).map(o => [o.id, o]));
 
   const reisen = zeilen(await grist.docApi.fetchTable("Reisen"))
     .filter(r => imZeitraum(r.Datum))
@@ -997,12 +997,12 @@ async function ausGrist() {
       datum: tag(r.Datum),
     })));
 
-  /* Die Dienstorte-Liste ist die Legende zum Reiseweg, kein Fahrtenprotokoll.
-     Stammorte stehen deshalb höchstens einmal darin -- sonst erscheint die
+  /* Das Ortsverzeichnis ist die Legende zum Reiseweg, kein Fahrtenprotokoll.
+     Stammziele stehen deshalb höchstens einmal darin -- sonst erscheint die
      Wohnung bei zwei Reisen viermal, je einmal als Start und als Ziel.
      Wohnung und Dienststätte führen die Liste fest an: sie erklären die
      beiden Kürzel, die in fast jedem Reiseweg vorkommen. Danach die übrigen
-     Stammorte in der Reihenfolge ihres ersten Vorkommens im Zeitraum. */
+     Stammziele in der Reihenfolge ihres ersten Vorkommens im Zeitraum. */
   const orteListe = Object.values(orteNachId);
   const stammIds = ["WO", "KV"]
     .map(k => orteListe.find(o => o.Kuerzel === k))
@@ -1018,22 +1018,22 @@ async function ausGrist() {
     adresse: orteNachId[id].Adresse || "",
   }));
 
-  /* Einmalziele aus den Freitextfeldern: jede Eintragung bleibt eine eigene
+  /* Einzelziele aus den Freitextfeldern: jede Eintragung bleibt eine eigene
      Zeile -- sie gehört zu genau einer Fahrt, und das Datum weist sie ihr zu.
      Es steht in der Kürzel-Spalte, die bei diesen Zeilen ohnehin leer bleibt. */
-  const ausAdressen = zeilen(await grist.docApi.fetchTable("Adressen"))
+  const ausEinzelziele = zeilen(await grist.docApi.fetchTable("Einzelziele"))
     .filter(a => imZeitraum(a.Datum))
     .sort((a, b) => a.Datum - b.Datum)
     .map(a => ({ kuerzel: tag(a.Datum), name: a.Label || "", adresse: a.Adresse || "" }));
 
-  renderDienstorte({ stand, ...kopfAdresse }, [...ausOrte, ...ausAdressen]);
+  renderOrtsverzeichnis({ stand, ...kopfAdresse }, [...ausOrte, ...ausEinzelziele]);
 
 }
 
 if (window.self === window.top) {
   renderS1S2(beispielKopfS1, beispielReisen);
   renderVermerke(beispielKopfVermerke, beispielVermerke);
-  renderDienstorte(beispielKopfDienstorte, beispielDienstorte);
+  renderOrtsverzeichnis(beispielKopfOrtsverzeichnis, beispielOrtsverzeichnis);
 } else {
   /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
      Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
@@ -1052,7 +1052,7 @@ if (window.self === window.top) {
   const s = document.createElement("script");
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
-    grist.ready({ requiredAccess: "full" });   // liest Einstellungen, Orte, Reisen, Adressen
+    grist.ready({ requiredAccess: "full" });   // liest Einstellungen, Stammziele, Reisen, Einzelziele
     /* onRecords feuert beim Aufbau und danach nur bei Aenderungen an der
        Tabelle, an der das Widget haengt -- das ist 'Einstellungen', also
        praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder

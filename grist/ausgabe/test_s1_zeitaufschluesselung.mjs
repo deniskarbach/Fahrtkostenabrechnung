@@ -26,7 +26,7 @@ const spaltig = rows => {
 const TABELLEN = {
   Einstellungen: [{ id: 1, Name: "Musterfrau", Vorname: "Erika",
                     Zeitraum_von: d(20000), Zeitraum_bis: d(20100) }],
-  Orte: [
+  Stammziele: [
     { id: 1, Kuerzel: "WO", Name: "Wohnung",    Adresse: "Beispielweg 7" },
     { id: 2, Kuerzel: "KV", Name: "Verwaltung", Adresse: "Amtsstr. 1" },
   ],
@@ -42,7 +42,7 @@ const TABELLEN = {
       Abwesenheit_min: 600, Min_Dienststaette: 60, Min_Dienstort: 30,
       Min_privat_Abzug: 45, Rest_min: 465, Tagegeld_Stufe: "anteilig" },
   ],
-  Adressen: [],
+  Einzelziele: [],
 };
 
 const zellen = {};

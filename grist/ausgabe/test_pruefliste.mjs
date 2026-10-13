@@ -1,5 +1,5 @@
 /* Prüft ausgabe/pruefliste.html -- das Blatt für die Zeiterfassungsstelle,
-   auf dem alles aus S1, Vermerken, Dienstorten, Fahrtenbuch und Routenlinks
+   auf dem alles aus S1, Vermerken, Ortsverzeichnis, Fahrtenbuch und Routenlinks
    in einer Zeile je Reise zusammenläuft.
 
    Geprüft wird:
@@ -9,7 +9,7 @@
    3. Mehrtägige Reise erscheint als Datumsspanne, wie auf S1.
    4. Freitext mit Markup bleibt inert.
    5. DRIFT-WÄCHTER: die Orte-Legende muss Zeile für Zeile dasselbe liefern
-      wie das Dienstorte-Blatt in ausdruck.html -- die Sortierlogik steht
+      wie das Ortsverzeichnis in ausdruck.html -- die Sortierlogik steht
       in beiden Dateien (eigenständige Widgets ohne gemeinsame Datei) und
       darf nicht auseinanderlaufen.
    6. Druckbreite und Druckweg -- beides war kaputt: die Tabelle war mit
@@ -40,7 +40,7 @@ const TABELLEN = {
                     Wohnort_Strasse: "Beispielweg 7", Wohnort_PLZ: "00000", Wohnort_Ort: "Musterstadt",
                     Dienstort_Strasse: "Amtsstr. 1", Dienstort_PLZ: "00000", Dienstort_Ort: "Musterstadt",
                     Zeitraum_von: d(20000), Zeitraum_bis: d(20100) }],
-  Orte: [
+  Stammziele: [
     { id: 1, Kuerzel: "WO",   Name: "Wohnung",        Adresse: "Beispielweg 7, 00000 Musterstadt" },
     { id: 2, Kuerzel: "KV",   Name: "Kreisverwaltung", Adresse: "Amtsstr. 1, 00000 Musterstadt" },
     { id: 3, Kuerzel: "KITA", Name: "Kita Sonnenschein", Adresse: "Lindenweg 3, 00000 Musterstadt" },
@@ -55,7 +55,7 @@ const TABELLEN = {
       OePNV: 0, Mitnahme_Personen: 0, Uebernachtung: 0, Nebenkosten: 0,
       Vermerk_Label: "V24-01", Ort_Beginn: 1, Ort_1: 2, Ort_Ende: 1,
       Maps_Link: "https://www.google.com/maps/dir/?api=1&origin=A&destination=A" },
-    // Mehrtaegig -> Datumsspanne; ausserdem KITA als dritter Stammort.
+    // Mehrtaegig -> Datumsspanne; ausserdem KITA als drittes Stammziel.
     { id: 2, Datum: d(20020), Datum_bis: d(20021), Lfd_Nr: 2,
       Beginn: "06:30", Ende: "18:05", Reiseweg: "WO > KITA > WO",
       Abwesenheit_min: 2135, Min_Dienststaette: 0, Min_Dienstort: 0,
@@ -75,7 +75,7 @@ const TABELLEN = {
       OePNV: 0, Mitnahme_Personen: 0, Uebernachtung: 0, Nebenkosten: 0,
       Vermerk_Label: "", Ort_Ende: 1, Maps_Link: "" },
   ],
-  Adressen: [
+  Einzelziele: [
     { id: 1, Datum: d(20030), Label: "Hof Lindenau", Adresse: "Dorfstr. 2, 00000 Beispieldorf" },
   ],
 };
@@ -190,15 +190,15 @@ assert.equal(p.knoten("k-antragsteller").html, "Musterfrau Erika, Referat 42");
 assert.equal(p.knoten("k-wohnort").html, "Beispielweg 7, 00000 Musterstadt");
 
 /* ------------------------------------------------- 5. Drift-Wächter gegen ausdruck.html */
-const a = sandboxFuer("grist/ausgabe/ausdruck.html", ["daten-dien"]);
+const a = sandboxFuer("grist/ausgabe/ausdruck.html", ["daten-ov"]);
 await a.sandbox.ausGrist();
 
 const spalten = tb => tb._zeilen.map(z => z.map(td => td.text.trim()).slice(1));  // ohne lfd. Nr.
 const ausPruefliste = spalten(p.tbodies["daten-orte"]);
-const ausAusdruck   = spalten(a.tbodies["daten-dien"]);
+const ausAusdruck   = spalten(a.tbodies["daten-ov"]);
 
 assert.deepEqual(ausPruefliste, ausAusdruck,
-  "Orte-Legende der Prüfliste weicht vom Dienstorte-Blatt ab -- die Sortierlogik "
+  "Orte-Legende der Prüfliste weicht vom Ortsverzeichnis ab -- die Sortierlogik "
   + "steht in beiden Dateien und ist auseinandergelaufen");
 assert.ok(ausPruefliste.length >= 4, "zu wenige Orte im Vergleich: " + ausPruefliste.length);
 
@@ -260,5 +260,5 @@ for (const [name, start, ende] of [
 }
 
 console.log(`ok — ${kopfSpalten} Spalten je Zeile, Werte in der richtigen Spalte, `
-          + `Orte-Legende deckungsgleich mit dem Dienstorte-Blatt (${ausPruefliste.length} Zeilen), `
+          + `Orte-Legende deckungsgleich mit dem Ortsverzeichnis (${ausPruefliste.length} Zeilen), `
           + `Druckbreite und Querformat-Druckweg abgesichert`);

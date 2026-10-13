@@ -11,7 +11,7 @@ Technische Details zu den einzelnen Formeln: siehe [Formeln](formeln/README.md).
 4. [Einrichten](#einrichten)
 5. [Formular ausfüllen](#formular-ausfüllen)
 6. [Einstellungen](#einstellungen)
-7. [Orte pflegen](#orte-pflegen)
+7. [Stammziele pflegen](#stammziele-pflegen)
 8. [Prüfen vor dem Drucken & Einreichung](#prüfen-vor-dem-drucken--einreichung)
 9. [Drucken](#drucken)
 10. [Prüfliste für die Zeiterfassungsstelle](#prüfliste-für-die-zeiterfassungsstelle)
@@ -59,7 +59,7 @@ eigene Handgriffe nötig — alles dazwischen übernimmt die Tabelle automatisch
    gearbeitet, nie im Vorlagendokument selbst.
 2. **Tabelle `Einstellungen`** — einmalig Stammdaten und die eigene Adresse
    eintragen.
-3. **Tabelle `Orte`** — die Adressen von `WO` (Wohnung) und `KV`
+3. **Seite `Stammziele`** — die Adressen von `WO` (Wohnung) und `KV`
    (Dienststelle) nachtragen, weitere regelmäßige Ziele ergänzen.
 4. **Formular veröffentlichen** und den Link auf dem Handy ablegen.
 5. **Erfassen am Handy** — Formularlink öffnen, ausfüllen, absenden. Eine
@@ -71,16 +71,16 @@ eigene Handgriffe nötig — alles dazwischen übernimmt die Tabelle automatisch
 
 ## Die Tabellen im Überblick
 
-Von Hand gepflegt werden nur `Einstellungen` und `Orte`. `Reisen` füllt das
-Formular, `Adressen` entsteht von selbst.
+Von Hand gepflegt werden nur `Einstellungen` und `Stammziele`. `Reisen` füllt das
+Formular, `Einzelziele` entsteht von selbst.
 
 | | Tabelle | Wozu sie da ist | Was hier zu tun ist |
 |---|---|---|---|
 | ✍️ | Einstellungen | Stammdaten der Person, eigene Wohn- und Dienstanschrift, Abrechnungszeitraum. Die **einzige** Stelle, an der persönliche Daten stehen | **Einrichten & pflegen.** Einmalig Name, Organisationseinheit, Anschriften; **pro Abrechnung** den Zeitraum setzen |
-| ✍️ | Orte | Stammziele mit Kürzel und vollständiger Adresse — speist die Auswahlliste im Formular, den Routenlink und die Legende auf dem Ausdruck | **Pflegen.** `WO` und `KV` sind Pflichtzeilen, ihre Adresse eintragen; neue regelmäßige Ziele ergänzen |
+| ✍️ | Stammziele | Stammziele mit Kürzel und vollständiger Adresse — speist die Auswahlliste im Formular, den Routenlink und die Legende auf dem Ausdruck | **Pflegen.** `WO` und `KV` sind Pflichtzeilen, ihre Adresse eintragen; neue regelmäßige Ziele ergänzen |
 | ✅ | Reisen | Eine Zeile je Dienstreise aus dem Formular, dazu alle Rechenspalten (Kilometer, Tagegeld-Stufe, Reiseweg, laufende Nummer, Routenlink) | **Nichts.** Eine Korrektur ist hier trotzdem möglich — anders als bei Google Sheets |
-| ✍️ | Adressen | Die Einmalziele: sobald ein Ortsfeld als Freitext ausgefüllt wurde, entsteht hier automatisch eine Zeile | **Adresse nachtragen.** Straße/PLZ/Ort ergänzen, damit das Dienstorte-Blatt vollständig ist |
-| 🖨️ | Ausdruck (Seite) | Abrechnungszeitraum und drei Widgets: Ausdruck (S1/S2, Vermerke, Dienstorte, Fahrtenbuch), Fahrtenbuch zum Einkleben, Routenlinks (Google Maps) | **Zeitraum setzen, aktualisieren, drucken bzw. Route öffnen** |
+| ✍️ | Einzelziele | Die Einzelziele: sobald ein Ortsfeld als Freitext ausgefüllt wurde, entsteht hier automatisch eine Zeile | **Adresse nachtragen.** Straße/PLZ/Ort ergänzen, damit das Ortsverzeichnis vollständig ist |
+| 🖨️ | Ausdruck (Seite) | Abrechnungszeitraum und die Widgets Reisekostenabrechnung (S1/S2, Vermerke, Ortsverzeichnis), Fahrtenbuch zum Einkleben, Routenlinks (Google Maps) | **Zeitraum setzen, aktualisieren, drucken bzw. Route öffnen** |
 | 🖨️ | Prüfliste (eigene Seite) | Alles aus allen Blättern in einer Zeile je Reise — für die Zeiterfassungsstelle, die den Antrag final bearbeitet | **Nichts.** Getrennt freigebbar, siehe unten |
 
 ✍️ von Hand pflegen · ✅ läuft automatisch · 🖨️ ausdrucken/unterschreiben
@@ -138,12 +138,12 @@ Abschnitte:
 Sieben Felder: Ort Reisebeginn, Ort 1 bis Ort 5, Ort Reiseende. Jedes Feld
 ist ein **Paar**:
 
-- **Auswahlliste** aus `Orte` — für die regelmäßigen Ziele
+- **Auswahlliste** aus `Stammziele` — für die regelmäßigen Ziele
 - **Freitext** daneben — für alles, was nicht in der Liste steht
 
 Ist die Auswahl gesetzt, gewinnt sie; der Freitext wird dann ignoriert.
-Einmalziele sind der Normalfall, nicht die Ausnahme — deshalb das Paar.
-Für jedes Freitext-Ziel entsteht automatisch eine Zeile in `Adressen`.
+Einzelziele sind der Normalfall, nicht die Ausnahme — deshalb das Paar.
+Für jedes Freitext-Ziel entsteht automatisch eine Zeile in `Einzelziele`.
 
 **3. Tagegeld**
 - Tagegeld beantragen? (Ja/Nein)
@@ -181,12 +181,12 @@ S2-Vordruck stehen und werden, falls die Abrechnungsstelle sie überhaupt
 braucht, von Hand ausgefüllt.
 
 > **Zu beachten:** Die eigene Anschrift steht hier — und für Reiseweg und
-> Routenlink zusätzlich als Zeile `WO` in `Orte`. Bei einem Umzug ändert sie
+> Routenlink zusätzlich als Zeile `WO` in `Stammziele`. Bei einem Umzug ändert sie
 > sich an beiden Stellen.
 
 ---
 
-## Orte pflegen
+## Stammziele pflegen
 
 Die wiederkehrenden Ziele mit Kürzel und Adresse. Diese Liste ist die
 Auswahlliste im Formular und die Legende auf dem Ausdruck.
@@ -194,7 +194,7 @@ Auswahlliste im Formular und die Legende auf dem Ausdruck.
 | Spalte | Inhalt |
 |---|---|
 | Kürzel | erscheint im Reiseweg (`WO > KV > KITA > WO`) |
-| Name der Einrichtung | erscheint auf dem Dienstorte-Blatt |
+| Name der Einrichtung | erscheint im Ortsverzeichnis |
 | Straße und Hausnummer, PLZ, Ort | speisen den Routenlink |
 | Vollständige Adresse | Formel, wird nicht eingetragen |
 
@@ -203,7 +203,7 @@ Auswahlliste im Formular und die Legende auf dem Ausdruck.
 auch.
 
 Ein Ziel, das nur einmal vorkommt, gehört **nicht** hierher: dafür ist das
-Freitextfeld im Formular da. Es landet automatisch in `Adressen`.
+Freitextfeld im Formular da. Es landet automatisch in `Einzelziele`.
 
 ---
 
@@ -212,8 +212,8 @@ Freitextfeld im Formular da. Es landet automatisch in `Adressen`.
 - **Abrechnungszeitraum** gesetzt? Er entscheidet, welche Reisen erscheinen.
 - **Aktualisieren** im Widget gedrückt? Eine neu erfasste Reise erreicht den
   Ausdruck nicht von selbst — siehe [Drucken](#drucken).
-- **Adressen** vollständig? Freitext-Ziele stehen zunächst ohne Straße und PLZ
-  in der Tabelle `Adressen`; auf dem Dienstorte-Blatt bleibt die Adressspalte
+- **Einzelziele** vollständig? Freitext-Ziele stehen zunächst ohne Straße und PLZ
+  auf der Seite `Einzelziele`; im Ortsverzeichnis bleibt die Adressspalte
   sonst leer.
 - **Kilometer** plausibel? Ein Zahlendreher im Tachostand ergibt 0 dienstliche
   Kilometer, keine negative Zahl — er fällt also nicht durch einen Fehlerwert
@@ -236,8 +236,8 @@ Auf der Seite `Ausdruck` liegen drei Widgets:
 
 | Widget | Inhalt |
 |---|---|
-| **Ausdruck** | S1, S2, Vermerke, Dienstorte und Fahrtenbuch — alle Seiten in einem Druckauftrag |
-| **Fahrtenbuch (Schnittversion)** | dasselbe Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt |
+| **Reisekostenabrechnung** | S1, S2, Vermerke und Ortsverzeichnis — alle Seiten in einem Druckauftrag |
+| **Fahrtenbuch (Schnittversion)** | das Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt |
 | **Routenlinks (Google Maps)** | keine Druckseite, sondern eine Arbeitsliste: je Reise ein klickbarer „Route"-Link, um die gefahrene Strecke in Google Maps nachzuvollziehen und zu prüfen |
 
 Die beiden Druck-Widgets haben oben eine Leiste mit zwei Knöpfen:
@@ -262,7 +262,7 @@ Was auf welchem Blatt landet:
 |---|---|---|
 | S1 / S2 | Einstellungen | Reisen im Zeitraum |
 | Vermerke | Einstellungen | Reisen mit ausgefülltem Feld „Sonstige Informationen" |
-| Dienstorte | Einstellungen | Orte (je höchstens einmal) + Adressen (je Eintrag, mit Datum) |
+| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 | Routenlinks | — | Reisen im Zeitraum |
 
@@ -293,7 +293,7 @@ Nr. · Reisedatum · Uhrzeit (Beginn/Ende) · Reiseweg · Tagegeldzeiten
 Übernachtung · Nebenkosten · Vermerk-Kennung · Routenlink
 
 Darunter steht die **Orte-Legende** — dieselben Zeilen wie auf dem
-Dienstorte-Blatt, damit die Kürzel im Reiseweg ohne Blattwechsel auflösbar
+Ortsverzeichnis, damit die Kürzel im Reiseweg ohne Blattwechsel auflösbar
 sind. Die Spaltenbegriffe sind bewusst die aus S1, damit die Ansicht vertraut
 ist. A4 quer, mit **Drucken** und **Aktualisieren**.
 
