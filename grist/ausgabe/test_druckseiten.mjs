@@ -1,10 +1,9 @@
 /* Prüft die Seitenzuordnung im Druck von ausdruck.html.
 
-   Vier Dokumente mit gemischter Ausrichtung (hoch/hoch/hoch/hoch/quer) in
-   einem Druckjob hängen an zwei Dingen: jedes Blatt muss eine @page-Regel
+   Mehrere Dokumente mit eigenen Seitenrändern in einem Druckjob hängen an zwei Dingen: jedes Blatt muss eine @page-Regel
    bekommen, und kein erzwungener Umbruch darf eine Seite erzeugen, zu der
    kein Blatt gehört. Genau das war der Fehler: "break-after: page" auf dem
-   letzten Blatt (Fahrtenbuch, quer) erzeugte eine Seite ohne Blatt, die auf
+   letzten Blatt (damals das Fahrtenbuch, quer) erzeugte eine Seite ohne Blatt, die auf
    die namenlose Standardregel fiel -- A4 hoch. Chrome unterschlug sie, Edge
    druckte sie.
 
@@ -26,17 +25,15 @@ assert.ok(!/break-after:\s*page/.test(css), "break-after: page erzeugt eine Seit
 //    ist auch definiert. 'auto' ist die namenlose @page-Regel.
 const benannt = new Set([...css.matchAll(/@page\s+([a-z0-9-]+)\s*\{/gi)].map(m => m[1]));
 const doks = [...css.matchAll(/\.(dok-[a-z0-9-]+)\s+\.blatt\s*\{([^}]*)\}/gi)];
-assert.equal(doks.length, 5, `erwartet 5 Dokumente, gefunden ${doks.length}`);
+assert.equal(doks.length, 4, `erwartet 4 Dokumente, gefunden ${doks.length}`);
 for (const [, dok, regeln] of doks) {
   const seite = /page:\s*([a-z0-9-]+)/i.exec(regeln)?.[1];
   assert.ok(seite, `${dok}: kein page: gesetzt`);
   assert.ok(seite === "auto" || benannt.has(seite), `${dok}: @page ${seite} fehlt`);
 }
 
-// 3. Das Fahrtenbuch ist das einzige Querformat -- der Grund für die ganze
-//    Konstruktion. Faellt es auf die Standardregel zurueck, ist es hoch.
-const fb = /@page\s+fahrtenbuch\s*\{([^}]*)\}/i.exec(css)?.[1] ?? "";
-assert.ok(/landscape/.test(fb), "@page fahrtenbuch ist nicht landscape");
+// 3. Alle Blätter sind hoch -- das Fahrtenbuch (quer) steht in fahrtenbuch.html.
+assert.ok(!/landscape/.test(css), "Querformat im Ausdruck, obwohl alle Blätter hoch sind");
 assert.ok(/@page\s*\{[^}]*portrait/.test(css), "namenlose @page ist nicht portrait");
 
 // 4. Gedruckt wird aus einem eigenen Fenster, nicht aus dem Grist-Iframe:

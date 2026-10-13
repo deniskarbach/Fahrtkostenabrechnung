@@ -85,9 +85,4 @@ assert.equal(zeilen[0][SPALTE_8H], "X", ">8h muss ein X zeigen");
 assert.equal(zeilen[1][SPALTE_8H], "(X)", "anteilig muss als (X) in der >8h-Spalte stehen");
 assert.equal(zeilen[1][SPALTE_8H + 1], "", "anteilig darf nicht in die >=14h-Spalte rutschen");
 
-// Der echte Reiseweg bleibt exklusiv Sache des Fahrtenbuchs.
-const fbWeg = [...knoten("daten-fb").innerHTML.matchAll(/<td class="weg">([\s\S]*?)<\/td>/g)]
-  .map(m => m[1]);
-assert.equal(fbWeg[0], "WO &gt; KV &gt; WO", "Fahrtenbuch muss weiterhin den Reiseweg zeigen");
-
-console.log("ok — S1 zeigt Ges./DSt/DO/Priv/Rest, Fahrtenbuch weiterhin den Reiseweg");
+console.log("ok — S1 zeigt Ges./DSt/DO/Priv/Rest");

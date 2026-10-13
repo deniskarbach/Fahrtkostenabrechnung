@@ -5,26 +5,25 @@
 <title>Reisekostenabrechnung – Ausdruck</title>
 <style>
 /* ---------------------------------------------------------------
-   Zusammenführung von S1/S2, Vermerke, Dienstorte und Fahrtenbuch in
-   EIN Custom-Widget -- vorher vier separate Widgets auf der Ausdruck-
-   Seite (vier eigene Grist-Fetches, vier iframes). Jedes Dokument bleibt
+   Zusammenführung von S1/S2, Vermerke und Dienstorte in
+   EIN Custom-Widget -- vorher separate Widgets auf der Ausdruck-
+   Seite (je eigene Grist-Fetches und iframes). Jedes Dokument bleibt
    inhaltlich exakt wie in seiner eigenständigen Datei, nur unter einem
    Namensraum .dok-XXX gekapselt, damit gleichnamige Klassen (.kopf,
    .raster, .titel …) und CSS-Variablen (--schrift, --rahmen …) sich
-   zwischen den vier Dokumenten nicht überschreiben.
+   zwischen den Dokumenten nicht überschreiben.
 
-   Gemischte Ausrichtung (S1/S2/Vermerke/Dienstorte hoch, Fahrtenbuch
-   quer) geht in einem einzigen Druckjob nur über benannte @page-Regeln
-   -- die "page"-Eigenschaft weist jedem Blatt seine Seite zu.
+   Unterschiedliche Seitenränder je Blatt gehen in einem einzigen Druckjob
+   nur über benannte @page-Regeln -- die "page"-Eigenschaft weist jedem
+   Blatt seine Seite zu.
 
-   Fahrtenbuch-Schnittversion bleibt bewusst ein eigenes Widget: kein
-   Bestandteil der Standardausgabe, nur für den Sonderfall "ausschneiden".
+   Das Fahrtenbuch (quer) ist nicht mehr Teil dieses Ausdrucks: es steht in
+   fahrtenbuch.html, die Schnittversion in fahrtenbuch-schnitt.html.
    --------------------------------------------------------------- */
 @page            { size: A4 portrait;  margin: 15mm; }              /* S1 */
 @page s2         { size: A4 portrait;  margin: 10mm 17.78mm 0; }
 @page vermerke   { size: A4 portrait;  margin: 19.05mm 17.78mm; }
 @page dienstorte { size: A4 portrait;  margin: 19.05mm 17.78mm; }
-@page fahrtenbuch{ size: A4 landscape; margin: 10mm; }
 
 * { box-sizing: border-box; }
 
@@ -197,44 +196,15 @@ body {
 .dok-dienstorte .raster td { height: 5.56mm; vertical-align: middle; }
 .dok-dienstorte .raster .mitte { text-align: center; }
 
-/* ============================================================ Fahrtenbuch */
-
-.dok-fahrtenbuch {
-  --rahmen: 0.4pt solid #000;
-  --schrift: 8pt;
-  --schrift-kopf: 7pt;
-  --h-daten: 6.35mm;
-  --polster-x: 0.8mm;
-}
-
-.dok-fahrtenbuch .blatt { page: fahrtenbuch; width: 297mm; margin: 10mm auto; padding: 10mm;
-                           background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25);
-                           font-size: var(--schrift); }
-
-.dok-fahrtenbuch table { width: 277mm; border-collapse: collapse; table-layout: fixed; }
-.dok-fahrtenbuch th, .dok-fahrtenbuch td { border: var(--rahmen); padding: .4mm var(--polster-x); overflow: hidden; }
-
-.dok-fahrtenbuch thead th { font-weight: bold; font-size: var(--schrift-kopf); text-align: center;
-           vertical-align: middle; white-space: pre-line; line-height: 1.1;
-           overflow-wrap: anywhere; }
-.dok-fahrtenbuch thead .h1 { height: 6.35mm; }
-.dok-fahrtenbuch thead .h2 { height: 6.09mm; }
-.dok-fahrtenbuch thead .h3 { height: 3.97mm; }
-.dok-fahrtenbuch thead .weg { text-align: left; }
-.dok-fahrtenbuch thead .klein { font-size: 5.6pt; }
-
-.dok-fahrtenbuch tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
-.dok-fahrtenbuch tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
-
 /* ============================================================ Druck allgemein */
 
 @media print {
   body { background: #fff; }
-  /* Umbruch VOR jedem Blatt, nicht dahinter. Beides trennt die vier
+  /* Umbruch VOR jedem Blatt, nicht dahinter. Beides trennt die
      Dokumente gleich gut, aber die Richtung entscheidet, welche @page-Regel
      für die erzeugte Seite gilt: ein Umbruch gilt der Seite, auf der das
      nächste Blatt beginnt, und dieses Blatt bringt sein "page: …" mit.
-     Hinter dem letzten Blatt (Fahrtenbuch, quer) kommt keines mehr -- die
+     Hinter dem letzten Blatt (damals das Fahrtenbuch, quer) kam keines mehr -- die
      Seite, die "break-after" dort erzwang, fiel deshalb auf die namenlose
      Standardregel zurück und damit auf A4 HOCH. Chrome unterschlug diese
      leere Schlussseite, Edge druckte sie: dasselbe Dokument sah je nach
@@ -275,7 +245,7 @@ body {
 <div class="druckleiste">
   <button type="button" id="drucken">Drucken</button>
   <button type="button" class="sek" id="neu-laden" hidden>Aktualisieren</button>
-  <span class="info" id="hinweis">S1/S2, Vermerke, Dienstorte und Fahrtenbuch — alle Seiten in einem Druckauftrag.</span>
+  <span class="info" id="hinweis">S1/S2, Vermerke und Dienstorte — alle Seiten in einem Druckauftrag.</span>
 </div>
 
 <!-- ================================ S1 / S2 ================================ -->
@@ -738,54 +708,6 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
 </div>
 </div>
 
-<!-- ================================ Fahrtenbuch ================================ -->
-<div class="dok-fahrtenbuch">
-<div class="blatt">
-
-  <table>
-    <colgroup>
-      <col style="width:6.90mm"><col style="width:17.86mm"><col style="width:17.86mm">
-      <col style="width:13.61mm"><col style="width:17.86mm"><col style="width:72.99mm">
-      <col style="width:15.55mm"><col style="width:13.61mm"><col style="width:9.54mm">
-      <col style="width:17.86mm"><col style="width:22.26mm"><col style="width:6.90mm">
-      <col style="width:8.48mm"><col style="width:17.86mm"><col style="width:17.86mm">
-    </colgroup>
-    <thead>
-      <tr>
-        <th class="h1" rowspan="2">Lfd Nr.</th>
-        <th class="h1" rowspan="2">Monat</th>
-        <th class="h1" rowspan="2">Tag</th>
-        <th class="h1" colspan="2">Dauer der Reise</th>
-        <th class="h1 weg" rowspan="2">Reiseweg (Umwege sind zu begründen)&#10;&#10;&#10;Kurze Angabe des Reisezweckes</th>
-        <th class="h1" colspan="2">Stand des Kilometerzählers bei</th>
-        <th class="h1" colspan="2">Zurückgelegte Kilometer</th>
-        <th class="h1" colspan="3">Mitgenommende Bedienstete</th>
-        <th class="h1" rowspan="2">Unterschrift d. Fahrerin/Fahrers</th>
-        <th class="h1" rowspan="2">Vermerke</th>
-      </tr>
-      <tr>
-        <th class="h2">von</th>
-        <th class="h2">bis</th>
-        <th class="h2">Beginn&#10;der Reise</th>
-        <th class="h2">Ende&#10;der Reise</th>
-        <th class="h2">dienstlich</th>
-        <th class="h2">außer-&#10;dienstlich</th>
-        <th class="h2">Name, Amtsbezeichnung</th>
-        <th class="h2">Kilo-&#10;meter</th>
-        <th class="h2 klein">Vergütungsbetrag</th>
-      </tr>
-      <tr>
-        <th class="h3">1</th><th class="h3">2</th><th class="h3">3</th><th class="h3">4</th>
-        <th class="h3">5</th><th class="h3">6</th><th class="h3">7</th><th class="h3">8</th>
-        <th class="h3">9</th><th class="h3">10</th><th class="h3">11</th><th class="h3">12</th>
-        <th class="h3">13</th><th class="h3">14</th><th class="h3">15</th>
-      </tr>
-    </thead>
-    <tbody id="daten-fb"></tbody>
-  </table>
-</div>
-</div>
-
 <script>
 /* Erfundene Beispieldaten. Werden nur benutzt, wenn die Datei direkt im
    Browser geöffnet wird — für Layoutarbeit ohne Grist. */
@@ -848,13 +770,6 @@ const beispielDienstorte = [
   { kuerzel:"26.02.2026", name:"Hof Lindenau", adresse:"" },
 ];
 
-const beispielFahrten = [
-  { nr:1, monat:"02", tag:"03", von:"07:15", bis:"16:40", weg:"Nr. 1 – WO > KV > Beispieldorf > WO",
-    kmBeginn:12000, kmEnde:12087, kmDienstlich:87, kmPrivat:0, vermerk:"" },
-  { nr:2, monat:"02", tag:"05", von:"08:00", bis:"12:10", weg:"Nr. 2 – WO > KV > WO",
-    kmBeginn:12087, kmEnde:12111, kmDienstlich:24, kmPrivat:0, vermerk:"V26-01" },
-];
-
 /* ---------------------------------------------------------- Hilfsfunktionen */
 
 /* Tabellenzellen werden als HTML zusammengesetzt. Das Präfix html`…` schiebt
@@ -873,7 +788,7 @@ const hinweis = t => { document.getElementById("hinweis").textContent = t; };
 /* Gedruckt wird NICHT per window.print() aus dem Widget heraus. Im Grist-
    Iframe greifen die @page-Regeln dieses Dokuments nicht zuverlaessig: unter
    Windows/Edge fiel der ganze Druckjob auf A4 hoch zurueck und quetschte das
-   297mm breite Fahrtenbuch auf Hochformat. Unter macOS/Chrome passierte das
+   damals enthaltene, 297mm breite Fahrtenbuch auf Hochformat. Unter macOS/Chrome passierte das
    nicht -- dieselbe Datei sah je nach Arbeitsplatz anders aus.
 
    Die Pruefliste hatte genau denselben Fehler ("oeffnete in Hochformat und
@@ -882,7 +797,7 @@ const hinweis = t => { document.getElementById("hinweis").textContent = t; };
    auffiel. Der Weg ist derselbe: die fertigen Blaetter wandern in ein eigenes
    Fenster, wo sie Top-Level-Dokument sind und @page in jedem Fall gilt.
 
-   Mitgenommen werden alle fuenf .dok-*-Huellen, nicht nur die .blatt darin --
+   Mitgenommen werden alle .dok-*-Huellen, nicht nur die .blatt darin --
    das CSS ist je Dokument unter .dok-XXX gekapselt und griffe sonst nicht. */
 function drucken() {
   const w = window.open("", "_blank");
@@ -944,13 +859,6 @@ const s1Zeile = r => {
   return `Nr. ${r.Lfd_Nr}  –  (Ges.: ${stunden(r.Abwesenheit_min)}`
        + ` | DSt: ${stunden(r.Min_Dienststaette)} | DO: ${stunden(r.Min_Dienstort)}`
        + `${priv} | Rest: ${stunden(r.Rest_min)})`;
-};
-
-const zweistellig = n => n == null ? "" : String(n).padStart(2, "0");
-const monatTag = s => {
-  if (s == null) return { monat: "", tag: "" };
-  const d = new Date(s * 1000);
-  return { monat: zweistellig(d.getUTCMonth() + 1), tag: zweistellig(d.getUTCDate()) };
 };
 
 /* ---------------------------------------------------------- Render: S1/S2 */
@@ -1029,28 +937,6 @@ orte.forEach((o, i) => {
     <td>${o.name}</td>
     <td colspan="2">${o.adresse}</td></tr>`);
 });
-}
-
-/* ---------------------------------------------------------- Render: Fahrtenbuch */
-
-function renderFahrtenbuch(fahrten) {
-const tb = document.getElementById("daten-fb");
-tb.innerHTML = "";
-for (const f of fahrten) {
-  tb.insertAdjacentHTML("beforeend", html`<tr>
-    <td>${f.nr ?? ""}</td>
-    <td>${f.monat}</td>
-    <td>${f.tag}</td>
-    <td>${f.von}</td>
-    <td>${f.bis}</td>
-    <td class="weg">${f.weg}</td>
-    <td>${f.kmBeginn ?? ""}</td>
-    <td>${f.kmEnde ?? ""}</td>
-    <td>${f.kmDienstlich ?? ""}</td>
-    <td>${f.kmPrivat ?? ""}</td>
-    <td></td><td></td><td></td><td></td>
-    <td>${f.vermerk}</td></tr>`);
-}
 }
 
 /* ---------------------------------------------------------- Grist-Anbindung */
@@ -1142,25 +1028,12 @@ async function ausGrist() {
 
   renderDienstorte({ stand, ...kopfAdresse }, [...ausOrte, ...ausAdressen]);
 
-  renderFahrtenbuch(reisen.map(r => ({
-      nr:   r.Lfd_Nr,
-      ...monatTag(r.Datum),
-      von:  r.Beginn || "",
-      bis:  r.Ende || "",
-      weg:  r.Reiseweg || "",
-      kmBeginn:     r.KM_Beginn,
-      kmEnde:       r.KM_Ende,
-      kmDienstlich: r.KM_dienstlich,
-      kmPrivat:     r.Umweg_privat || 0,
-      vermerk:      r.Vermerk_Label || "",
-    })));
 }
 
 if (window.self === window.top) {
   renderS1S2(beispielKopfS1, beispielReisen);
   renderVermerke(beispielKopfVermerke, beispielVermerke);
   renderDienstorte(beispielKopfDienstorte, beispielDienstorte);
-  renderFahrtenbuch(beispielFahrten);
 } else {
   /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
      Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
@@ -1179,7 +1052,7 @@ if (window.self === window.top) {
   const s = document.createElement("script");
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
-    grist.ready({ requiredAccess: "full" });   // liest vier Tabellen
+    grist.ready({ requiredAccess: "full" });   // liest Einstellungen, Orte, Reisen, Adressen
     /* onRecords feuert beim Aufbau und danach nur bei Aenderungen an der
        Tabelle, an der das Widget haengt -- das ist 'Einstellungen', also
        praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder
