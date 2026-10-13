@@ -812,6 +812,82 @@ def formelfehler_melden():
         print("  Formeln: keine Fehlerzellen")
 
 
+# Seite zum Korrigieren einer erfassten Reise ohne Tabellenansicht: links das
+# Auswahl-Widget (Datum per Browser-Kalender, darunter die Reisen des Tages),
+# rechts die gewählte Reise als eine Karte -- Felder und Paare wie im
+# Formular, ohne Rechenspalten. Mehrere kleine Karten waren im Test
+# unübersichtlicher als eine. Das Grist-Kalender-Widget bot trotz Lesezugriff
+# Ziehen an; das eigene Widget kann nur lesen und auswählen.
+KORREKTUR_SEITE = "Reisekorrektur"
+KORREKTUR_AUSWAHL = "reiseauswahl.html"
+KORREKTUR_KARTE = [
+    ("Datum", "Datum_Ende"), ("Beginn", "Ende"), ("KM_Beginn", "KM_Ende"),
+    ("Umweg_privat",),
+    *[(s, f"{s}_Text") for s in ORT_SLOTS],
+    ("Tagegeld_beantragt",), ("Min_Dienststaette", "Min_Dienstort", "Min_privat_Abzug"),
+    ("OePNV", "Nebenkosten"), ("Uebernachtung", "Verpflegung"), ("Mitnahme_Personen",),
+    ("Vermerk",), ("Belege", "Tacho_Fotos"),
+]
+
+
+def reisekorrektur_seite():
+    """Legt die Seite KORREKTUR_SEITE an. Idempotent: existiert sie, passiert
+    nichts -- eine im Editor angepasste Karte bleibt also erhalten."""
+    if sql(f"select id from _grist_Views where name = '{KORREKTUR_SEITE}'"):
+        print(f"  Seite '{KORREKTUR_SEITE}': vorhanden")
+        return
+    tid = sql("select id from _grist_Tables where tableId = 'Reisen'")[0]["id"]
+    col = {c["colId"]: c["id"] for c in
+           sql(f"select id, colId from _grist_Tables_column where parentId = {tid}")}
+
+    neu = api("POST", "/apply", [["CreateViewSection", tid, 0, "custom", None, None]]
+              )["retValues"][0]
+    vid, auswahl = neu["viewRef"], neu["sectionRef"]
+    karte = api("POST", "/apply", [["CreateViewSection", tid, vid, "single", None, None]]
+                )["retValues"][0]["sectionRef"]
+
+    # Grist legt in der Karte alle sichtbaren Spalten an -- ersetzen.
+    # Position: Freitext genau hinter seine Auswahl (+0.5), wie es
+    # reihenfolge_ordnen() ohnehin erzwingen würde.
+    alt = [f["id"] for f in sql(f"select id from _grist_Views_section_field "
+                                f"where parentId = {karte}")]
+    spalten = [c for reihe in KORREKTUR_KARTE for c in reihe]
+    pos, i = [], 0
+    for c in spalten:
+        if c.endswith("_Text"):
+            pos.append(pos[-1] + 0.5)
+        else:
+            i += 1
+            pos.append(i)
+    ids = api("POST", "/apply", [
+        ["BulkRemoveRecord", "_grist_Views_section_field", alt],
+        ["BulkAddRecord", "_grist_Views_section_field", [None] * len(spalten),
+         {"parentId": [karte] * len(spalten), "colRef": [col[c] for c in spalten],
+          "parentPos": pos}],
+    ])["retValues"][1]
+    fid = iter(ids)
+    layout = {"children": [{"leaf": next(fid)} if len(r) == 1 else
+                           {"children": [{"leaf": next(fid)} for _ in r]}
+                           for r in KORREKTUR_KARTE]}
+
+    options = {"customView": json.dumps({
+        "mode": "url", "url": AUSGABE_BASIS_URL + KORREKTUR_AUSWAHL, "widgetDef": None,
+        "access": "read table", "pluginId": "", "sectionId": "",
+        "renderAfterReady": False, "widgetId": None,
+        "widgetOptions": None, "columnsMapping": None})}
+    api("POST", "/apply", [
+        ["UpdateRecord", "_grist_Views", vid, {"name": KORREKTUR_SEITE, "layoutSpec": json.dumps(
+            {"children": [{"children": [{"leaf": auswahl, "size": 30},
+                                        {"leaf": karte, "size": 70}]}], "collapsed": []})}],
+        ["UpdateRecord", "_grist_Views_section", auswahl,
+         {"title": "Reise wählen", "options": json.dumps(options)}],
+        ["UpdateRecord", "_grist_Views_section", karte,
+         {"title": "Reise bearbeiten", "layoutSpec": json.dumps(layout),
+          "linkSrcSectionRef": auswahl, "linkSrcColRef": 0, "linkTargetColRef": 0}],
+    ])
+    print(f"  Seite '{KORREKTUR_SEITE}' angelegt (View {vid})")
+
+
 def einstellungen_karte():
     """Ersetzt die Tabellenansicht auf der eigenen 'Einstellungen'-Seite durch
     ein Card-Widget: eine Zeile als Formular gelesen ist unmissverständlich,
@@ -996,6 +1072,7 @@ if __name__ == "__main__":
     ausgabe_widgets()      # dito
     ausdruck_layout()      # dito; ordnet nur ein frisch eingerichtetes Dokument
     pruefliste_widget()    # eigene Seite, getrennt freigebbar
+    reisekorrektur_seite() # eigene Seite, Karte statt Tabelle
     layouts_aufraeumen()   # nach allem, was Sections anlegt oder entfernt
 
     print(f"""

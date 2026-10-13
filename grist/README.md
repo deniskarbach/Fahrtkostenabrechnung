@@ -95,6 +95,6 @@ cp grist/.env.beispiel grist/.env   # dort die drei Werte eintragen
 python3 grist/setup.py
 ```
 
-Legt Tabellen, Spalten, Formeln, die Seiten `Ausdruck` und `Prüfliste`
+Legt Tabellen, Spalten, Formeln, die Seiten `Ausdruck`, `Prüfliste` und `Reisekorrektur`
 sowie alle Ausgabe-Widgets an.
 Wiederholbar. Einzelheiten: [Einrichtung](formeln/setup.md).

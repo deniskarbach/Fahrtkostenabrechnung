@@ -23,6 +23,7 @@ python3 grist/setup.py --selbsttest   # prüft die Formeln ohne Grist
 
 | Schritt | Wirkung |
 |---|---|
+| `tabellen_umbenennen` | ältere Dokumente: `Orte`/`Adressen` per `RenameTable` in `Stammziele`/`Einzelziele` umbenennen |
 | `anlegen` je Tabelle | fehlende Tabellen und Spalten ergänzen, Beschriftungen nachziehen |
 | `formeln_angleichen` | Rechenspalten auf den Stand des Codes bringen |
 | Sync-Spalten | die sieben `Ort_*_Sync` anlegen (brauchen `Einzelziele`, deshalb zuletzt) |
@@ -36,6 +37,7 @@ python3 grist/setup.py --selbsttest   # prüft die Formeln ohne Grist
 | `zeitraum_widget` | Seite `Ausdruck` anlegen (falls nötig) und die Zeitraum-Karte darauf |
 | `ausgabe_widgets` | die beiden Custom-Widgets mit ihren URLs abgleichen |
 | `ausdruck_layout` | Zeitraum oben, die beiden Druck-Widgets nebeneinander darunter |
+| `reisekorrektur_seite` | Seite `Reisekorrektur` anlegen (falls nicht vorhanden): Auswahl-Widget `reiseauswahl.html` (nur Lesezugriff), daneben eine verknüpfte Karte mit den Formularfeldern |
 | `layouts_aufraeumen` | Layout-Knoten entfernen, die auf fremde Sections zeigen |
 
 Danach bleiben zwei Handgriffe in der Oberfläche:
@@ -96,6 +98,7 @@ Weitere Tests im Repo:
 
 | Datei | Prüft |
 |---|---|
+| [`ausgabe/test_reiseauswahl.mjs`](../ausgabe/test_reiseauswahl.mjs) | Reiseauswahl: Reisen je Tag inkl. mehrtägiger, vorige/nächste Reise |
 | [`ausgabe/test_ortsverzeichnis.mjs`](../ausgabe/test_ortsverzeichnis.mjs) | Ortsverzeichnis: Stammziele höchstens einmal, Reihenfolge, Einzelziele mit Datum |
 | [`ausgabe/test_escaping.py`](../ausgabe/test_escaping.py) | kein Zeilen-Template ohne `html\`\``-Präfix |
 | [`ausgabe/test_schwaerzung.py`](../ausgabe/test_schwaerzung.py) | S2-Erzeugung schwärzt und bricht bei Abweichung ab |

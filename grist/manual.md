@@ -47,7 +47,7 @@ eigene Handgriffe nötig — alles dazwischen übernimmt die Tabelle automatisch
 | | Google Sheets | Grist |
 |---|---|---|
 | Konto zum Erfassen | Google-Konto nötig | **keines** — der Formularlink genügt |
-| Korrektur einer Reise | nur in der Formularantworten-Datei | direkt in der Tabelle `Reisen` |
+| Korrektur einer Reise | nur in der Formularantworten-Datei | auf der Seite `Reisekorrektur` |
 | Neue Formularfrage | verschiebt alle folgenden Spalten, Bezüge prüfen | Formeln greifen über Spalten-IDs, kein Versatz |
 | Ausgabe | eigene Blätter mit Formeln | ein Widget, das die Tabellen liest |
 
@@ -78,7 +78,8 @@ Formular, `Einzelziele` entsteht von selbst.
 |---|---|---|---|
 | ✍️ | Einstellungen | Stammdaten der Person, eigene Wohn- und Dienstanschrift, Abrechnungszeitraum. Die **einzige** Stelle, an der persönliche Daten stehen | **Einrichten & pflegen.** Einmalig Name, Organisationseinheit, Anschriften; **pro Abrechnung** den Zeitraum setzen |
 | ✍️ | Stammziele | Stammziele mit Kürzel und vollständiger Adresse — speist die Auswahlliste im Formular, den Routenlink und die Legende auf dem Ausdruck | **Pflegen.** `WO` und `KV` sind Pflichtzeilen, ihre Adresse eintragen; neue regelmäßige Ziele ergänzen |
-| ✅ | Reisen | Eine Zeile je Dienstreise aus dem Formular, dazu alle Rechenspalten (Kilometer, Tagegeld-Stufe, Reiseweg, laufende Nummer, Routenlink) | **Nichts.** Eine Korrektur ist hier trotzdem möglich — anders als bei Google Sheets |
+| ✅ | Reisen | Eine Zeile je Dienstreise aus dem Formular, dazu alle Rechenspalten (Kilometer, Tagegeld-Stufe, Reiseweg, laufende Nummer, Routenlink) | **Nichts.** Korrigiert wird auf der Seite `Reisekorrektur` |
+| ✍️ | Reisekorrektur (Seite) | Links ein Datumsfeld mit Kalender und darunter die Reisen dieses Tages, rechts die gewählte Reise als Karte mit denselben Feldern wie im Formular. Die Auswahl links kann nichts ändern | **Datum wählen, Reise anklicken, rechts ändern.** Rechenspalten ziehen sofort nach |
 | ✍️ | Einzelziele | Die Einzelziele: sobald ein Ortsfeld als Freitext ausgefüllt wurde, entsteht hier automatisch eine Zeile | **Adresse nachtragen.** Straße/PLZ/Ort ergänzen, damit das Ortsverzeichnis vollständig ist |
 | 🖨️ | Ausdruck (Seite) | Abrechnungszeitraum und die Widgets Reisekostenabrechnung (S1/S2, Vermerke, Ortsverzeichnis), Fahrtenbuch zum Einkleben, Routenlinks (Google Maps) | **Zeitraum setzen, aktualisieren, drucken bzw. Route öffnen** |
 | 🖨️ | Prüfliste (eigene Seite) | Alles aus allen Blättern in einer Zeile je Reise — für die Zeiterfassungsstelle, die den Antrag final bearbeitet | **Nichts.** Getrennt freigebbar, siehe unten |
@@ -99,7 +100,7 @@ Formular, `Einzelziele` entsteht von selbst.
 ## Einrichten
 
 Das Datenmodell legt `setup.py` an — Tabellen, Spalten, Formeln, die Seiten
-`Ausdruck` und `Prüfliste` samt Widgets. Einzelheiten: [Einrichtung](formeln/setup.md).
+`Ausdruck`, `Prüfliste` und `Reisekorrektur` samt Widgets. Einzelheiten: [Einrichtung](formeln/setup.md).
 
 ```
 cp grist/.env.beispiel grist/.env   # dort die drei Werte eintragen
@@ -221,8 +222,14 @@ Freitextfeld im Formular da. Es landet automatisch in `Einzelziele`.
   zwangsläufig ein Fehler: bei einer Fahrt, die vollständig als „Privater
   Umweg" erfasst wurde (z. B. eine reine Verwaltungsfahrt ohne
   erstattungsfähige Strecke), ist sie das erwartete, gedruckte Ergebnis.
-- Eine Korrektur ist direkt in der Tabelle `Reisen` möglich. Alle
-  Rechenspalten ziehen sofort nach.
+- Eine Korrektur geht auf der Seite `Reisekorrektur`: links das Datum wählen
+  (‹ › springen zur vorigen/nächsten Reise), die Reise anklicken, rechts
+  ändern. Beim Öffnen steht die jüngste Reise schon bereit. Alle
+  Rechenspalten ziehen sofort nach. Ein geändertes Datum nummeriert die
+  laufenden Nummern neu.
+- Unbekannte Orte dort ins Freitextfeld schreiben, nicht über „+ neu“ in der
+  Auswahlliste anlegen — sonst landet das Einzelziel dauerhaft in
+  `Stammziele`.
 
 > **Mehrtägige Reisen:** Gefiltert wird über den **Reisebeginn**. Eine Reise,
 > die vor dem Zeitraum beginnt und hineinreicht, gehört in die vorige
