@@ -253,8 +253,8 @@ return link
 - `o.Adresse if o else …` – wie `Reiseweg` gewinnt die Auswahl, hier aber mit
   der **Adresse** statt dem Kürzel
 - `(s.Adresse if s else "") or t` – beim Freitext zählt die in
-  [Einzelziele](einzelziele.md) nachgetragene Anschrift; erst wenn dort noch nichts
-  steht, der Freitext selbst
+  [Einzelziele](einzelziele.md) aus dem Freitext zerlegte Anschrift; folgt der
+  Freitext dem Schema nicht, der Freitext selbst
 - `if not a: return ""` – ein belegter Stopp ohne Anschrift macht die ganze
   Route unbrauchbar, nicht nur sich selbst
 - `if len(adr) < 2` – unter zwei Stationen gibt es keine Route
@@ -316,16 +316,13 @@ Sieben unsichtbare Formelspalten, eine je Ortsfeld. Sie legen die Zeilen in
 ```python
 if $Ort_Beginn or not $Ort_Beginn_Text:
   return None
-rec = Einzelziele.lookupOrAddDerived(Reise=$id, Slot="Ort_Beginn")
-rec.Label = $Ort_Beginn_Text
-return rec
+return Einzelziele.lookupOrAddDerived(Reise=$id, Slot="Ort_Beginn")
 ```
 
 **Statement:**
 - `if $Ort_Beginn` – ist die Auswahl gesetzt, entsteht **keine** Adresszeile
 - `or not …_Text` – ohne Freitext ebenfalls nicht
-- `lookupOrAddDerived(Reise=$id, Slot=…)` – sucht die Zeile zu diesem Paar aus Reise und Ortsfeld und legt sie an, falls es sie nicht gibt
-- `rec.Label = …` – der Freitext wird **nach** dem Nachschlagen zugewiesen
+- `lookupOrAddDerived(Reise=$id, Slot=…)` – sucht die Zeile zu diesem Paar aus Reise und Ortsfeld und legt sie an, falls es sie nicht gibt; den Freitext liest die Zeile selbst ([Einzelziele → Label](einzelziele.md#label))
 
 **Ergebnis:** Ein Verweis auf die zugehörige Adresszeile.
 **Sonderfall:** Gewinnt die Auswahl (Muster B), entsteht keine Zeile — sonst
@@ -337,15 +334,20 @@ stünde der ignorierte Freitext trotzdem im Ortsverzeichnis.
 - Der Schlüssel ist **Reise + Ortsfeld**, beides zusammen ist eindeutig. Damit
   bekommt jede Fahrt ihre eigene Zeile; dasselbe Ziel auf zwei Fahrten ergibt
   zwei Zeilen, denn es sind zwei Vorgänge.
-- `Label` steht bewusst **nicht** im Schlüssel: der Schlüssel soll die Zeile
-  identifizieren, nicht ihren Inhalt tragen. Eine spätere Korrektur des
-  Freitextes zieht so oder so nach — Grist leitet die Zeile bei jeder
-  Neuberechnung neu ab (nachgemessen in
-  [`test_lookuporadd.py`](../test_lookuporadd.py), Test 3).
+- Bis 14.10.2026 wies die Formel danach `zeile.Label = …` zu. Das bricht in
+  Grist mit AttributeError ab und fiel nur nicht auf, weil es noch keinen
+  Freitext gab. Jetzt liest `Einzelziele.Label` den Freitext per Formel.
 - `lookupOrAddDerived` legt Zeilen an, räumt aber nie ab. Wird eine Reise
   gelöscht, der Freitext geleert oder nachträglich eine Auswahl gesetzt, bleibt
-  die Adresszeile stehen. `setup.py` entfernt sie bei jedem Lauf
-  (`einzelziele_aufraeumen`).
+  die Adresszeile stehen — mit leerem `Label`, also in keiner Ausgabe
+  sichtbar. `setup.py` entfernt sie zusätzlich (`einzelziele_aufraeumen`).
+
+## Anschrift_Warnung, Anschrift_Hinweis
+
+Lesen über die sieben Sync-Spalten `Einzelziele.Anschrift_fehlt`. Die Warnung
+ist nur `⚠️` (Liste der Reisekorrektur), der Hinweis nennt Ortsfeld und
+Freitext und das erwartete Schema (Karte der Reisekorrektur). Beide leer, wenn
+alles vollständig ist.
 
 Die sieben Spalten sind in der Tabellenansicht ausgeblendet — sie haben keinen
 eigenen Aussagewert. Im Editor über *Hidden columns* jederzeit wieder

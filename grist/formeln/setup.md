@@ -37,8 +37,13 @@ python3 grist/setup.py --selbsttest   # prüft die Formeln ohne Grist
 | `zeitraum_widget` | Seite `Ausdruck` anlegen (falls nötig) und die Zeitraum-Karte darauf |
 | `ausgabe_widgets` | die beiden Custom-Widgets mit ihren URLs abgleichen |
 | `ausdruck_layout` | Zeitraum oben, die beiden Druck-Widgets nebeneinander darunter |
-| `reisekorrektur_seite` | Seite `Reisekorrektur` anlegen (falls nicht vorhanden): Auswahl-Widget `reiseauswahl.html` (nur Lesezugriff), daneben eine verknüpfte Karte mit den Formularfeldern |
+| `reisekorrektur_seite` | Seite `Reisekorrektur` anlegen (falls ohne Liste): oben Karte mit `Einstellungen.Korrektur_Jahr`/`Korrektur_Monat`, darunter links (⅓) die Reisen dieses Zeitraums über `Korrektur_Reisen`, neueste oben, rechts (⅔) die Karte der gewählten Reise mit den Formularfeldern |
+| `seiten_entfernen` | Seiten `Reisen` und `Einzelziele` entfernen; beide Tabellen bleiben unter Raw Data, bearbeitet wird auf `Reisekorrektur` |
 | `layouts_aufraeumen` | Layout-Knoten entfernen, die auf fremde Sections zeigen |
+| `auswahl_seiten` | Stammziele: links Liste (⅓), rechts verknüpfte Karte (⅔). Nur wenn noch keine verknüpfte Karte da ist |
+| `table1_entfernen` | die leere Standardtabelle `Table1` eines neuen Dokuments entfernen |
+| `seiten_ordnen` | Seitenliste nach `SEITEN_REIHENFOLGE` (Häufigkeit): Ausdruck, Reisekorrektur, Stammziele, Prüfliste, Einstellungen, Formularverwaltung |
+| `widget_texte_setzen` | Titel und Info-Text an jedem Widget aus `WIDGET_TEXTE` setzen (überschreibt Änderungen im Editor) |
 
 Danach bleiben zwei Handgriffe in der Oberfläche:
 
@@ -98,7 +103,6 @@ Weitere Tests im Repo:
 
 | Datei | Prüft |
 |---|---|
-| [`ausgabe/test_reiseauswahl.mjs`](../ausgabe/test_reiseauswahl.mjs) | Reiseauswahl: Reisen je Tag inkl. mehrtägiger, vorige/nächste Reise |
 | [`ausgabe/test_ortsverzeichnis.mjs`](../ausgabe/test_ortsverzeichnis.mjs) | Ortsverzeichnis: Stammziele höchstens einmal, Reihenfolge, Einzelziele mit Datum |
 | [`ausgabe/test_escaping.py`](../ausgabe/test_escaping.py) | kein Zeilen-Template ohne `html\`\``-Präfix |
 | [`ausgabe/test_schwaerzung.py`](../ausgabe/test_schwaerzung.py) | S2-Erzeugung schwärzt und bricht bei Abweichung ab |

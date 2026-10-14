@@ -53,6 +53,20 @@ def sql(frage):
             api("GET", "/sql?q=" + urllib.parse.quote(frage))["records"]]
 
 
+def ohne_icon(name):
+    """Seitenname ohne vorangestelltes Emoji ('🖨️ Ausdruck' -> 'Ausdruck').
+    Die Icons setzt die Vorlage im Editor; gesucht wird nach dem Namen."""
+    kopf, _, rest = name.partition(" ")
+    return rest if rest and not kopf[0].isalnum() else name
+
+
+def seite_suchen(name):
+    """Wie sql('select id from _grist_Views where name = ...'), aber mit
+    oder ohne Icon vor dem Namen."""
+    return [{"id": v["id"]} for v in sql("select id, name from _grist_Views")
+            if ohne_icon(v["name"]) == name]
+
+
 def spalte(sid, label, typ="Any", formel=None, optionen=None):
     f = {"label": label, "type": typ, "isFormula": formel is not None,
          "formula": formel or ""}
@@ -164,26 +178,24 @@ JA_NEIN = {"choices": ["Ja", "Nein"]}
 
 def SYNC(slot):
     """Legt bei ausgefülltem Freitext automatisch die zugehörige Zeile in
-    Einzelziele an (Reise+Slot als Schlüssel -> nie ein Treffer auf eine fremde
-    Zeile, jede Fahrt bekommt ihre eigene). Label steht bewusst NICHT im
-    Schlüssel, sondern wird danach zugewiesen: der Schlüssel soll die Zeile
-    identifizieren, nicht ihren Inhalt tragen. Nachgezogen wird eine spätere
-    Freitext-Korrektur so oder so -- Grist leitet die Zeile bei jeder
-    Neuberechnung neu ab (nachgemessen in grist/test_lookuporadd.py, Test 3).
-    Gewinnt die Auswahl (wie in REISEWEG/MAPS), entsteht keine Einzelziel-Zeile
-    -- sonst taucht der ignorierte Freitext trotzdem im Ortsverzeichnis auf.
+    Einzelziele an (Reise+Slot als Schlüssel -> nie ein Treffer auf eine
+    fremde Zeile, jede Fahrt bekommt ihre eigene). Gewinnt die Auswahl (wie in
+    REISEWEG/MAPS), entsteht keine Einzelziel-Zeile -- sonst taucht der
+    ignorierte Freitext trotzdem im Ortsverzeichnis auf.
 
-    Die lokale Variable heisst bewusst NICHT 'rec': Grist ersetzt jedes $Feld
-    durch rec.Feld und uebergibt die eigene Zeile als Parameter 'rec'. Eine
-    Zuweisung an 'rec' im Formelrumpf macht daraus einen SyntaxError -- und
-    zwar in allen sieben Sync-Spalten gleichzeitig, womit lautlos nie wieder
-    eine Einzelziel-Zeile entstand."""
+    Den Freitext liest die Einzelziel-Zeile selbst per Formel (Label). Eine
+    Zuweisung hier (zeile.Label = ...) bricht mit AttributeError ab -- so
+    stand es bis 14.10.2026 da und fiel nur nicht auf, weil es noch keinen
+    Freitext gab. Freitext im Schlüssel ginge, ließe aber bei jeder Korrektur
+    die alte Zeile stehen, und die würde mitgedruckt.
+
+    Keine lokale Variable 'rec': Grist ersetzt jedes $Feld durch rec.Feld und
+    übergibt die eigene Zeile als Parameter 'rec' -- eine Zuweisung daran ist
+    ein SyntaxError in allen sieben Sync-Spalten."""
     return f'''
 if ${slot} or not ${slot}_Text:
   return None
-zeile = Einzelziele.lookupOrAddDerived(Reise=$id, Slot="{slot}")
-zeile.Label = ${slot}_Text
-return zeile
+return Einzelziele.lookupOrAddDerived(Reise=$id, Slot="{slot}")
 '''.strip()
 
 # ---------------------------------------------------------------- Tabellen
@@ -207,6 +219,17 @@ STAMMZIELE = [
            formel='", ".join(x for x in [$Strasse, ($PLZ + " " + $Ort).strip()] if x)'),
 ]
 
+MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
+          "August", "September", "Oktober", "November", "Dezember"]
+# Ohne Jahr gilt das laufende, ohne Monat das ganze Jahr -- die Liste bleibt
+# auch bei hunderten Reisen kurz.
+KORREKTUR_REISEN = f"""
+jahr = $Korrektur_Jahr or TODAY().year
+monat = {MONATE}.index($Korrektur_Monat) + 1 if $Korrektur_Monat else None
+return [r for r in Reisen.all if r.Datum and r.Datum.year == jahr
+        and (monat is None or r.Datum.month == monat)]
+""".strip()
+
 # Speist die Formulare (S1/S2-Kopf, Vermerke, Ortsverzeichnis) -- unabhängig von
 # 'Stammziele' gepflegt, siehe Kommentar dort.
 #
@@ -216,14 +239,20 @@ EINSTELLUNGEN = [
     spalte("Vorname", "Vorname", "Text"),
     spalte("Name", "Name", "Text"),
     spalte("Organisationseinheit", "Organisationseinheit", "Text"),
-    spalte("Wohnort_Strasse", "Wohnort – Straße und Nr.", "Text"),
+    spalte("Wohnort_Strasse", "Wohnort – Straße und Hausnummer", "Text"),
     spalte("Wohnort_PLZ", "Wohnort – PLZ", "Text"),
     spalte("Wohnort_Ort", "Wohnort – Ort", "Text"),
-    spalte("Dienstort_Strasse", "Dienstort – Straße und Nr.", "Text"),
+    spalte("Dienstort_Strasse", "Dienstort – Straße und Hausnummer", "Text"),
     spalte("Dienstort_PLZ", "Dienstort – PLZ", "Text"),
     spalte("Dienstort_Ort", "Dienstort – Ort", "Text"),
     spalte("Zeitraum_von", "Abrechnungszeitraum von", "Date"),
     spalte("Zeitraum_bis", "Abrechnungszeitraum bis", "Date"),
+    # Seite Reisekorrektur: Jahr und Monat filtern nur die Liste darunter
+    # (Grist-Verknüpfung über die RefList, kein eigenes Widget).
+    spalte("Korrektur_Jahr", "Jahr", "Int"),
+    spalte("Korrektur_Monat", "Monat", "Choice", optionen={"choices": MONATE}),
+    spalte("Korrektur_Reisen", "Reisen in Jahr/Monat", "RefList:Reisen",
+           formel=KORREKTUR_REISEN),
 ]
 
 # Die beiden Pflichtzeilen, die setup.py in 'Stammziele' anlegt (nur Kürzel und
@@ -284,25 +313,68 @@ REISEN = [
 # bis die Abrechnungsstelle sie beim Prüfen einer Fahrt nachträgt; der
 # Sync-Mechanismus fasst diese Felder nie an. Aufbau bewusst analog zu STAMMZIELE
 # (gleiche Spalten Strasse/PLZ/Ort + zusammengesetzte Adresse-Formel).
+# Der Freitext ist die einzige Quelle: Schema "Bezeichnung, Straße Hausnummer,
+# PLZ Ort", Kommas oder Zeilenumbrüche trennen. Entscheidend ist die Position,
+# nicht die Zahl: das letzte Stück muss mit fünf Ziffern beginnen, das davor
+# ist die Straße (fünfstellige Hausnummern stören also nicht), alles davor die
+# Bezeichnung. Was nicht passt, gilt als unvollständig -- geraten wird nichts.
+# Korrigiert wird im Freitext der Reise, hier wird nichts eingetragen.
+# Kein "$" als Zeilenende im Muster -- Grist liest $… als Spaltenbezug.
+ZERLEGT = r"""
+import re
+teile = [t.strip() for t in re.split(r"[,\n]", $Label or "") if t.strip()]
+m = re.fullmatch(r"(\d{5})\s+(\S.*)", teile[-1]) if len(teile) >= 2 else None
+if not m:
+  return [$Label or "", "", "", ""]
+return [", ".join(teile[:-2]), teile[-2], m.group(1), m.group(2)]
+""".strip()
+
+LABEL = """
+r = $Reise
+if not r or getattr(r, $Slot):
+  return ""
+return getattr(r, $Slot + "_Text") or ""
+""".strip()
+
 EINZELZIELE = [
     spalte("Reise",   "Reise", "Ref:Reisen"),
     spalte("Slot",    "Ort-Feld", "Text"),
-    spalte("Label",   "Freitext (wie erfasst)", "Text"),
-    spalte("Strasse", "Straße und Hausnummer", "Text"),
-    spalte("PLZ",     "PLZ", "Text"),
-    spalte("Ort",     "Ort", "Text"),
+    # leer, sobald die Reise dort eine Auswahl hat oder der Freitext fehlt --
+    # solche Zeilen sind verwaist und erscheinen in keiner Ausgabe
+    spalte("Label",   "Freitext (wie erfasst)", "Text", formel=LABEL),
+    spalte("Zerlegt", "Freitext zerlegt", "Any", formel=ZERLEGT),
+    spalte("Bezeichnung", "Bezeichnung", "Text", formel="$Zerlegt[0]"),
+    spalte("Strasse", "Straße und Hausnummer", "Text", formel="$Zerlegt[1]"),
+    spalte("PLZ",     "PLZ", "Text", formel="$Zerlegt[2]"),
+    spalte("Ort",     "Ort", "Text", formel="$Zerlegt[3]"),
     spalte("Adresse", "Vollständige Adresse", "Text",
            formel='", ".join(x for x in [$Strasse, ($PLZ + " " + $Ort).strip()] if x)'),
     spalte("Datum",   "Reisedatum", "Date", formel="$Reise.Datum"),
+    # speist den Hinweis in der Reisekorrektur
+    spalte("Anschrift_fehlt", "Anschrift fehlt", "Bool",
+           formel="bool($Label) and not ($Strasse and $PLZ and $Ort)"),
 ]
 
 def einzelziele_sync_spalten():
     """Je Ort-Slot eine unsichtbare Formelspalte auf Reisen (kein Eingabefeld,
-    taucht daher nie im Formular auf). Braucht die Tabelle Einzelziele -- erst
-    nach deren Anlage aufrufen."""
+    taucht daher nie im Formular auf), dazu Warnung und Hinweis für
+    unvollständige Anschriften. Braucht die Tabelle Einzelziele -- erst nach
+    deren Anlage aufrufen."""
+    paare = ", ".join(f'("{ORT_LABEL[s]}", ${s}_Sync)' for s in ORT_SLOTS)
+    fehlt = (f"fehlt = [(name, z.Label) for name, z in [{paare}] "
+             f"if z and z.Anschrift_fehlt]\n")
     return [spalte(f"{sid}_Sync", f"{ORT_LABEL[sid]} – Einzelziel-Sync", "Ref:Einzelziele",
                     formel=SYNC(sid))
-            for sid in ORT_SLOTS]
+            for sid in ORT_SLOTS] + [
+        # Liste der Reisekorrektur: nur das Zeichen, der Text steht in der Karte
+        spalte("Anschrift_Warnung", "⚠️", "Text",
+               formel=fehlt + 'return "⚠️" if fehlt else ""'),
+        spalte("Anschrift_Hinweis", "Hinweis zur Anschrift", "Text",
+               formel=fehlt + 'if not fehlt:\n  return ""\n'
+                      'return ("Anschrift unvollständig bei " + "; ".join('
+                      'n + ": „" + t.replace("\\n", ", ") + "“" for n, t in fehlt)'
+                      ' + ". Bitte im Freitext so eintragen: Bezeichnung, Straße Hausnummer, PLZ Ort.")'),
+    ]
 
 def einzelziele_aufraeumen():
     """Entfernt Einzelziel-Zeilen, deren Reise gelöscht, deren Freitext geleert
@@ -420,10 +492,14 @@ def ort_anzeige_setzen():
 HILFSSPALTEN = {
     "Reisen": ["Datum_bis", "KM_gesamt", "Abwesenheit_min", "Rest_min"]
               + [f"{s}_Sync" for s in ORT_SLOTS],
-    "Einzelziele": ["Reise", "Slot", "Adresse"],
+    "Einzelziele": ["Reise", "Slot", "Zerlegt", "Adresse", "Anschrift_fehlt"],
     # Adresse ist wie in Stammziele nur die zusammengesetzte Formel aus
     # Strasse/PLZ/Ort -- die Fachkraft trägt in den Einzelfeldern ein.
     "Stammziele": ["Adresse"],
+    # Zeitraum nur auf 'Ausdruck', Korrektur_* nur auf 'Reisekorrektur' --
+    # beide Seiten nimmt hilfsspalten_ausblenden() aus.
+    "Einstellungen": ["Zeitraum_von", "Zeitraum_bis", "Korrektur_Jahr", "Korrektur_Monat",
+                      "Korrektur_Reisen"],
 }
 
 
@@ -440,12 +516,15 @@ def hilfsspalten_ausblenden():
         if not treffer:
             continue
         tid, raw = treffer[0]["id"], treffer[0]["rawViewSectionRef"]
+        frei = ",".join(str(v["id"]) for n in ("Ausdruck", KORREKTUR_SEITE)
+                        for v in seite_suchen(n)) or "0"
         # rawViewSectionRef ist die interne "Raw Data"-Ansicht -- Grist
         # verweigert das Entfernen von Feldern dort (jede Spalte muss dort
         # vollständig bleiben); ausgeblendet wird nur in echten Grid-/
         # Card-Ansichten (Reisen-Seite, Einzelziele-Seite, Record-Card-Popup).
         for sek in sql(f"select id from _grist_Views_section "
-                       f"where tableRef = {tid} and parentKey <> 'form' and id <> {raw}"):
+                       f"where tableRef = {tid} and parentKey <> 'form' and id <> {raw} "
+                       f"and parentId not in ({frei})"):
             felder = sql(f"select f.id, c.colId from _grist_Views_section_field f "
                          f"join _grist_Tables_column c on c.id = f.colRef "
                          f"where f.parentId = {sek['id']}")
@@ -550,7 +629,7 @@ def zeitraum_widget():
         print("  Zeitraum-Widget: Tabelle 'Einstellungen' fehlt — übersprungen")
         return
     et = et[0]["id"]
-    seite = sql("select id from _grist_Views where name = 'Ausdruck'")
+    seite = seite_suchen("Ausdruck")
 
     if seite:
         vid = seite[0]["id"]
@@ -589,13 +668,13 @@ def zeitraum_widget():
 # Reihenfolge = Reihenfolge auf der Ausdruck-Seite. S1/S2, Vermerke und
 # Ortsverzeichnis stecken zusammen in einer Datei (ausdruck.html) -- ein
 # Widget statt drei, ein Grist-Fetch statt drei. Das Fahrtenbuch steht in
-# fahrtenbuch-preview.html (Vorbereitung, noch kein Widget). Schnittversion und
-# Routenlinks bleiben eigenständig, sie sind kein Bestandteil der
-# Standardausgabe (Arbeitswerkzeuge, keine Druckformulare).
+# fahrtenbuch-preview.html (Vorbereitung, noch kein Widget). Die Schnittversion
+# bleibt eigenständig, sie ist kein Bestandteil der Standardausgabe.
+# Routenlinks gibt es nur noch in der Prüfliste -- ein früheres Widget hier
+# entfernt ausgabe_widgets() beim nächsten Lauf.
 AUSGABE_WIDGETS = [
     ("Reisekostenabrechnung",        "ausdruck.html"),
-    ("Fahrtenbuch (Schnittversion)", "fahrtenbuch.html"),
-    ("Routenlinks (Google Maps)",    "routenlinks.html"),
+    ("Fahrtenbuch",                  "fahrtenbuch.html"),
 ]
 
 # Die Prüfliste liegt bewusst NICHT auf der Ausdruck-Seite, sondern auf einer
@@ -637,7 +716,7 @@ def pruefliste_widget():
 
     Idempotent: ist die Seite mit dem Widget da, passiert nichts."""
     url = AUSGABE_BASIS_URL + PRUEFLISTE[1]
-    seite = sql(f"select id from _grist_Views where name = '{PRUEFLISTE[0]}'")
+    seite = seite_suchen(PRUEFLISTE[0])
 
     if seite:
         vid = seite[0]["id"]
@@ -673,7 +752,7 @@ def ausgabe_widgets():
     mehr in AUSGABE_WIDGETS steht (z. B. nach einem Zusammenlegen wie hier),
     werden entfernt. Abgleich anhand der URL, nicht des Titels -- ein im
     Editor umbenanntes Widget bleibt unangetastet, solange die URL passt."""
-    seite = sql("select id from _grist_Views where name = 'Ausdruck'")
+    seite = seite_suchen("Ausdruck")
     et = sql("select id from _grist_Tables where tableId = 'Einstellungen'")
     if not (seite and et):
         print("  Ausgabe-Widgets: Seite 'Ausdruck' oder Tabelle fehlt — übersprungen")
@@ -724,7 +803,7 @@ def ausdruck_layout():
     im Normalfall genau einmal, beim Einrichten eines frischen Dokuments --
     ein neu ergaenztes AUSGABE_WIDGETS-Widget zieht aber automatisch nach,
     weil dann noch nicht 'alle' im Layout stehen."""
-    seite = sql("select id from _grist_Views where name = 'Ausdruck'")
+    seite = seite_suchen("Ausdruck")
     if not seite:
         print("  Ausdruck-Layout: Seite fehlt -- übersprungen")
         return
@@ -812,17 +891,17 @@ def formelfehler_melden():
         print("  Formeln: keine Fehlerzellen")
 
 
-# Seite zum Korrigieren einer erfassten Reise ohne Tabellenansicht: links das
-# Auswahl-Widget (Datum per Browser-Kalender, darunter die Reisen des Tages),
+# Seite zum Korrigieren einer erfassten Reise: oben die Karte mit
+# Einstellungen!Korrektur_Jahr/_Monat (wie der Abrechnungszeitraum auf
+# 'Ausdruck'), darunter links die Reisen dieses Zeitraums (nur Datum),
 # rechts die gewählte Reise als eine Karte -- Felder und Paare wie im
-# Formular, ohne Rechenspalten. Mehrere kleine Karten waren im Test
-# unübersichtlicher als eine. Das Grist-Kalender-Widget bot trotz Lesezugriff
-# Ziehen an; das eigene Widget kann nur lesen und auswählen.
+# Formular, ohne Rechenspalten.
+# Verworfen: eigenes Auswahl-Widget (zu aufwendig), vier Einzelkarten
+# (unübersichtlich), Grist-Kalender (bot trotz Lesezugriff Verschieben an).
 KORREKTUR_SEITE = "Reisekorrektur"
-KORREKTUR_AUSWAHL = "reiseauswahl.html"
 KORREKTUR_KARTE = [
     ("Datum", "Datum_Ende"), ("Beginn", "Ende"), ("KM_Beginn", "KM_Ende"),
-    ("Umweg_privat",),
+    ("Umweg_privat",), ("Anschrift_Hinweis",),
     *[(s, f"{s}_Text") for s in ORT_SLOTS],
     ("Tagegeld_beantragt",), ("Min_Dienststaette", "Min_Dienstort", "Min_privat_Abzug"),
     ("OePNV", "Nebenkosten"), ("Uebernachtung", "Verpflegung"), ("Mitnahme_Personen",),
@@ -830,28 +909,106 @@ KORREKTUR_KARTE = [
 ]
 
 
-def reisekorrektur_seite():
-    """Legt die Seite KORREKTUR_SEITE an. Idempotent: existiert sie, passiert
-    nichts -- eine im Editor angepasste Karte bleibt also erhalten."""
-    if sql(f"select id from _grist_Views where name = '{KORREKTUR_SEITE}'"):
-        print(f"  Seite '{KORREKTUR_SEITE}': vorhanden")
-        return
-    tid = sql("select id from _grist_Tables where tableId = 'Reisen'")[0]["id"]
-    col = {c["colId"]: c["id"] for c in
-           sql(f"select id, colId from _grist_Tables_column where parentId = {tid}")}
+def spalten_ids(tabelle):
+    tid = sql(f"select id from _grist_Tables where tableId = '{tabelle}'")[0]["id"]
+    return tid, {c["colId"]: c["id"] for c in
+                 sql(f"select id, colId from _grist_Tables_column where parentId = {tid}")}
 
-    neu = api("POST", "/apply", [["CreateViewSection", tid, 0, "custom", None, None]]
-              )["retValues"][0]
-    vid, auswahl = neu["viewRef"], neu["sectionRef"]
+
+def reisekorrektur_seite():
+    """Legt die Seite KORREKTUR_SEITE an: oben die Datumskarte, darunter links
+    (1/3) die Liste der Reisen bis zu diesem Datum, neueste oben, rechts (2/3)
+    die Karte der in der Liste gewählten Reise. Eine ältere Fassung ohne Liste
+    wird ergänzt, die vorhandene Reisen-Karte bleibt. Sonst idempotent:
+    eine im Editor angepasste Seite bleibt, wie sie ist."""
+    et, ecol = spalten_ids("Einstellungen")
+    rt, rcol = spalten_ids("Reisen")
+    seite = seite_suchen(KORREKTUR_SEITE)
+    if seite:
+        vid = seite[0]["id"]
+        da = {(r["tableRef"], r["parentKey"]): r["id"] for r in sql(
+            f"select id, tableRef, parentKey from _grist_Views_section where parentId = {vid}")}
+        if (rt, "record") in da:
+            print(f"  Seite '{KORREKTUR_SEITE}': vorhanden")
+            return
+        datum, karte = da.get((et, "single")), da.get((rt, "single"))
+    else:
+        neu = api("POST", "/apply", [["CreateViewSection", et, 0, "single", None, None]]
+                  )["retValues"][0]
+        vid, datum, karte = neu["viewRef"], neu["sectionRef"], None
+    datum = datum or api("POST", "/apply", [["CreateViewSection", et, vid, "single", None, None]]
+                         )["retValues"][0]["sectionRef"]
+    liste = liste_anlegen(vid, "Reisen", ["Datum", "Anschrift_Warnung"], ["-Datum", "-Beginn"])
+    karte = karte or karte_anlegen(vid, "Reisen", KORREKTUR_KARTE)
+
+    filter_karte(datum, ecol)
+    api("POST", "/apply", [
+        ["UpdateRecord", "_grist_Views", vid, {"name": KORREKTUR_SEITE, "layoutSpec": json.dumps(
+            {"children": [{"leaf": datum, "size": 16},
+                          {"size": 118, "children": [{"leaf": liste, "size": 1},
+                                                     {"leaf": karte, "size": 2}]}],
+             "collapsed": []})}],
+        ["UpdateRecord", "_grist_Views_section", datum, {"title": "Filter"}],
+        ["UpdateRecord", "_grist_Views_section", liste,
+         {"title": "Reisen", "linkSrcSectionRef": datum,
+          "linkSrcColRef": ecol["Korrektur_Reisen"], "linkTargetColRef": 0}],
+        ["UpdateRecord", "_grist_Views_section", karte,
+         {"title": "Reise bearbeiten", "linkSrcSectionRef": liste,
+          "linkSrcColRef": 0, "linkTargetColRef": 0}],
+    ])
+    print(f"  Seite '{KORREKTUR_SEITE}': eingerichtet (View {vid})")
+
+
+def filter_karte(sec, ecol):
+    """Jahr und Monat nebeneinander in Karte `sec`. Felder ersetzen statt
+    filtern: Grist übernimmt nicht zuverlässig alle Spalten in eine neue
+    Karte (ein neues Feld fehlte im Test)."""
+    weg = [f["id"] for f in sql(f"select id from _grist_Views_section_field "
+                                f"where parentId = {sec}")]
+    ids = api("POST", "/apply", [
+        ["BulkRemoveRecord", "_grist_Views_section_field", weg],
+        ["BulkAddRecord", "_grist_Views_section_field", [None, None],
+         {"parentId": [sec, sec], "parentPos": [1, 2],
+          "colRef": [ecol["Korrektur_Jahr"], ecol["Korrektur_Monat"]]}],
+    ])["retValues"][1]
+    api("POST", "/apply", [["UpdateRecord", "_grist_Views_section", sec, {"layoutSpec": json.dumps(
+        {"children": [{"children": [{"leaf": i} for i in ids]}]})}]])
+
+
+def liste_anlegen(vid, tabelle, spalten, sortierung):
+    """Schmale Tabelle auf Seite `vid` zum Auswählen, rechts daneben steht die
+    Karte zum Bearbeiten. Möglichst nur Datenspalten -- eine Rechenspalte lädt
+    in einer Tabelle zum Bearbeiten der Formel ein (Ausnahme: das ⚠️ der
+    Reisekorrektur). `sortierung`: Spalten-Ids, ein
+    '-' davor sortiert absteigend."""
+    tid, col = spalten_ids(tabelle)
+    liste = api("POST", "/apply", [["CreateViewSection", tid, vid, "record", None, None]]
+                )["retValues"][0]["sectionRef"]
+    weg = [f["id"] for f in sql(f"select id from _grist_Views_section_field "
+                                f"where parentId = {liste}")]
+    sort = [-col[c[1:]] if c.startswith("-") else col[c] for c in sortierung]
+    api("POST", "/apply", [
+        ["BulkRemoveRecord", "_grist_Views_section_field", weg],
+        ["BulkAddRecord", "_grist_Views_section_field", [None] * len(spalten),
+         {"parentId": [liste] * len(spalten), "colRef": [col[c] for c in spalten],
+          "parentPos": list(range(1, len(spalten) + 1))}],
+        ["UpdateRecord", "_grist_Views_section", liste, {"sortColRefs": json.dumps(sort)}],
+    ])
+    return liste
+
+
+def karte_anlegen(vid, tabelle, reihen):
+    """Karte auf Seite `vid`; jede Reihe in `reihen` ist eine Zeile der Karte,
+    mehrere Spalten darin stehen nebeneinander."""
+    tid, col = spalten_ids(tabelle)
     karte = api("POST", "/apply", [["CreateViewSection", tid, vid, "single", None, None]]
                 )["retValues"][0]["sectionRef"]
-
     # Grist legt in der Karte alle sichtbaren Spalten an -- ersetzen.
     # Position: Freitext genau hinter seine Auswahl (+0.5), wie es
     # reihenfolge_ordnen() ohnehin erzwingen würde.
     alt = [f["id"] for f in sql(f"select id from _grist_Views_section_field "
                                 f"where parentId = {karte}")]
-    spalten = [c for reihe in KORREKTUR_KARTE for c in reihe]
+    spalten = [c for reihe in reihen for c in reihe]
     pos, i = [], 0
     for c in spalten:
         if c.endswith("_Text"):
@@ -868,40 +1025,185 @@ def reisekorrektur_seite():
     fid = iter(ids)
     layout = {"children": [{"leaf": next(fid)} if len(r) == 1 else
                            {"children": [{"leaf": next(fid)} for _ in r]}
-                           for r in KORREKTUR_KARTE]}
+                           for r in reihen]}
+    api("POST", "/apply", [["UpdateRecord", "_grist_Views_section", karte,
+                            {"layoutSpec": json.dumps(layout)}]])
+    return karte
 
-    options = {"customView": json.dumps({
-        "mode": "url", "url": AUSGABE_BASIS_URL + KORREKTUR_AUSWAHL, "widgetDef": None,
-        "access": "read table", "pluginId": "", "sectionId": "",
-        "renderAfterReady": False, "widgetId": None,
-        "widgetOptions": None, "columnsMapping": None})}
-    api("POST", "/apply", [
-        ["UpdateRecord", "_grist_Views", vid, {"name": KORREKTUR_SEITE, "layoutSpec": json.dumps(
-            {"children": [{"children": [{"leaf": auswahl, "size": 30},
-                                        {"leaf": karte, "size": 70}]}], "collapsed": []})}],
-        ["UpdateRecord", "_grist_Views_section", auswahl,
-         {"title": "Reise wählen", "options": json.dumps(options)}],
-        ["UpdateRecord", "_grist_Views_section", karte,
-         {"title": "Reise bearbeiten", "layoutSpec": json.dumps(layout),
-          "linkSrcSectionRef": auswahl, "linkSrcColRef": 0, "linkTargetColRef": 0}],
-    ])
-    print(f"  Seite '{KORREKTUR_SEITE}' angelegt (View {vid})")
+
+# Seiten nach dem Muster der Reisekorrektur: links (1/3) eine schmale Liste
+# zum Auswählen, rechts (2/3) die Karte zum Bearbeiten. Eine Bearbeitungs-
+# ansicht je Seite statt Liste und Karte, die beide alles ändern können.
+# (Seite, Tabelle, Listenspalten, Sortierung, Kartenreihen, Titel Liste, Titel Karte)
+AUSWAHL_SEITEN = [
+    ("Stammziele", "Stammziele", ["Kuerzel", "Name"], ["Kuerzel"],
+     [("Kuerzel", "Name"), ("Strasse",), ("PLZ", "Ort")],
+     "Stammziele", "Ziel bearbeiten"),
+]
+
+
+def auswahl_seiten():
+    """Baut die AUSWAHL_SEITEN um. Idempotent: hat die Seite schon eine mit
+    der Liste verknüpfte Karte, bleibt sie, wie sie ist."""
+    for name, tabelle, spalten, sortierung, reihen, t_liste, t_karte in AUSWAHL_SEITEN:
+        treffer = seite_suchen(name)
+        if not treffer:
+            print(f"  Seite '{name}': fehlt -- übersprungen")
+            continue
+        vid = treffer[0]["id"]
+        da = sql(f"select id, parentKey, linkSrcSectionRef from _grist_Views_section "
+                 f"where parentId = {vid}")
+        listen = {s["id"] for s in da if s["parentKey"] == "record"}
+        if any(s["parentKey"] == "single" and s["linkSrcSectionRef"] in listen for s in da):
+            print(f"  Seite '{name}': vorhanden")
+            continue
+        liste = liste_anlegen(vid, tabelle, spalten, sortierung)
+        karte = karte_anlegen(vid, tabelle, reihen)
+        api("POST", "/apply", [
+            *[["RemoveRecord", "_grist_Views_section", s["id"]] for s in da],
+            ["UpdateRecord", "_grist_Views", vid, {"layoutSpec": json.dumps(
+                {"children": [{"children": [{"leaf": liste, "size": 1},
+                                            {"leaf": karte, "size": 2}]}],
+                 "collapsed": []})}],
+            ["UpdateRecord", "_grist_Views_section", liste, {"title": t_liste}],
+            ["UpdateRecord", "_grist_Views_section", karte,
+             {"title": t_karte, "linkSrcSectionRef": liste,
+              "linkSrcColRef": 0, "linkTargetColRef": 0}],
+        ])
+        print(f"  Seite '{name}': Liste + Karte eingerichtet")
+
+
+# Titel und Text hinter dem Info-Symbol je Widget. Schlüssel: (Seite, Tabelle,
+# Widget-Art) -- bei Custom-Widgets der Dateiname statt der Art, weil alle
+# an 'Einstellungen' hängen. Wird bei jedem Lauf gesetzt; eine Änderung im
+# Editor gehört deshalb hierher.
+WIDGET_TEXTE = {
+    ("Ausdruck", "Einstellungen", "single"): ("Abrechnungszeitraum",
+        "Von und bis der Abrechnung. Es zählen die Reisen, die in diesem "
+        "Zeitraum beginnen."),
+    ("Ausdruck", "Einstellungen", "ausdruck.html"): ("Reisekostenabrechnung",
+        "S1, S2, Vermerke und Ortsverzeichnis für den Zeitraum oben. Nach "
+        "neuen oder geänderten Reisen zuerst Aktualisieren, dann Drucken."),
+    ("Ausdruck", "Einstellungen", "fahrtenbuch.html"): ("Fahrtenbuch",
+        "Das Fahrtenbuch zum Ausschneiden und Einkleben. Vor dem Drucken "
+        "Aktualisieren."),
+    ("Stammziele", "Stammziele", "record"): ("Stammziele",
+        "Ziele, die regelmäßig angefahren werden. Das Kürzel steht im Formular "
+        "zur Auswahl. WO und KV bitte nicht löschen."),
+    ("Stammziele", "Stammziele", "single"): ("Ziel bearbeiten",
+        "Das links ausgewählte Ziel. Straße, PLZ und Ort vollständig eintragen, "
+        "sonst fehlt die Anschrift im Ortsverzeichnis und der Routenlink."),
+    ("Einstellungen", "Einstellungen", "single"): ("Persönliche Angaben",
+        "Name, Organisationseinheit, Wohn- und Dienstanschrift. Stehen im Kopf "
+        "von S1 und S2. Einmal eintragen, bei Änderungen anpassen. Der "
+        "Abrechnungszeitraum wird auf der Seite Ausdruck gesetzt."),
+    ("Formularverwaltung", "Reisen", "form"): ("Formular",
+        "Das Formular, mit dem die Reisen erfasst werden. Über Veröffentlichen "
+        "entsteht der Link fürs Handy. Die Seite nicht löschen, sonst "
+        "funktioniert der Link nicht mehr."),
+    ("Prüfliste", "Einstellungen", "pruefliste.html"): ("Prüfliste",
+        "Jede Reise des Zeitraums in einer Zeile, mit allem aus S1, Vermerken, "
+        "Ortsverzeichnis und Fahrtenbuch. Für die Zeiterfassungsstelle."),
+    ("Reisekorrektur", "Einstellungen", "single"): ("Filter",
+        "Jahr eintragen und Monat wählen. Wirkt nur auf die Liste darunter. "
+        "Ohne Jahr gilt das laufende, ohne Monat das ganze Jahr."),
+    ("Reisekorrektur", "Reisen", "record"): ("Reisen",
+        "Die Reisen im gewählten Jahr bzw. Monat, die neueste oben. Reise "
+        "anklicken, rechts bearbeiten. ⚠️ heißt: Bei einem frei eingetragenen "
+        "Ort fehlt die vollständige Anschrift."),
+    ("Reisekorrektur", "Reisen", "single"): ("Reise bearbeiten",
+        "Die links gewählte Reise. Was hier geändert wird, gilt sofort."),
+}
+
+
+# Nach Häufigkeit: oft Gebrauchtes oben, Einrichtung unten.
+SEITEN_REIHENFOLGE = ["Ausdruck", "Reisekorrektur", "Stammziele",
+                      "Prüfliste", "Einstellungen", "Formularverwaltung"]
+
+
+def seiten_ordnen():
+    """Bringt die Seitenliste in SEITEN_REIHENFOLGE; nicht genannte Seiten
+    folgen dahinter. Idempotent."""
+    rang = {n: i for i, n in enumerate(SEITEN_REIHENFOLGE)}
+    seiten = sql("select p.id, p.pagePos, v.name from _grist_Pages p "
+                 "join _grist_Views v on v.id = p.viewRef")
+    ist = [p["id"] for p in sorted(seiten, key=lambda p: p["pagePos"])]
+    seiten.sort(key=lambda p: (rang.get(ohne_icon(p["name"]), len(rang)), p["pagePos"]))
+    # Grist rechnet pagePos selbst um -- verglichen wird nur die Reihenfolge.
+    aktionen = [] if ist == [p["id"] for p in seiten] else [
+        ["UpdateRecord", "_grist_Pages", p["id"], {"pagePos": i + 1}]
+        for i, p in enumerate(seiten)]
+    if aktionen:
+        api("POST", "/apply", aktionen)
+    print(f"  Seiten: {len(aktionen)} umsortiert")
+
+
+def table1_entfernen():
+    """Ein neues Grist-Dokument bringt eine leere 'Table1' mit. Nur leer
+    entfernen -- hat jemand etwas hineingeschrieben, bleibt sie."""
+    da = {t["id"] for t in api("GET", "/tables")["tables"]}
+    if "Table1" in da and not api("GET", "/tables/Table1/records")["records"]:
+        api("POST", "/apply", [["RemoveTable", "Table1"]])
+        print("  Table1: leer, entfernt")
+
+
+def seiten_entfernen():
+    """Entfernt die Seiten 'Reisen' und 'Einzelziele'; beide Tabellen bleiben
+    unter Raw Data vollständig erhalten. Reisen wird auf KORREKTUR_SEITE
+    bearbeitet, Einzelziele entsteht aus dem Freitext und wird dort über den
+    Freitext korrigiert. Idempotent: ohne Seite passiert nichts."""
+    for name in ("Reisen", "Einzelziele"):
+        seite = seite_suchen(name)
+        if seite:
+            api("POST", "/apply", [["RemoveView", seite[0]["id"]]])
+        print(f"  Seite '{name}': {'entfernt' if seite else 'nicht vorhanden'}")
+
+
+def widget_texte_setzen():
+    """Setzt WIDGET_TEXTE an alle passenden Widgets. Idempotent; Widgets
+    ohne Eintrag bleiben unberührt."""
+    aktionen = []
+    for r in sql("select s.id, v.name, t.tableId, s.parentKey, s.options, s.title, s.description "
+                 "from _grist_Views_section s join _grist_Views v on v.id = s.parentId "
+                 "join _grist_Tables t on t.id = s.tableRef"):
+        art = r["parentKey"]
+        if art == "custom":
+            try:
+                cv = json.loads(json.loads(r["options"] or "{}").get("customView") or "{}")
+                art = (cv.get("url") or "").rsplit("/", 1)[-1]
+            except (ValueError, TypeError):
+                continue
+        soll = WIDGET_TEXTE.get((ohne_icon(r["name"]), r["tableId"], art))
+        if soll and soll != (r["title"], r["description"]):
+            aktionen.append(["UpdateRecord", "_grist_Views_section", r["id"],
+                             {"title": soll[0], "description": soll[1]}])
+    if aktionen:
+        api("POST", "/apply", aktionen)
+    print(f"  Titel/Beschreibungen: {len(aktionen)} gesetzt")
+
+
+EINSTELLUNGEN_KARTE = [
+    ("Vorname", "Name"), ("Organisationseinheit",),
+    ("Wohnort_Strasse",), ("Wohnort_PLZ", "Wohnort_Ort"),
+    ("Dienstort_Strasse",), ("Dienstort_PLZ", "Dienstort_Ort"),
+]
 
 
 def einstellungen_karte():
     """Ersetzt die Tabellenansicht auf der eigenen 'Einstellungen'-Seite durch
     ein Card-Widget: eine Zeile als Formular gelesen ist unmissverständlich,
-    als Tabellenzeile wirkt sie wie eine von vielen. Idempotent: existiert
-    bereits eine Card-Section auf der Seite, passiert nichts."""
-    seite = sql("select id from _grist_Views where name = 'Einstellungen'")
+    als Tabellenzeile wirkt sie wie eine von vielen. Felder nach
+    EINSTELLUNGEN_KARTE angeordnet. Idempotent: existiert bereits eine
+    angeordnete Karte auf der Seite, passiert nichts."""
+    seite = seite_suchen("Einstellungen")
     et = sql("select id from _grist_Tables where tableId = 'Einstellungen'")
     if not (seite and et):
         print("  Einstellungen-Karte: Seite oder Tabelle fehlt -- übersprungen")
         return
     vid, et = seite[0]["id"], et[0]["id"]
 
-    if sql(f"select id from _grist_Views_section "
-           f"where parentId = {vid} and tableRef = {et} and parentKey = 'single'"):
+    if sql(f"select id from _grist_Views_section where parentId = {vid} "
+           f"and tableRef = {et} and parentKey = 'single' and layoutSpec <> ''"):
         print("  Einstellungen-Karte: vorhanden")
         return
 
@@ -909,8 +1211,7 @@ def einstellungen_karte():
         f"select id from _grist_Views_section "
         f"where parentId = {vid} and tableRef = {et} and parentKey <> 'custom'")]
 
-    sec = api("POST", "/apply",
-              [["CreateViewSection", et, vid, "single", None, None]])["retValues"][0]["sectionRef"]
+    sec = karte_anlegen(vid, "Einstellungen", EINSTELLUNGEN_KARTE)
     # Nur die ersetzten Tabellen-Sections fallen aus dem Layout; alles andere
     # auf der Seite bleibt stehen. Vorher wurde die layoutSpec plattgemacht --
     # ein zweites Widget auf der Seite war danach unsichtbar (die Section blieb
@@ -1018,6 +1319,40 @@ def selbsttest():
     assert ohne_blaetter(baum, {22, 23}) == [{"size": 16, "leaf": 15}]   # leerer Ast faellt weg
     assert ohne_blaetter(baum, set()) == baum
 
+    # Reisekorrektur-Filter: Jahr leer = laufendes Jahr, Monat leer = ganzes Jahr.
+    from datetime import date
+    reisen = [type("R", (), {"Datum": d})() for d in
+              (date(2025, 12, 3), date(2026, 3, 1), date(2026, 10, 2), None)]
+    def filter_lauf(jahr, monat):
+        rec = type("E", (), {"Korrektur_Jahr": jahr, "Korrektur_Monat": monat})()
+        raum = {"Reisen": type("T", (), {"all": reisen}), "TODAY": lambda: date(2026, 10, 14)}
+        exec("def f(rec):\n" + "\n".join("  " + z for z in
+             KORREKTUR_REISEN.replace("$", "rec.").splitlines()), raum)
+        return [r.Datum for r in raum["f"](rec)]
+    assert filter_lauf(None, None) == [date(2026, 3, 1), date(2026, 10, 2)]
+    assert filter_lauf(2025, None) == [date(2025, 12, 3)]
+    assert filter_lauf(2026, "Oktober") == [date(2026, 10, 2)]
+    assert filter_lauf(None, "Mai") == []
+
+    # Freitext zerlegen: Position entscheidet, nicht die Zahl.
+    def zerlegt(text):
+        return lauf(ZERLEGT, type("E", (), {"Label": text})())
+    for text, soll in [
+        ("Café Mokka, Bahnhofstr. 7, 12345 Musterstadt",
+         ["Café Mokka", "Bahnhofstr. 7", "12345", "Musterstadt"]),
+        ("Café Mokka\nBahnhofstr. 7, 12345 Musterstadt",
+         ["Café Mokka", "Bahnhofstr. 7", "12345", "Musterstadt"]),
+        ("Kita Sonnenschein, Haus B, Lindenweg 3, 12345 Musterstadt",
+         ["Kita Sonnenschein, Haus B", "Lindenweg 3", "12345", "Musterstadt"]),
+        ("Industriestr. 10234, 12345 Musterstadt",
+         ["", "Industriestr. 10234", "12345", "Musterstadt"]),
+        ("Café Mokka, Bahnhofstr. 7 12345 Musterstadt",       # Komma fehlt
+         ["Café Mokka, Bahnhofstr. 7 12345 Musterstadt", "", "", ""]),
+        ("Café Mokka Musterstadt", ["Café Mokka Musterstadt", "", "", ""]),
+        ("", ["", "", "", ""]),
+    ]:
+        assert zerlegt(text) == soll, (text, zerlegt(text))
+
     print(f"Selbsttest ok ({ZWISCHENZIELE} Zwischenziele)\n  Reiseweg: {weg}")
 
 
@@ -1045,8 +1380,8 @@ def tabellen_umbenennen():
 if __name__ == "__main__":
     print(f"Dokument {DOC} auf {URL}")
     tabellen_umbenennen()       # vor allem anderen -- sonst entstehen Doppel
-    for name, spalten in (("Stammziele", STAMMZIELE), ("Einstellungen", EINSTELLUNGEN), ("Reisen", REISEN)):
-        anlegen(name, spalten)      # Stammziele zuerst — Reisen verweist darauf
+    for name, spalten in (("Stammziele", STAMMZIELE), ("Reisen", REISEN), ("Einstellungen", EINSTELLUNGEN)):
+        anlegen(name, spalten)      # Reihenfolge = Ref-Abhängigkeiten
         formeln_angleichen(name, spalten)
 
     anlegen("Einzelziele", EINZELZIELE)              # braucht Reisen (Ref-Spalte)
@@ -1072,11 +1407,17 @@ if __name__ == "__main__":
     ausgabe_widgets()      # dito
     ausdruck_layout()      # dito; ordnet nur ein frisch eingerichtetes Dokument
     pruefliste_widget()    # eigene Seite, getrennt freigebbar
-    reisekorrektur_seite() # eigene Seite, Karte statt Tabelle
+    reisekorrektur_seite() # eigene Seite, Datumskarte + Reisen-Karte
+    auswahl_seiten()       # Stammziele: Liste + Karte
+    seiten_entfernen()     # erst wenn Reisekorrektur steht
+    table1_entfernen()
+    seiten_ordnen()
     layouts_aufraeumen()   # nach allem, was Sections anlegt oder entfernt
+    widget_texte_setzen()
 
     print(f"""
 Fertig. Rest in der Oberfläche:
-  1. Formular-Widget auf 'Reisen' anlegen — das Layout setzt formular.py
+  1. Seite 'Formularverwaltung' mit Formular-Widget auf Tabelle 'Reisen' anlegen
+     — das Layout setzt formular.py
   2. Formular veröffentlichen, dann 'Duplicate Document' — das ist die Vorlage
 """)

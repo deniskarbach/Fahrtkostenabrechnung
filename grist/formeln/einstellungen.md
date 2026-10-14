@@ -55,8 +55,9 @@ auch das Komma.
 ## Abrechnungszeitraum
 
 `Zeitraum_von` und `Zeitraum_bis` sind die einzigen Felder, die **pro
-Abrechnung** angefasst werden. Sie stehen deshalb zusätzlich als Karte oben auf
-der Seite `Ausdruck` — dort, wo gedruckt wird.
+Abrechnung** angefasst werden. Sie stehen deshalb nur als Karte oben auf der
+Seite `Ausdruck` — dort, wo gedruckt wird — und nicht in der Karte auf
+`Einstellungen`.
 
 Die Filterung selbst steht im Widget:
 

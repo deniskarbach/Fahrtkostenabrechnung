@@ -76,15 +76,16 @@ Formular, `Einzelziele` entsteht von selbst.
 
 | | Tabelle | Wozu sie da ist | Was hier zu tun ist |
 |---|---|---|---|
-| ✍️ | Einstellungen | Stammdaten der Person, eigene Wohn- und Dienstanschrift, Abrechnungszeitraum. Die **einzige** Stelle, an der persönliche Daten stehen | **Einrichten & pflegen.** Einmalig Name, Organisationseinheit, Anschriften; **pro Abrechnung** den Zeitraum setzen |
-| ✍️ | Stammziele | Stammziele mit Kürzel und vollständiger Adresse — speist die Auswahlliste im Formular, den Routenlink und die Legende auf dem Ausdruck | **Pflegen.** `WO` und `KV` sind Pflichtzeilen, ihre Adresse eintragen; neue regelmäßige Ziele ergänzen |
-| ✅ | Reisen | Eine Zeile je Dienstreise aus dem Formular, dazu alle Rechenspalten (Kilometer, Tagegeld-Stufe, Reiseweg, laufende Nummer, Routenlink) | **Nichts.** Korrigiert wird auf der Seite `Reisekorrektur` |
-| ✍️ | Reisekorrektur (Seite) | Links ein Datumsfeld mit Kalender und darunter die Reisen dieses Tages, rechts die gewählte Reise als Karte mit denselben Feldern wie im Formular. Die Auswahl links kann nichts ändern | **Datum wählen, Reise anklicken, rechts ändern.** Rechenspalten ziehen sofort nach |
-| ✍️ | Einzelziele | Die Einzelziele: sobald ein Ortsfeld als Freitext ausgefüllt wurde, entsteht hier automatisch eine Zeile | **Adresse nachtragen.** Straße/PLZ/Ort ergänzen, damit das Ortsverzeichnis vollständig ist |
-| 🖨️ | Ausdruck (Seite) | Abrechnungszeitraum und die Widgets Reisekostenabrechnung (S1/S2, Vermerke, Ortsverzeichnis), Fahrtenbuch zum Einkleben, Routenlinks (Google Maps) | **Zeitraum setzen, aktualisieren, drucken bzw. Route öffnen** |
+| ✍️ | Einstellungen | Stammdaten der Person, eigene Wohn- und Dienstanschrift. Die **einzige** Stelle, an der persönliche Daten stehen | **Einrichten & pflegen.** Einmalig Name, Organisationseinheit, Anschriften |
+| ✍️ | Stammziele | Stammziele mit Kürzel und vollständiger Adresse — speist die Auswahlliste im Formular, den Routenlink und die Legende auf dem Ausdruck | **Pflegen.** Links Ziel wählen, rechts ändern. `WO` und `KV` sind Pflichtzeilen, ihre Adresse eintragen; neue regelmäßige Ziele ergänzen |
+| ✅ | Reisen (nur Raw Data) | Eine Zeile je Dienstreise aus dem Formular, dazu alle Rechenspalten (Kilometer, Tagegeld-Stufe, Reiseweg, laufende Nummer, Routenlink). Keine eigene Seite | **Nichts.** Korrigiert wird auf der Seite `Reisekorrektur` |
+| ✍️ | Reisekorrektur (Seite) | Oben Jahr und Monat als Filter, darunter links die Reisen dieses Zeitraums (nur das Datum), rechts die gewählte Reise als Karte mit denselben Feldern wie im Formular | **Jahr/Monat wählen, Reise anklicken, rechts ändern.** Ohne Jahr gilt das laufende, ohne Monat das ganze Jahr. ⚠️ in der Liste: bei einem frei eingetragenen Ort fehlt die vollständige Anschrift, der Hinweis in der Karte sagt, wo |
+| ✅ | Einzelziele (nur Raw Data) | Je frei eingetragenem Ort eine Zeile, Bezeichnung und Anschrift aus dem Freitext zerlegt. Keine eigene Seite | **Nichts.** Unvollständige Anschriften zeigt die Reisekorrektur mit ⚠️ |
+| 🖨️ | Ausdruck (Seite) | Abrechnungszeitraum und die Widgets Reisekostenabrechnung (S1/S2, Vermerke, Ortsverzeichnis), Fahrtenbuch zum Einkleben. Der Zeitraum wird **nur hier** gesetzt | **Pro Abrechnung Zeitraum setzen, aktualisieren, drucken** |
 | 🖨️ | Prüfliste (eigene Seite) | Alles aus allen Blättern in einer Zeile je Reise — für die Zeiterfassungsstelle, die den Antrag final bearbeitet | **Nichts.** Getrennt freigebbar, siehe unten |
+| ⚙️ | Formularverwaltung (Seite, letzte) | Das Formular-Widget, über das jede Reise in die Tabelle `Reisen` geschrieben wird. Ohne diese Seite gibt es keinen Formularlink: die Veröffentlichung hängt an ihr | **Nur beim Einrichten:** Formular veröffentlichen, Link aufs Handy. Die Seite nicht löschen, sonst funktioniert der Link nicht mehr |
 
-✍️ von Hand pflegen · ✅ läuft automatisch · 🖨️ ausdrucken/unterschreiben
+✍️ von Hand pflegen · ✅ läuft automatisch · 🖨️ ausdrucken/unterschreiben · ⚙️ nur beim Einrichten
 
 **Automatisch berechnet und ausgegeben werden:**
 
@@ -113,7 +114,9 @@ gesetzte Beschriftungen und Layouts bleiben unangetastet.
 
 Danach bleiben zwei Handgriffe in der Oberfläche:
 
-1. Formular-Widget auf `Reisen` anlegen — das Layout setzt `formular.py`
+1. Seite `Formularverwaltung` mit einem Formular-Widget auf die Tabelle
+   `Reisen` anlegen und ans Ende der Seitenliste ziehen — das Layout setzt
+   `formular.py`
 2. Formular veröffentlichen, dann **Duplicate Document** — das ist die Vorlage
 
 ---
@@ -143,8 +146,13 @@ ist ein **Paar**:
 - **Freitext** daneben — für alles, was nicht in der Liste steht
 
 Ist die Auswahl gesetzt, gewinnt sie; der Freitext wird dann ignoriert.
-Einzelziele sind der Normalfall, nicht die Ausnahme — deshalb das Paar.
-Für jedes Freitext-Ziel entsteht automatisch eine Zeile in `Einzelziele`.
+
+Im Freitext steht **Bezeichnung, Straße Hausnummer, PLZ Ort**, getrennt durch
+Kommas oder Zeilenumbrüche, z. B. `Café Mokka, Bahnhofstr. 7, 12345
+Musterstadt`. Daraus entstehen Bezeichnung und Anschrift für Ortsverzeichnis
+und Routenlink — nachgetragen wird nichts. Das letzte Stück muss mit der
+fünfstelligen PLZ beginnen; was dem Schema nicht folgt, gilt als
+unvollständig und erscheint in der Reisekorrektur mit ⚠️.
 
 **3. Tagegeld**
 - Tagegeld beantragen? (Ja/Nein)
@@ -172,10 +180,9 @@ eindeutiger als eine Zeile in einer Tabelle.
 | Vorname, Name, Organisationseinheit | Kopfzeile jedes Ausdrucks |
 | Wohnort – Straße, PLZ, Ort | Kopfzeile („Wohnort") |
 | Dienstort – Straße, PLZ, Ort | Kopfzeile („Dienstort") |
-| Abrechnungszeitraum von / bis | **pro Abrechnung setzen** — bestimmt, welche Reisen ausgegeben werden |
 
-Der Abrechnungszeitraum steht zusätzlich als Karte oben auf der Seite
-`Ausdruck` — dort, wo gedruckt wird.
+Der Abrechnungszeitraum steht **nicht** hier, sondern nur als Karte oben auf
+der Seite `Ausdruck` — dort, wo gedruckt wird.
 
 **Eine Kontoverbindung wird nicht erfasst.** IBAN- und BIC-Kasten bleiben im
 S2-Vordruck stehen und werden, falls die Abrechnungsstelle sie überhaupt
@@ -190,7 +197,9 @@ braucht, von Hand ausgefüllt.
 ## Stammziele pflegen
 
 Die wiederkehrenden Ziele mit Kürzel und Adresse. Diese Liste ist die
-Auswahlliste im Formular und die Legende auf dem Ausdruck.
+Auswahlliste im Formular und die Legende auf dem Ausdruck. Aufbau wie auf
+`Reisekorrektur`: links die Liste (Kürzel, Name), rechts die Karte des
+gewählten Ziels zum Bearbeiten.
 
 | Spalte | Inhalt |
 |---|---|
@@ -199,7 +208,7 @@ Auswahlliste im Formular und die Legende auf dem Ausdruck.
 | Straße und Hausnummer, PLZ, Ort | speisen den Routenlink |
 | Vollständige Adresse | Formel, wird nicht eingetragen |
 
-`WO` (Wohnung) und `KV` (Dienststelle) legt `setup.py` als Pflichtzeilen an —
+`WO` (Wohnung) und `KV` (Dienststelle) sind als Pflichtzeilen schon angelegt —
 **ohne Adresse**. Die ist dort einmal nachzutragen, wie bei jedem anderen Ort
 auch.
 
@@ -213,20 +222,21 @@ Freitextfeld im Formular da. Es landet automatisch in `Einzelziele`.
 - **Abrechnungszeitraum** gesetzt? Er entscheidet, welche Reisen erscheinen.
 - **Aktualisieren** im Widget gedrückt? Eine neu erfasste Reise erreicht den
   Ausdruck nicht von selbst — siehe [Drucken](#drucken).
-- **Einzelziele** vollständig? Freitext-Ziele stehen zunächst ohne Straße und PLZ
-  auf der Seite `Einzelziele`; im Ortsverzeichnis bleibt die Adressspalte
-  sonst leer.
+- **Anschriften** vollständig? In der Reisekorrektur darf keine Reise ein ⚠️
+  tragen; sonst bleibt im Ortsverzeichnis die Adressspalte leer. Korrigiert
+  wird im Freitext der Reise.
 - **Kilometer** plausibel? Ein Zahlendreher im Tachostand ergibt 0 dienstliche
   Kilometer, keine negative Zahl — er fällt also nicht durch einen Fehlerwert
   auf, sondern durch eine auffällig niedrige Zahl. Eine `0` auf S1 ist nicht
   zwangsläufig ein Fehler: bei einer Fahrt, die vollständig als „Privater
   Umweg" erfasst wurde (z. B. eine reine Verwaltungsfahrt ohne
   erstattungsfähige Strecke), ist sie das erwartete, gedruckte Ergebnis.
-- Eine Korrektur geht auf der Seite `Reisekorrektur`: links das Datum wählen
-  (‹ › springen zur vorigen/nächsten Reise), die Reise anklicken, rechts
-  ändern. Beim Öffnen steht die jüngste Reise schon bereit. Alle
-  Rechenspalten ziehen sofort nach. Ein geändertes Datum nummeriert die
-  laufenden Nummern neu.
+- Eine Korrektur geht auf der Seite `Reisekorrektur`: oben Jahr eintragen
+  (mit **Enter** bestätigen) und Monat wählen — die Liste links zeigt dann
+  die Reisen dieses Zeitraums, die neueste oben. Ohne Jahr gilt das laufende,
+  ohne Monat das ganze Jahr. Der Filter wirkt nur auf diese Liste, nicht auf
+  den Ausdruck. Reise anklicken, rechts ändern. Alle Rechenspalten ziehen sofort nach. Ein
+  geändertes Datum nummeriert die laufenden Nummern neu.
 - Unbekannte Orte dort ins Freitextfeld schreiben, nicht über „+ neu“ in der
   Auswahlliste anlegen — sonst landet das Einzelziel dauerhaft in
   `Stammziele`.
@@ -239,15 +249,14 @@ Freitextfeld im Formular da. Es landet automatisch in `Einzelziele`.
 
 ## Drucken
 
-Auf der Seite `Ausdruck` liegen drei Widgets:
+Auf der Seite `Ausdruck` liegen zwei Widgets:
 
 | Widget | Inhalt |
 |---|---|
 | **Reisekostenabrechnung** | S1, S2, Vermerke und Ortsverzeichnis — alle Seiten in einem Druckauftrag |
-| **Fahrtenbuch (Schnittversion)** | das Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt |
-| **Routenlinks (Google Maps)** | keine Druckseite, sondern eine Arbeitsliste: je Reise ein klickbarer „Route"-Link, um die gefahrene Strecke in Google Maps nachzuvollziehen und zu prüfen |
+| **Fahrtenbuch** | das Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt |
 
-Die beiden Druck-Widgets haben oben eine Leiste mit zwei Knöpfen:
+Beide Widgets haben oben eine Leiste mit zwei Knöpfen:
 
 - **Drucken** — öffnet den Druckdialog. Grist versteckt „Widget drucken" sonst
   im Drei-Punkte-Menü.
@@ -259,10 +268,6 @@ Die beiden Druck-Widgets haben oben eine Leiste mit zwei Knöpfen:
 > erreicht ihn **nicht** von selbst. Vor dem Drucken einmal **Aktualisieren**
 > drücken.
 
-**Routenlinks** hat nur **Aktualisieren** — es gibt dort nichts zu drucken,
-nur Links zum Öffnen. Derselbe Hinweis gilt trotzdem: eine neu erfasste Reise
-erscheint erst nach einem Klick auf **Aktualisieren**.
-
 Was auf welchem Blatt landet:
 
 | Blatt | Kopf aus | Zeilen aus |
@@ -271,7 +276,6 @@ Was auf welchem Blatt landet:
 | Vermerke | Einstellungen | Reisen mit ausgefülltem Feld „Sonstige Informationen" |
 | Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
-| Routenlinks | — | Reisen im Zeitraum |
 
 **Spalte „Reiseweg" auf S1:** Der Vordruck verlangt dort nur die laufende
 Nummer, „bei Führung eines Fahrtenbuches" — genau das steht im Spaltenkopf,
@@ -314,7 +318,7 @@ ist. A4 quer, mit **Drucken** und **Aktualisieren**.
 
 ## "Einkleben" und Unterschreiben
 
-- **Fahrtenbuch (Schnittversion)** bei **100 %** ausdrucken — nicht „an
+- **Fahrtenbuch** bei **100 %** ausdrucken — nicht „an
   Seitengröße anpassen", sonst stimmen die Spaltenbreiten nicht.
 - Je Zeilenblock entstehen zwei Seiten: links die Spalten 1–6, rechts 7–15.
   Die Hinweiszeile über jeder Seite sagt, welche Kante auszuschneiden ist.

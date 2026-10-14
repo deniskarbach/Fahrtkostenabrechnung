@@ -282,7 +282,7 @@ const zahl = n => n > 0 ? String(n) : "";
 /* Die Route-Zelle braucht ein echtes <a href>, kein reiner Text -- deshalb
    hier NICHT html`` (das würde das Tag selbst escapen). Der Link steht
    zunächst als data-Attribut (durchläuft dort ganz normal esc()) und wird
-   danach per DOM-API zum <a>; siehe routenlinks.html, gleiches Muster. */
+   danach per DOM-API zum <a>. */
 function zeile(r) {
   return html`<tr>
     <td>${r.nr ?? ""}</td>
@@ -431,9 +431,9 @@ async function ausGrist() {
   }));
 
   const ausEinzelziele = zeilen(await grist.docApi.fetchTable("Einzelziele"))
-    .filter(a => imZeitraum(a.Datum))
+    .filter(a => a.Label && imZeitraum(a.Datum))
     .sort((a, b) => a.Datum - b.Datum)
-    .map(a => ({ kuerzel: tag(a.Datum), name: a.Label || "", adresse: a.Adresse || "" }));
+    .map(a => ({ kuerzel: tag(a.Datum), name: a.Bezeichnung ?? a.Label ?? "", adresse: a.Adresse || "" }));
 
   rendern(kopf, reisen.map(r => ({
       nr:    r.Lfd_Nr,

@@ -13,18 +13,16 @@ Das Fahrtenbuch (quer) ist herausgelöst und steht in
 Vorbereitung, noch kein Widget. Der Abschnitt [Fahrtenbuch](#fahrtenbuch)
 beschreibt diese Datei.
 
-Daneben stehen zwei eigenständige Widgets, kein Bestandteil der
+Daneben steht ein eigenständiges Widget, kein Bestandteil der
 Standardausgabe:
 [`ausgabe/fahrtenbuch.html`](../ausgabe/fahrtenbuch.html ':ignore')
-(das Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt) und
-[`ausgabe/routenlinks.html`](../ausgabe/routenlinks.html ':ignore') (Gegenstück
-zum Sheets-Blatt „GoogleMapsExport", siehe [unten](#routenlinks-google-maps)).
+(das Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt).
 
 Dazu [`ausgabe/pruefliste.html`](../ausgabe/pruefliste.html ':ignore') auf einer
 eigenen Seite: alles aus allen Blättern in einer Zeile je Reise, für die
 Zeiterfassungsstelle — siehe [unten](#prüfliste-zeiterfassungsstelle).
 
-Alle vier Dateien lassen sich direkt im Browser öffnen — dann rendern sie
+Alle drei Dateien lassen sich direkt im Browser öffnen — dann rendern sie
 erfundene Beispieldaten. Das ist die Arbeitsweise für Layoutänderungen ohne
 Grist.
 
@@ -36,7 +34,6 @@ Grist.
 | Vermerke | Einstellungen | Reisen im Zeitraum **mit** `Vermerk` |
 | Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
-| Routenlinks | — | Reisen im Zeitraum |
 | Prüfliste | Einstellungen | Reisen im Zeitraum + Stammziele/Einzelziele als Legende |
 
 ## Zeitraumfilter
@@ -228,63 +225,6 @@ mit 0:00. Die Zelle ist in 5,6 pt gesetzt und bricht nur am festen Umbruch:
 eine dritte Zeile würde die Zeile höher machen als ihr Gegenstück auf der
 linken Seite, und die beiden Hälften passten nicht mehr aneinander.
 
-## Routenlinks (Google Maps)
-
-Eigenes Widget, [`ausgabe/routenlinks.html`](../ausgabe/routenlinks.html ':ignore') --
-Gegenstück zum Sheets-Blatt
-[GoogleMapsExport](../../sheets/formeln/googlemapsexport.md ':ignore'). Die
-`.md`-Doku dort beschreibt nur die Formeln; Kopfblock, Tabellenkopf und
-Spaltenreihenfolge sind aus der **Vorlage selbst** übernommen
-(`ReisekostenabrechnungFINAL.xlsx`, Blatt „GoogleMapsExport" -- dieselbe Datei,
-aus der auch [S2](#s2) entsteht), nicht aus der Formeldoku nacherfunden.
-
-**Kopfblock:** Titel, Antragssteller/Wohnort/Dienstort wie bei S1 -- in der
-Vorlage über zwei Zeilen gemergt. Der dortige Titel „REISEKOSTENRECHNUNG" ist
-erkennbar aus S1 kopiert (für eine Routenliste sachlich falsch) und hier durch
-„Routenlinks" ersetzt; der Rest des Kopfblocks (Antragssteller/Wohnort/
-Dienstort) ist unverändert übernommen, gebaut mit derselben `anschrift()`-Logik
-wie in [Einstellungen](einstellungen.md#kopfzeile-des-ausdrucks).
-
-**Tabellenkopf**, exakt in der Reihenfolge der Vorlage -- **abweichend** von
-der Reihenfolge in der Sheets-Formeldoku, die Reiseweg vor Beginn/Ende listet:
-
-| Spalte (Vorlage) | Quelle |
-|---|---|
-| Nr. | `Lfd_Nr` |
-| Datum | `Datum` |
-| Reisebeginn | `Beginn` |
-| Reiseende | `Ende` |
-| Wegstrecke | `Reiseweg` |
-| KM dienstlich | `KM_dienstlich` |
-| Routenlink | `Maps_Link`, verlinkt als „Route" |
-
-Kein Druckformular wie ausdruck.html, trotz des formellen Kopfblocks: die
-Sheets-Vorlage nennt für dieses Blatt selbst keine Druckanweisung („Nichts.
-Routenlink bei Bedarf nutzen" -- ein Link ist auf Papier ohnehin nicht
-klickbar). Deshalb Bildschirm-Maße statt A4/mm, kein „Drucken"-Knopf, nur
-„Aktualisieren".
-
-**Statement (Route-Zelle):**
-- bekommt kein `html\`…\`` -- ein eingebettetes `<a>` würde darin selbst
-  escaped und der Link ginge kaputt
-- stattdessen steht der Link zunächst als `data-link`-Attribut (läuft dort
-  ganz normal durch `esc()`) und wird erst danach per DOM-API
-  (`a.href = …`) zum `<a>` -- der Wert wird nie als HTML geparst, das ist
-  sicherer als ein von Hand zusammengesetztes `<a href="…">`
-
-**Ergebnis:** Ein „Route"-Link, der die Reise direkt in Google Maps öffnet,
-in einem neuen Tab (`target="_blank"`, das Widget-Iframe bleibt bestehen).
-**Sonderfall:** Weniger als zwei Orte **oder** ein angefahrener Ort ohne
-Anschrift → `Maps_Link` ist leer → keine Zelle mit Link, kein Fehler. Eine
-leere Route-Zelle bei gefülltem Reiseweg heißt also: in
-[Stammziele](stammziele.md) oder [Einzelziele](einzelziele.md) fehlt Straße/PLZ/Ort.
-
-Deutlich einfacher als die Sheets-Version: dort löst eine `BYROW`/`MAP`/
-`XMATCH`-Formel Formular-Kürzel gegen `Stammziele` auf, weil das Formular rohen
-Text liefert. In Grist ist ein Ortsfeld eine echte `Ref:Stammziele`-Referenz --
-die Auflösung passiert schon in `Maps_Link` selbst (siehe
-[Reisen](reisen.md#maps_link--routenlink)), hier wird nur noch gelesen.
-
 ## Prüfliste (Zeiterfassungsstelle)
 
 Eigenes Widget, [`ausgabe/pruefliste.html`](../ausgabe/pruefliste.html ':ignore') --
@@ -338,8 +278,10 @@ gegen 271,6mm, und dass der Knopf über ein eigenes Fenster druckt statt über
   die Stelle soll die gewohnte Ansicht wiedererkennen, nicht eine neue lernen
 - die Tagegeldzeiten stehen als **eigene Spalten**, nicht als Textzeile wie in
   der [S1-Spalte „Reiseweg"](#spalte-reiseweg) -- einzeln prüfbar statt nur lesbar
-- Route-Zelle wie in [Routenlinks](#routenlinks-google-maps): erst `data-link`,
-  dann per DOM-API zum `<a>`
+- Route-Zelle: kein `html\`…\`` (ein eingebettetes `<a>` würde escaped);
+  der Link steht erst als `data-link` (läuft durch `esc()`) und wird danach
+  per DOM-API (`a.href = …`) zum `<a>`. Leerer `Maps_Link` (unter zwei Orten
+  oder Ort ohne Anschrift) → Zelle ohne Link, kein Fehler
 
 **Sonderfall:** Die Sortierlogik der Orte-Legende steht in **zwei** Dateien
 (`pruefliste.html` und `ausdruck.html`) -- die Widgets sind bewusst

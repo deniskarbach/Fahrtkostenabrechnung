@@ -72,9 +72,7 @@ Ortsverzeichnis als druckbare Seiten, A4 hoch, eine Datei ohne Abhängigkeiten.
 Im Browser geöffnet rendert sie erfundene Beispieldaten; als Grist-Widget die
 echten. Daneben
 [`ausgabe/fahrtenbuch.html`](ausgabe/fahrtenbuch.html ':ignore') zum
-Ausschneiden und Einkleben, und
-[`ausgabe/routenlinks.html`](ausgabe/routenlinks.html ':ignore') — klickbare
-Google-Maps-Routen je Reise, zur Prüfung der gefahrenen Strecke. Auf einer
+Ausschneiden und Einkleben. Auf einer
 eigenen, getrennt freigebbaren Seite liegt
 [`ausgabe/pruefliste.html`](ausgabe/pruefliste.html ':ignore') — alles aus allen
 Blättern in einer Zeile je Reise, für die Zeiterfassungsstelle.
@@ -85,7 +83,6 @@ Blättern in einer Zeile je Reise, für die Zeiterfassungsstelle.
 | Vermerke | Einstellungen | Reisen mit Vermerk |
 | Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
-| Routenlinks | — | Reisen im Zeitraum |
 | Prüfliste (eigene Seite) | Einstellungen | Reisen im Zeitraum + Orte-Legende |
 
 ## Einrichten

@@ -36,34 +36,44 @@ def sql(frage):
 # Wortlaut aus dem Formular-Editor. Anpassungen hier vornehmen, dann Skript
 # laufen lassen.
 
-BESCHR_1 = ("Bitte geben Sie die grundlegenden Rahmendaten der Dienstreise an, "
-            "einschließlich Datum, Zeiten sowie Kilometerständen zu Beginn und "
-            "Ende.")
+BESCHR_1 = ("Datum, Uhrzeiten und Kilometerstände der Fahrt. Das Enddatum nur "
+            "bei Reisen über mehrere Tage.")
 
-BESCHR_2 = ("Bitte geben Sie die während der Dienstreise angefahrenen Orte an, "
-            "beginnend mit dem Ort des Reisebeginns. Links aus der Liste wählen. "
-            "Ist der Ort nicht dabei — einmalige Ziele wie ein Café oder ein "
-            "Ausweichgebäude — rechts frei eintragen. Nicht benötigte Orte leer "
-            "lassen. ")
+BESCHR_2 = ("Alle Orte in der Reihenfolge der Fahrt. Bekannte Orte aus der Liste "
+            "wählen. Fehlt ein Ort in der Liste, im Feld darunter in dieser Form "
+            "eintragen: **Bezeichnung, Straße Hausnummer, PLZ Ort**, z. B. "
+            "*Café Mokka, Bahnhofstr. 7, 12345 Musterstadt*. Ohne vollständige "
+            "Anschrift lässt sich die Strecke nicht abrechnen. Nicht gebrauchte "
+            "Orte leer lassen.")
 
-BESCHR_3 = ('Bitte geben Sie an, ob für die Dienstreise Tagegeld beantragt '
-            'werden soll. Bitte geben Sie an, ob Sie Tagegeld beantragen '
-            'möchten, falls gewünscht. Das System berechnet für welche '
-            'Abwesenheitsdauer Tagegeld möglich ist: > 8h, ≥ 14h, 24h, '
-            '[Anteilig: > 8h mit Abzug Aufenthalt Dienststätte und Dienstort '
-            'unter 8h 1m bei "Ja" ausgewählt]. \n\nBerechnung: Differenz aus '
-            'Reisebeginn und Reiseende abzüglich der Aufenthaltsdauer in '
-            'Dienststätte und Dienstort. Es kann nur eine Option ausgewählt '
-            'werden. ')
+BESCHR_3 = ("Ankreuzen, wenn Tagegeld beantragt wird. Die Höhe ergibt sich aus "
+            "der Dauer der Reise und wird automatisch berechnet. Abgezogen wird die Zeit in der "
+            "Dienststätte, am Dienstort und für private Unterbrechungen, "
+            "jeweils in Minuten.")
 
-BESCHR_4 = ("Bitte geben Sie an, ob im Rahmen der Dienstreise weitere Fahrt- "
-            "oder Nebenkosten angefallen sind: ÖPNV, Mitnahme von Personen, "
-            "Übernachtungskosten, Nebenkosten, Unentgeltliche Verpflegung")
+BESCHR_4 = "Nur ausfüllen, wenn etwas angefallen ist."
 
-BESCHR_5 = ("Bitte geben Sie ergänzende Vermerke sowie die erforderlichen "
-            "Nachweise zur Dienstreise an. Bitte geben Sie zusätzliche Vermerke "
-            "an, z. B. bei Umwegen durch Straßensperrungen oder Umleitungen, "
-            "oder bei Nutzung eines zweiten PKW, falls zutreffend.")
+BESCHR_5 = ("Ein Vermerk nur bei Besonderheiten, z. B. Umleitung wegen einer "
+            "Straßensperrung oder Fahrt mit einem anderen Auto. Belege und "
+            "Tachofotos hier hochladen.")
+
+
+# Feldeinstellungen fürs Formular (Pflicht, Darstellung, abweichender Titel).
+# Grist speichert sie an der Spalte, nicht im Layout -- sie gelten also auch,
+# wenn das Layout neu geschrieben wird. Hier stehen sie, damit ein neu
+# aufgebautes Dokument dieselben bekommt. Aus dem Editor übernommen.
+FELD_OPTIONEN = {
+    "Datum":      {"formRequired": True},
+    "Datum_Ende": {"question": "Enddatum"},
+    "Beginn":     {"formRequired": True, "formTextFormat": "singleline"},
+    "Ende":       {"formRequired": True},
+    "KM_Beginn":  {"formRequired": True, "formNumberFormat": "text"},
+    "KM_Ende":    {"formRequired": True},
+    "Vermerk":    {"formTextFormat": "multiline", "formTextLineCount": 5},
+    # Platz für Bezeichnung und Anschrift
+    **{f"{s}_Text": {"formTextFormat": "multiline", "formTextLineCount": 2}
+       for s in ORT_SLOTS},
+}
 
 
 # ------------------------------------------------------------ Layout-Bausteine
@@ -97,12 +107,13 @@ def reihe(*spalten):
 
 
 def mit_trennern(zeilen):
-    """[a, b, c] -> [a, ---, b, ---, c]"""
+    """[a, b, c] -> [a, ---, b, ---, c]; eine Liste als Zeile zählt als ein
+    Block aus mehreren Knoten."""
     aus = []
     for i, z in enumerate(zeilen):
         if i:
             aus.append(trenner())
-        aus.append(z)
+        aus.extend(z if isinstance(z, list) else [z])
     return aus
 
 
@@ -119,8 +130,8 @@ def bauen():
         "Layout", submitText="Senden.", anotherResponse=True, successURL=None,
         children=[
             absatz("# **Dienstreise**", "center"),
-            absatz("Eine Reise je Eintrag, am besten direkt im Anschluss "
-                   "ausfüllen.", "center"),
+            absatz("Bitte jede Dienstreise einzeln und möglichst direkt nach "
+                   "der Fahrt eintragen.", "center"),
 
             abschnitt(
                 "### **Abschnitt 1: Allgemeine Angaben zur Dienstreise**", BESCHR_1,
@@ -133,10 +144,12 @@ def bauen():
 
             abschnitt(
                 "### **Abschnitt 2: Angefahrene Orte**", BESCHR_2,
-                *mit_trennern([reihe(s, f"{s}_Text") for s in ORT_SLOTS])),
+                # Auswahl halbe Breite, Freitext (zweizeilig) volle Breite
+                # darunter -- so im Editor gesetzt, Platz für die Anschrift.
+                *mit_trennern([[reihe(s, None), feld(f"{s}_Text")] for s in ORT_SLOTS])),
 
             abschnitt(
-                "### **Abschnitt 3: Tagegeld**", BESCHR_3,
+                "### **Abschnitt 3: Tagegeld** (Optional)", BESCHR_3,
                 feld("Tagegeld_beantragt"),
                 trenner(),
                 reihe("Min_Dienststaette", "Min_Dienstort", "Min_privat_Abzug")),
@@ -220,4 +233,16 @@ if ZEIGEN:
 
 api("POST", "/apply", [["UpdateRecord", "_grist_Views_section", SEKTION,
                         {"layoutSpec": json.dumps(layout)}]])
-print("\nLayout geschrieben. Im Formular-Editor prüfen und veröffentlichen.")
+
+optionen = []
+for c in sql("select c.id, c.colId, c.widgetOptions from _grist_Tables_column c "
+             "join _grist_Tables t on t.id = c.parentId where t.tableId = 'Reisen'"):
+    soll = FELD_OPTIONEN.get(c["colId"])
+    alt = json.loads(c["widgetOptions"] or "{}")
+    if soll and any(alt.get(k) != v for k, v in soll.items()):
+        optionen.append(["UpdateRecord", "_grist_Tables_column", c["id"],
+                         {"widgetOptions": json.dumps({**alt, **soll})}])
+if optionen:
+    api("POST", "/apply", optionen)
+print(f"\nLayout geschrieben, Feldeinstellungen: {len(optionen)} angepasst. "
+      f"Im Formular-Editor prüfen.")

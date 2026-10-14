@@ -80,15 +80,15 @@ const TABELLEN = {
   ],
 };
 
-/* ------------------------------------------------- Fake-DOM (wie test_routenlinks) */
+/* ------------------------------------------------- Fake-DOM */
 const unesc = s => s.replace(/&amp;/g, "&").replace(/&lt;/g, "<")
                     .replace(/&gt;/g, ">").replace(/&quot;/g, '"');
 
 function sandboxFuer(datei, tbodyIds) {
   const zellen = {};
   const tbodies = {};
-  /* Die Widgets fuellen ihre tbodys unterschiedlich: pruefliste.html und
-     routenlinks.html setzen innerHTML in einem Rutsch, ausdruck.html haengt
+  /* Die Widgets fuellen ihre tbodys unterschiedlich: pruefliste.html
+     setzt innerHTML in einem Rutsch, ausdruck.html haengt
      Zeile fuer Zeile per insertAdjacentHTML an. Das Fake-DOM muss beides
      koennen, sonst prueft der Drift-Waechter nur eine der beiden Dateien. */
   const knoten = id => {

@@ -1022,9 +1022,9 @@ async function ausGrist() {
      Zeile -- sie gehört zu genau einer Fahrt, und das Datum weist sie ihr zu.
      Es steht in der Kürzel-Spalte, die bei diesen Zeilen ohnehin leer bleibt. */
   const ausEinzelziele = zeilen(await grist.docApi.fetchTable("Einzelziele"))
-    .filter(a => imZeitraum(a.Datum))
+    .filter(a => a.Label && imZeitraum(a.Datum))
     .sort((a, b) => a.Datum - b.Datum)
-    .map(a => ({ kuerzel: tag(a.Datum), name: a.Label || "", adresse: a.Adresse || "" }));
+    .map(a => ({ kuerzel: tag(a.Datum), name: a.Bezeichnung ?? a.Label ?? "", adresse: a.Adresse || "" }));
 
   renderOrtsverzeichnis({ stand, ...kopfAdresse }, [...ausOrte, ...ausEinzelziele]);
 
