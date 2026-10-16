@@ -283,7 +283,7 @@ Was auf welchem Blatt landet:
 |---|---|---|
 | S1 / S2 | Einstellungen | Reisen im Zeitraum |
 | Vermerke | Einstellungen | Reisen mit ausgefülltem Feld „Sonstige Informationen" |
-| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Datum) |
+| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Kürzel und Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 
 **Spalte „Reiseweg" auf S1:** Der Vordruck verlangt dort nur die laufende

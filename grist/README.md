@@ -79,7 +79,7 @@ Blättern in einer Zeile je Reise, für die Zeiterfassungsstelle.
 |---|---|---|
 | S1 / S2 | Einstellungen | Reisen im Zeitraum |
 | Vermerke | Einstellungen | Reisen mit Vermerk |
-| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Datum und Nummer) |
+| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Kürzel und Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 | Prüfliste (eigene Seite) | Einstellungen | Reisen im Zeitraum + Orte-Legende |
 
@@ -93,3 +93,19 @@ python3 grist/setup.py
 Legt Tabellen, Spalten, Formeln, die Seiten `Ausdruck`, `Prüfliste` und `Reisekorrektur`
 sowie alle Ausgabe-Widgets an.
 Wiederholbar. Einzelheiten: [Einrichtung](formeln/setup.md).
+
+## Ordner
+
+```
+grist/
+  setup.py, formular.py   Einrichtung des Grist-Dokuments (Tabellen, Seiten, Formular)
+  s2_aus_vorlage.py       erzeugt den S2-Block in ausdruck.html aus der lokalen XLSX-Vorlage
+  ausgabe/                NUR die Widgets, die Grist per URL lädt
+  tests/                  Offline-Tests (sh grist/tests/alle.sh) und Abnahmetest
+  formeln/, manual.md     Dokumentation
+```
+
+> **Zu beachten:** Die Dateien in `ausgabe/` lädt Grist über ihre
+> GitHub-Pages-Adresse. Umbenennen oder Verschieben ändert die Adresse — der
+> nächste Setup-Lauf legt die Widgets dann neu an, und das eingestellte
+> Seitenlayout geht verloren. Alles andere gehört nicht in diesen Ordner.

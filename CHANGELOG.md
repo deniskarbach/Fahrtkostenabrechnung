@@ -3,6 +3,12 @@
 Alle nennenswerten Änderungen an diesem Projekt.
 
 ## [Unreleased]
+- Repo aufgeräumt: `grist/ausgabe/` enthält nur noch die Widgets, die Grist
+  per URL lädt; Tests nach `grist/tests/` mit Gesamtaufruf `alle.sh`,
+  Abnahmetest nach `grist/tests/abnahme/`, S2-Generator nach `grist/`,
+  Screenshots nach `sheets/img/` (auf der Doku-Seite fehlten sie bisher).
+  Grist in Seitenleiste und README vor Sheets („frühere Umsetzung“).
+  Versehentlich versionierte LibreOffice-Sperrdatei entfernt
 - Grist, Befunde aus dem Abnahmetest (35 Testreisen):
   - Stammziel ohne PLZ/Ort: `Adresse` fängt leere Felder ab — vorher stand im
     Ortsverzeichnis „E,TypeError“ und der Routenlink war kaputt

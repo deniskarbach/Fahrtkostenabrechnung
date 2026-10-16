@@ -3,26 +3,23 @@
 # Ausgabe
 
 Was in der Google-Sheets-Umsetzung eigene Blätter mit Formeln sind, ist hier
-**ein Widget**, das die vier Tabellen liest und daraus die Druckseiten baut:
+**ein Widget**, das die drei Tabellen liest und daraus die Druckseiten baut:
 [`ausgabe/ausdruck.html`](../ausgabe/ausdruck.html ':ignore') — S1, S2, Vermerke und
 Ortsverzeichnis, A4 hoch, eine Datei ohne Abhängigkeiten. Ein Widget
 statt vier, ein Grist-Zugriff statt vier. In Grist heißt es „Reisekostenabrechnung“.
 
-Das Fahrtenbuch (quer) ist herausgelöst und steht in
-[`ausgabe/fahrtenbuch-preview.html`](../ausgabe/fahrtenbuch-preview.html ':ignore') — eine
-Vorbereitung, noch kein Widget. Der Abschnitt [Fahrtenbuch](#fahrtenbuch)
-beschreibt diese Datei.
-
-Daneben steht ein eigenständiges Widget, kein Bestandteil der
-Standardausgabe:
-[`ausgabe/fahrtenbuch.html`](../ausgabe/fahrtenbuch.html ':ignore')
-(das Fahrtenbuch, aber zum Ausschneiden und Einkleben aufgeteilt).
+Das Fahrtenbuch ist ein zweites Widget auf derselben Seite:
+[`ausgabe/fahrtenbuch.html`](../ausgabe/fahrtenbuch.html ':ignore') — zum
+Ausschneiden und Einkleben in das Original-Fahrtenbuch aufgeteilt. Daneben
+liegt [`ausgabe/fahrtenbuch-preview.html`](../ausgabe/fahrtenbuch-preview.html ':ignore'),
+das Fahrtenbuch als ganzes Querformat-Blatt — eine Vorbereitung, noch kein
+Widget. Der Abschnitt [Fahrtenbuch](#fahrtenbuch) beschreibt beide.
 
 Dazu [`ausgabe/pruefliste.html`](../ausgabe/pruefliste.html ':ignore') auf einer
 eigenen Seite: alles aus allen Blättern in einer Zeile je Reise, für die
 Zeiterfassungsstelle — siehe [unten](#prüfliste-zeiterfassungsstelle).
 
-Alle drei Dateien lassen sich direkt im Browser öffnen — dann rendern sie
+Alle vier Dateien lassen sich direkt im Browser öffnen — dann rendern sie
 erfundene Beispieldaten. Das ist die Arbeitsweise für Layoutänderungen ohne
 Grist.
 
