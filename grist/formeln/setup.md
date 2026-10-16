@@ -126,3 +126,20 @@ sh grist/tests/alle.sh
 | [`test_escaping.py`](../tests/test_escaping.py) | kein Zeilen-Template ohne `html\`\``-Präfix |
 | [`test_schwaerzung.py`](../tests/test_schwaerzung.py) | S2-Erzeugung schwärzt, bricht bei Abweichung ab, hat vier Füllfelder und drei Unterschriftslinien (braucht die lokale Vorlage, sonst übersprungen) |
 
+## Abnahmetest
+
+Vor einer Freigabe, gegen Grist — **verbraucht API-Kontingent** (rund 200
+Aufrufe), deshalb nicht in `alle.sh`:
+
+```
+python3 grist/tests/abnahme/abnahme.py
+```
+
+Legt eine Kopie des Dokuments **ohne Daten** an, richtet sie ein, schreibt 35
+erfundene Testreisen (Grenzwerte, Fehleingaben, Markup, Jahreswechsel) und
+vergleicht jede Rechenspalte mit einem unabhängig geschriebenen Soll-Modell.
+Danach rendert es Ausdruck, Fahrtenbuch und Prüfliste mit diesen Daten in
+Chrome als Druck-PDF und prüft Inhalt und Seitenzahl. Bricht ab, wenn die
+Testkopie das echte Dokument ist. Die Kopie bleibt danach stehen und wird bei
+Bedarf in Grist gelöscht.
+
