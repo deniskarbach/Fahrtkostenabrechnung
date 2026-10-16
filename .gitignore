@@ -1,6 +1,9 @@
 # Vorlagen und Ausdrucke bleiben lokal — dieses Repo ist öffentlich.
 *.xlsx
 *.pdf
+# Sperrdateien von LibreOffice/Excel -- enthalten Benutzer, Rechner, Pfad
+.~lock.*#
+~$*
 
 # Zugangsdaten
 .env
