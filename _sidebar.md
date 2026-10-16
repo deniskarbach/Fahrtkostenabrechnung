@@ -1,6 +1,17 @@
 - [Übersicht](/)
 
-- **Google Sheets**
+- **Grist**
+  - [Überblick](grist/README.md)
+  - [Handbuch](grist/manual.md)
+  - [Formeln – Überblick](grist/formeln/README.md)
+    - [Einstellungen](grist/formeln/einstellungen.md)
+    - [Stammziele](grist/formeln/stammziele.md)
+    - [Reisen](grist/formeln/reisen.md)
+    - [Ausgabe](grist/formeln/ausgabe.md)
+    - [Einrichtung (setup.py)](grist/formeln/setup.md)
+    - [Anhang](grist/formeln/anhang.md)
+
+- **Google Sheets** (frühere Umsetzung)
   - [Handbuch](sheets/manual.md)
   - [Formeln – Überblick](sheets/formeln/README.md)
     - [Setup](sheets/formeln/setup.md)
@@ -13,16 +24,5 @@
     - [Orte](sheets/formeln/orte.md)
     - [GoogleMapsExport](sheets/formeln/googlemapsexport.md)
     - [Anhang](sheets/formeln/anhang.md)
-
-- **Grist**
-  - [Überblick](grist/README.md)
-  - [Handbuch](grist/manual.md)
-  - [Formeln – Überblick](grist/formeln/README.md)
-    - [Einstellungen](grist/formeln/einstellungen.md)
-    - [Stammziele](grist/formeln/stammziele.md)
-    - [Reisen](grist/formeln/reisen.md)
-    - [Ausgabe](grist/formeln/ausgabe.md)
-    - [Einrichtung (setup.py)](grist/formeln/setup.md)
-    - [Anhang](grist/formeln/anhang.md)
 
 - [Changelog](CHANGELOG.md)
