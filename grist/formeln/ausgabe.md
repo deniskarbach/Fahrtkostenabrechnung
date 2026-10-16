@@ -131,11 +131,11 @@ und Chrome wiederholte einen so hohen Kopf gar nicht: Folgeseiten hatten
 
 ## S2
 
-Reiner Vordruck, keine Daten aus der Tabelle. Der HTML-Block wird nicht von
-Hand gepflegt, sondern aus dem XLSX-Blatt „S2" erzeugt:
+Vordruck; aus der Tabelle kommen nur die vier Felder aus `Einstellungen`
+(siehe unten). Der HTML-Block wird nicht von Hand gepflegt, sondern aus dem XLSX-Blatt „S2" erzeugt:
 
 ```
-python3 grist/ausgabe/s2_aus_vorlage.py > /tmp/s2.html
+python3 grist/s2_aus_vorlage.py > /tmp/s2.html
 ```
 
 S2 ist ein amtliches Formular — Ränder, Füllungen, Schriftgrößen, Zeilenhöhen

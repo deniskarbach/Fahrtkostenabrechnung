@@ -15,7 +15,7 @@ import os, pathlib, shutil, subprocess, sys, tempfile
 import openpyxl
 
 HIER = pathlib.Path(__file__).resolve().parent
-SKRIPT = HIER.parent / "ausgabe" / "s2_aus_vorlage.py"
+SKRIPT = HIER.parent / "s2_aus_vorlage.py"
 VORLAGE = HIER.parents[1] / "ReisekostenabrechnungFINAL.xlsx"
 
 if not VORLAGE.exists():

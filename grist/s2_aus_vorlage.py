@@ -7,13 +7,13 @@ Zeilenhöhen und Zellverbünde werden deshalb Zelle für Zelle aus der Vorlage
 laufen lassen und die Ausgabe in ausdruck.html zwischen <table class="s2">
 und </table> einsetzen -- nicht von Hand nachziehen.
 
-    python3 grist/ausgabe/s2_aus_vorlage.py > /tmp/s2.html
+    python3 grist/s2_aus_vorlage.py > /tmp/s2.html
 
 Braucht ReisekostenabrechnungFINAL.xlsx im Repo-Wurzelverzeichnis. Die Datei
 ist per .gitignore ausgeschlossen (öffentliches Repo), behördenspezifische
 Zellen werden beim Erzeugen geschwärzt -- siehe SCHWAERZEN.
 
-    python3 grist/ausgabe/s2_aus_vorlage.py --fingerabdruecke   # nach Vorlagenwechsel
+    python3 grist/s2_aus_vorlage.py --fingerabdruecke   # nach Vorlagenwechsel
 """
 import hashlib
 import os
@@ -29,7 +29,7 @@ from openpyxl.cell.rich_text import CellRichText, TextBlock
 # S2_VORLAGE überschreibt den Pfad — braucht test_schwaerzung.py, um die
 # Wächter gegen manipulierte Kopien der Vorlage laufen zu lassen.
 VORLAGE = pathlib.Path(os.environ.get("S2_VORLAGE") or
-                       pathlib.Path(__file__).resolve().parents[2]
+                       pathlib.Path(__file__).resolve().parents[1]
                        / "ReisekostenabrechnungFINAL.xlsx")
 # rich_text: Unterstreichung und Fettdruck gelten in der Vorlage oft nur für
 # einen Teil der Zelle (die Leerstelle nach "KK anweisen," ist eine
