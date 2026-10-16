@@ -386,10 +386,10 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <td style="border-right:var(--rahmen)"></td>
     </tr>
     <tr style="height:4.50mm">
-      <td style="border-left:var(--rahmen)"></td>
-      <td></td>
+      <td style="border-left:var(--rahmen);position:relative"><div style="position:absolute;left:0.79mm;top:3.43mm;width:18.35mm;border-top:0.75pt solid #000"></div></td>
+      <td style="position:relative"><div style="position:absolute;left:2.91mm;top:3.43mm;width:66.94mm;border-top:0.75pt solid #000"></div></td>
       <td colspan="2" style="border-right:var(--rahmen)"></td>
-      <td></td>
+      <td style="position:relative"><div style="position:absolute;left:2.11mm;top:3.43mm;width:62.52mm;border-top:0.75pt solid #000"></div></td>
       <td></td>
       <td style="border-right:var(--rahmen)"></td>
     </tr>
@@ -532,7 +532,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     <tr style="height:4.50mm">
       <td colspan="2" style="border-left:var(--rahmen-breit);font-size:14pt;font-weight:bold;text-decoration:underline;text-align:left;vertical-align:bottom">Abteilung:&nbsp;<span id="s2-abteilung">__________</span></td>
       <td></td>
-      <td colspan="4" style="border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom">_______________, <u>_______________</u></td>
+      <td colspan="4" style="border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom"><span id="s2-behoerde-ort">_______________</span>, <u>_______________</u></td>
     </tr>
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen-breit)"></td>
@@ -599,7 +599,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen-breit)"></td>
       <td></td>
-      <td colspan="5" style="border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom">_____________________________</td>
+      <td colspan="5" style="border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom"><span id="s2-behoerde">_____________________________</span></td>
     </tr>
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen-breit)"></td>
@@ -974,11 +974,12 @@ async function ausGrist() {
     dienstort: anschrift(e.Dienstort_Strasse, e.Dienstort_PLZ, e.Dienstort_Ort),
   };
 
-  /* S2, Verfügungsteil: Abteilung und Buchungsstelle aus Einstellungen. Ist
-     das Feld leer, bleibt die Linie der Vorlage stehen -- zum Ausfüllen von
-     Hand. Die Linie wird beim ersten Lauf gemerkt, damit ein später geleertes
-     Feld sie zurückbringt. */
-  for (const [id, wert] of [["s2-abteilung", e.Abteilung], ["s2-buchungsstelle", e.Buchungsstelle]]) {
+  /* S2, Verfügungsteil: Abteilung, Buchungsstelle, Ort und Name der Behörde
+     aus Einstellungen. Ist das Feld leer, bleibt die Linie der Vorlage
+     stehen -- zum Ausfüllen von Hand. Die Linie wird beim ersten Lauf
+     gemerkt, damit ein später geleertes Feld sie zurückbringt. */
+  for (const [id, wert] of [["s2-abteilung", e.Abteilung], ["s2-buchungsstelle", e.Buchungsstelle],
+                            ["s2-behoerde-ort", e.Behoerde_Ort], ["s2-behoerde", e.Behoerde]]) {
     const el = document.getElementById(id);
     S2_LINIE[id] ??= el.textContent;
     el.textContent = wert || S2_LINIE[id];

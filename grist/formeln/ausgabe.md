@@ -150,15 +150,22 @@ Vorlage sind oft nur Teile unterstrichen oder fett (die Leerstelle nach
 „2.", „3."). Das Skript liest die Vorlage deshalb als Rich Text; bis
 16.10.2026 fehlten diese Linien im Ausdruck.
 
-Von den vier geschwärzten Zellen füllt das Widget zwei aus
-[Einstellungen](einstellungen.md): `Abteilung` und `Buchungsstelle`. Ist das
-Feld leer, bleibt die Linie der Vorlage stehen. Die beiden anderen (Ort vor dem
-Datum, Behördenname) bleiben Linie.
+Die Unterschriftslinien über „(Datum)" und „(Unterschrift,
+Dienstbezeichnung)" sind in der Vorlage **gezeichnete Linien**, keine
+Zellrahmen. openpyxl liest Zeichnungen nicht ein; das Skript holt sie deshalb
+direkt aus dem Zeichnungsteil der XLSX und setzt sie als absolut positionierte
+Linie in die Zelle, in der sie beginnen. Andere Formen als waagrechte Linien
+lässt es nicht still weg, sondern bricht ab.
+
+Die vier geschwärzten Zellen füllt das Widget aus
+[Einstellungen](einstellungen.md): `Abteilung`, `Buchungsstelle`,
+`Behoerde_Ort` und `Behoerde`. Ist ein Feld leer, bleibt die Linie der Vorlage
+stehen.
 
 **Nach der Migration ins interne Netz** (Repo nicht mehr öffentlich) entfällt
 die Schwärzung: die Regeln in `SCHWAERZEN` löschen, S2 neu erzeugen — dann
-kommen alle vier Werte unverändert aus der Vorlage. Die Spalten `Abteilung`
-und `Buchungsstelle` und die drei Zeilen im Widget werden danach überflüssig.
+kommen alle vier Werte unverändert aus der Vorlage. Die vier Spalten in
+`Einstellungen` und der Füllblock im Widget werden danach überflüssig.
 
 IBAN- und BIC-Kasten bleiben leer und werden bei Bedarf von Hand ausgefüllt.
 

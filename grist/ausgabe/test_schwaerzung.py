@@ -57,6 +57,14 @@ with tempfile.TemporaryDirectory() as tmp:
     assert e.stdout.count("_____") >= len(ZELLEN), "Platzhalter fehlen in der Ausgabe"
     print(f"  [OK] Normallauf: {len(ZELLEN)} Zellen geschwärzt, keine Originalwerte in der Ausgabe")
 
+    # Jede geschwärzte Zelle ist ein Feld, das das Widget aus Einstellungen
+    # füllt -- bis auf das Datum daneben; und die drei gezeichneten
+    # Unterschriftslinien der Vorlage sind da (openpyxl liest sie nicht ein).
+    for id in ("s2-abteilung", "s2-buchungsstelle", "s2-behoerde-ort", "s2-behoerde"):
+        assert f'<span id="{id}">' in e.stdout, f"Feld {id} fehlt"
+    assert e.stdout.count("position:absolute") == 3, "Unterschriftslinien fehlen"
+    print("  [OK] Vier Felder zum Füllen, drei Unterschriftslinien")
+
     # 2. Vorlage verschoben: Zelle hat anderen Inhalt -> lauter Abbruch.
     verschoben = tmp / "verschoben.xlsx"
     shutil.copy(VORLAGE, verschoben)

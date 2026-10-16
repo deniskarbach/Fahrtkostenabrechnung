@@ -21,6 +21,8 @@ Dies ist die **einzige** Stelle, an der persönliche Daten erfasst werden.
 | `Dienstort_Ort` | Dienstort – Ort | Text | " |
 | `Abteilung` | Abteilung (S2) | Text | S2, Verfügungsteil „Abteilung:" — leer bleibt die Linie |
 | `Buchungsstelle` | Buchungsstelle (S2, nach „€ bei:") | Text | S2, Zeile „1. KK anweisen, … € bei:" — leer bleibt die Linie |
+| `Behoerde_Ort` | Behörde – Ort (S2, vor dem Datum) | Text | S2, „Ort, Datum" im Verfügungsteil — leer bleibt die Linie |
+| `Behoerde` | Behörde – Name (S2, unter „3. z. d. A.") | Text | S2, Zeile unter „3. z. d. A." — leer bleibt die Linie |
 | `Zeitraum_von` | Abrechnungszeitraum von | Date | Filter aller Ausgabeblätter |
 | `Zeitraum_bis` | Abrechnungszeitraum bis | Date | " |
 

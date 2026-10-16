@@ -18,7 +18,10 @@ Zellen werden beim Erzeugen geschwärzt -- siehe SCHWAERZEN.
 import hashlib
 import os
 import pathlib
+import re
 import sys
+import xml.etree.ElementTree as ET
+import zipfile
 
 import openpyxl
 from openpyxl.cell.rich_text import CellRichText, TextBlock
@@ -62,10 +65,11 @@ def T(text, art="", id=None):
 
 SCHWAERZEN = {
     (34, 1): ("81e3e161d025", [T("Abteilung: ", "bu"), T("__________", "bu", "s2-abteilung")]),
-    (34, 4): ("3df650914e3b", [T("_______________, "), T("_______________", "u")]),
+    (34, 4): ("3df650914e3b", [T("_______________", "", "s2-behoerde-ort"), T(", "),
+                               T("_______________", "u")]),
     (37, 1): ("719b8d22e6d7", [T("1.", "b"), T(" KK anweisen,"), T(" " * 25, "u"),
                                T("\u20ac bei: "), T("_____________________", "", "s2-buchungsstelle")]),
-    (45, 3): ("ed6bb6080fdc", [T("_____________________________")]),
+    (45, 3): ("ed6bb6080fdc", [T("_____________________________", "", "s2-behoerde")]),
 }
 
 GESCHWAERZT = {}   # (Zeile, Spalte) -> Originalwert, für die Schlusskontrolle
@@ -98,8 +102,8 @@ if "--fingerabdruecke" in sys.argv:
 
 STAERKE = {"thin": "var(--rahmen)", "medium": "var(--rahmen-breit)"}
 
-# Das Widget füllt im S2-Block nur die beiden <span> aus SCHWAERZEN
-# (Abteilung, Buchungsstelle). Die Kontoverbindung wird nicht erfasst, IBAN-
+# Das Widget füllt im S2-Block nur die <span> aus SCHWAERZEN (Abteilung,
+# Buchungsstelle, Ort und Name der Behörde). Die Kontoverbindung wird nicht erfasst, IBAN-
 # und BIC-Kasten bleiben als Vordruck stehen.
 
 
@@ -166,7 +170,65 @@ def rahmen(r, c, rs, cs):
     return seiten
 
 
+# ---------------------------------------------------------------- Linien
+# Die Unterschriftslinien über "(Datum)" und "(Unterschrift,
+# Dienstbezeichnung)" sind in der Vorlage gezeichnete Formen, keine
+# Zellrahmen -- openpyxl liest sie nicht ein, sie fehlten bis 16.10.2026.
+# Hier direkt aus dem Zeichnungsteil der XLSX: jede waagrechte Linie wird ein
+# absolut positioniertes <div> in der Zelle, an der sie beginnt. Versatz in
+# echten mm (EMU / 36000); die Spalten skaliert dieses Skript auf SATZ, die
+# Abweichung liegt unter 0,1 mm.
+EMU_MM = 36000
+NS = {"xdr": "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing",
+      "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+      "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships"}
+
+
+def zeichnung():
+    """Wurzel der Zeichnung zum Blatt S2, oder None ohne Zeichnung. Ziele
+    über ihren Dateinamen: openpyxl schreibt sie beim Speichern absolut."""
+    z = zipfile.ZipFile(VORLAGE)
+
+    def ziel(rels, pruefen):
+        if rels not in z.namelist():
+            return None
+        t = next((r.get("Target") for r in ET.fromstring(z.read(rels)) if pruefen(r)), None)
+        return t and t.rsplit("/", 1)[-1]
+
+    rid = next(b.get(f"{{{NS['r']}}}id") for b in ET.fromstring(z.read("xl/workbook.xml")).iter()
+               if b.tag.endswith("}sheet") and b.get("name") == "S2")
+    blatt = ziel("xl/_rels/workbook.xml.rels", lambda r: r.get("Id") == rid)
+    bild = ziel(f"xl/worksheets/_rels/{blatt}.rels", lambda r: r.get("Type", "").endswith("/drawing"))
+    return ET.fromstring(z.read(f"xl/drawings/{bild}")) if bild else None
+
+
+LINIEN = {}   # (Zeile, Spalte) der Startzelle -> [<div>, …]
+
+
+def linien_lesen():
+    mm = [breite(s) / sum(breite(x) for x in SPALTEN) * SATZ for s in SPALTEN]
+    wurzel = zeichnung()
+    for anker in ([] if wurzel is None else wurzel.findall("xdr:twoCellAnchor", NS)):
+        if anker.find(".//a:prstGeom[@prst='straightConnector1']", NS) is None:
+            sys.exit("Die Zeichnung auf S2 enthält eine Form, die keine Linie ist -- "
+                     "nicht unterstützt. Abbruch, sonst fehlt sie still im Ausdruck.")
+        (c1, o1, r1, ro1), (c2, o2, r2, ro2) = [
+            [int(anker.find(f"xdr:{p}/xdr:{k}", NS).text)
+             for k in ("col", "colOff", "row", "rowOff")] for p in ("from", "to")]
+        if (r1, ro1) != (r2, ro2):
+            sys.exit(f"Linie ab Zeile {r1 + 1} ist nicht waagrecht -- nicht unterstützt. Abbruch.")
+        if (r1 + 1, c1 + 1) in BELEGT:
+            sys.exit(f"Linie beginnt in einer verbundenen Zelle (Zeile {r1 + 1}) -- "
+                     f"nicht unterstützt. Abbruch.")
+        staerke = int(anker.find(".//a:ln", NS).get("w", 9525)) / 12700
+        breite_mm = sum(mm[:c2]) + o2 / EMU_MM - sum(mm[:c1]) - o1 / EMU_MM
+        LINIEN.setdefault((r1 + 1, c1 + 1), []).append(
+            f'<div style="position:absolute;left:{o1 / EMU_MM:.2f}mm;top:{ro1 / EMU_MM:.2f}mm;'
+            f'width:{breite_mm:.2f}mm;border-top:{staerke:g}pt solid #000"></div>')
+
+
 # ---------------------------------------------------------------- Ausgabe
+linien_lesen()
 aus = []
 gesamt = sum(breite(s) for s in SPALTEN)
 aus.append('  <table class="s2">')
@@ -234,6 +296,9 @@ for r in range(1, WS.max_row + 1):
                     stil.append("overflow:hidden")
 
         inhalt = "".join(html_stueck(*t, ganz_fett, ganz_unter) for t in teile)
+        if (r, ci) in LINIEN:
+            stil.append("position:relative")
+            inhalt += "".join(LINIEN[(r, ci)])
         offen = "<td" + ("".join(" " + x for x in attr))
         if stil:
             offen += ' style="' + ";".join(stil) + '"'

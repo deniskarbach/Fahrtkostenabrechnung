@@ -257,6 +257,8 @@ EINSTELLUNGEN = [
     # leer bleibt auf S2 die Linie zum Ausfüllen von Hand.
     spalte("Abteilung", "Abteilung (S2)", "Text"),
     spalte("Buchungsstelle", "Buchungsstelle (S2, nach „€ bei:“)", "Text"),
+    spalte("Behoerde_Ort", "Behörde – Ort (S2, vor dem Datum)", "Text"),
+    spalte("Behoerde", "Behörde – Name (S2, unter „3. z. d. A.“)", "Text"),
     spalte("Zeitraum_von", "Abrechnungszeitraum von", "Date"),
     spalte("Zeitraum_bis", "Abrechnungszeitraum bis", "Date"),
     # Seite Reisekorrektur: Jahr und Monat filtern nur die Liste darunter
@@ -1030,8 +1032,8 @@ WIDGET_TEXTE = {
         "sonst fehlt die Anschrift im Ortsverzeichnis und der Routenlink."),
     ("Einstellungen", "Einstellungen", "single"): ("Persönliche Angaben",
         "Name, Organisationseinheit, Wohn- und Dienstanschrift. Stehen im Kopf "
-        "von S1 und S2. Abteilung und Buchungsstelle erscheinen auf S2 im "
-        "Verfügungsteil; leer bleibt dort die Linie zum Ausfüllen. Einmal "
+        "von S1 und S2. Abteilung, Buchungsstelle und Behörde erscheinen auf S2 "
+        "im Verfügungsteil; leer bleibt dort die Linie zum Ausfüllen. Einmal "
         "eintragen, bei Änderungen anpassen. Der Abrechnungszeitraum wird auf "
         "der Seite Ausdruck gesetzt."),
     ("Formularverwaltung", "Reisen", "form"): ("Formular",
@@ -1124,6 +1126,7 @@ EINSTELLUNGEN_KARTE = [
     ("Wohnort_Strasse",), ("Wohnort_PLZ", "Wohnort_Ort"),
     ("Dienstort_Strasse",), ("Dienstort_PLZ", "Dienstort_Ort"),
     ("Abteilung", "Buchungsstelle"),
+    ("Behoerde_Ort", "Behoerde"),
 ]
 
 

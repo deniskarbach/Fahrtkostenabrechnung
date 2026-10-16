@@ -6,8 +6,10 @@ Alle nennenswerten Änderungen an diesem Projekt.
 - Grist S2: Unterstreichung und Fettdruck innerhalb von Zellen werden aus der
   Vorlage übernommen (Rich Text) — u. a. die Leerstelle nach „1. KK
   anweisen,", Buchungsjahr, „z. d. A."; nur die Ziffern „1.–3." sind fett.
-  Abteilung und Buchungsstelle kommen aus neuen Feldern in `Einstellungen`,
-  leer bleibt die Linie
+  Abteilung, Buchungsstelle, Ort und Name der Behörde kommen aus neuen
+  Feldern in `Einstellungen`, leer bleibt die Linie. Die drei gezeichneten
+  Unterschriftslinien über „(Datum)" / „(Unterschrift, Dienstbezeichnung)"
+  werden aus dem Zeichnungsteil der Vorlage übernommen
 - Grist Fahrtenbuch: Spalte 11 zeigt nur noch `DSt | DO`, einzeilig in 8 pt
   statt fünf Werten zweizeilig in 5,6 pt
 - Grist: Einzelziele vereinfacht — keine eigene Tabelle, kein Zerlegen, keine
