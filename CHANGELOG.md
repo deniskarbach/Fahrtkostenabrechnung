@@ -3,6 +3,15 @@
 Alle nennenswerten Änderungen an diesem Projekt.
 
 ## [Unreleased]
+- Grist, Befunde aus dem Abnahmetest (35 Testreisen):
+  - Stammziel ohne PLZ/Ort: `Adresse` fängt leere Felder ab — vorher stand im
+    Ortsverzeichnis „E,TypeError“ und der Routenlink war kaputt
+  - Fahrtenbuch: 17 Zeilen je Block wie im Original-Fahrtenbuch (vorher 26,
+    die 26. rutschte auf eine eigene Seite)
+  - negative Minuten zählen in der Tagegeld-Rechnung als 0
+  - negative Beträge erscheinen im Ausdruck mit Minus, statt leer zu bleiben
+    und trotzdem in die Summe einzugehen
+  - Uhrzeiten: Trennzeichen und Zusätze egal (`7.15`, `07:15 Uhr`, `7:15 UHR`)
 - Grist S2: Unterstreichung und Fettdruck innerhalb von Zellen werden aus der
   Vorlage übernommen (Rich Text) — u. a. die Leerstelle nach „1. KK
   anweisen,", Buchungsjahr, „z. d. A."; nur die Ziffern „1.–3." sind fett.

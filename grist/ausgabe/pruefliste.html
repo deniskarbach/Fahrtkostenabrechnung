@@ -275,9 +275,12 @@ const stunden = min => {
   return `${vz}${Math.trunc(min / 60)}:${String(min % 60).padStart(2, "0")}`;
 };
 
-const eur = n => n > 0 ? n.toLocaleString("de-DE",
-  { minimumFractionDigits:2, maximumFractionDigits:2 }) : "";
-const zahl = n => n > 0 ? String(n) : "";
+/* Auch negative Beträge erscheinen -- mit Minus. Bis 16.10.2026 blieb die Zelle
+   leer, der Betrag ging aber in die Summe ein: der Übertrag stimmte dann nicht
+   mit den sichtbaren Zeilen überein. So fällt eine Fehleingabe beim
+   Unterschreiben auf. */
+const eur = n => n ? n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}) : "";
+const zahl = n => n ? String(n) : "";
 
 /* Die Route-Zelle braucht ein echtes <a href>, kein reiner Text -- deshalb
    hier NICHT html`` (das würde das Tag selbst escapen). Der Link steht

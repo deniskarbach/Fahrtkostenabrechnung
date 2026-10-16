@@ -127,7 +127,10 @@ const beispielFahrten = [
     zeit:"DSt 1:00 | DO 0:30" },
 ];
 
-const ROWS_PRO_SEITE = 26;   // A4 quer, 190mm Nutzhöhe minus 16,4mm Kopf, bei 6,35mm/Zeile
+// = Zeilen im Original-Fahrtenbuch, in das geklebt wird. Mehr Zeilen je Blatt
+// passten nicht auf die Vorlage (bis 16.10.2026 waren es 26, gedruckt passten
+// nicht einmal die aufs Blatt).
+const ROWS_PRO_SEITE = 17;
 
 function kopfSeite1() {
   return `<colgroup>

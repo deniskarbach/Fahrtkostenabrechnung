@@ -231,6 +231,9 @@ Freitextfeld im Formular da. Es landet mit Kürzel und Datum im Ortsverzeichnis.
 - **Anschriften** vollständig? Im Ortsverzeichnis steht jedes Einzelziel
   (`E26-07`, `E26-08` …) mit dem Freitext, wie er erfasst wurde. Fehlt etwas, wird es
   im Freitext der Reise auf der Seite `Reisekorrektur` ergänzt.
+- **Keine negativen Werte**: Minuten und Beträge immer positiv eintragen. Ein
+  Minus zählt bei den Minuten als 0; ein negativer Betrag steht mit Minus im
+  Ausdruck und zieht die Summe herunter.
 - **Kilometer** plausibel? Ein Zahlendreher im Tachostand ergibt 0 dienstliche
   Kilometer, keine negative Zahl — er fällt also nicht durch einen Fehlerwert
   auf, sondern durch eine auffällig niedrige Zahl. Eine `0` auf S1 ist nicht

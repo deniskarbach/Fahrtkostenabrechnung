@@ -18,11 +18,11 @@ Routenlink und die Legende im Ortsverzeichnis.
 ## Adresse
 
 ```python
-", ".join(x for x in [$Strasse, ($PLZ + " " + $Ort).strip()] if x)
+", ".join(x for x in [$Strasse, (($PLZ or "") + " " + ($Ort or "")).strip()] if x)
 ```
 
 **Statement:**
-- `($PLZ + " " + $Ort)` – PLZ und Ort zu einem Block verbinden
+- `(($PLZ or "") + " " + ($Ort or ""))` – PLZ und Ort zu einem Block verbinden; ein nie befülltes Feld ist leer (`None`), nicht `""` — ohne `or ""` stand im Ortsverzeichnis „E,TypeError“, etwa bei den frisch angelegten `WO`/`KV`
 - `.strip()` – fehlt eines von beiden, bleibt kein einzelnes Leerzeichen übrig
 - `if x` – leere Teile fallen heraus, statt einen doppelten Trenner zu erzeugen
 - `", ".join(…)` – die verbliebenen Teile mit Komma verbinden

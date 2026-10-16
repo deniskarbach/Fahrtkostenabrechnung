@@ -99,12 +99,10 @@ Gesamtstrecke ergeben 0, nicht eine negative Zahl.
 ## Abwesenheit_min — Abwesenheit (Minuten)
 
 ```python
+import re
 def minuten(s):
-  try:
-    h, m = str(s).split(":")
-    return int(h) * 60 + int(m)
-  except Exception:
-    return None
+  z = re.findall(r"\d+", str(s or ""))
+  return int(z[0]) * 60 + int(z[1]) if len(z) >= 2 else None
 a, b = minuten($Beginn), minuten($Ende)
 if a is None or b is None or not $Datum:
   return 0
@@ -118,7 +116,7 @@ return total
 ```
 
 **Statement:**
-- `minuten(s)` – zerlegt `"07:15"` in Stunden und Minuten und rechnet in Minuten um; alles Unlesbare ergibt `None`
+- `minuten(s)` – nimmt die ersten beiden Zahlen als Stunden und Minuten; Trennzeichen und Zusätze sind egal (`07:15`, `7.15`, `7,15`, `07:15 Uhr`, `7:15 UHR`, `7 Uhr 15`). Eine einzelne Zahl (`715`, `7`) ist mehrdeutig und ergibt `None`
 - `if a is None or b is None …` – fehlt eine Uhrzeit oder das Datum, ist die Abwesenheit 0
 - `tage = ($Datum_bis - $Datum).days` – volle Tage zwischen Beginn und Ende
 - `if tage < 0` – Enddatum vor dem Startdatum: 0 statt einer negativen Dauer
@@ -128,7 +126,9 @@ return total
 **Ergebnis:** Dauer der Abwesenheit in Minuten — Grundlage der Tagegeld-Staffel.
 **Rechenweg:** Je angefangenem Zusatztag 1440 Minuten, dazu die Uhrzeitdifferenz.
 **Sonderfall:** Unlesbare oder fehlende Uhrzeit ergibt 0, nicht einen Fehler —
-der Fehler stünde sonst in der ganzen Spalte und leerte S1.
+der Fehler stünde sonst in der ganzen Spalte und leerte S1. Auf S1 fällt das als
+„Ges.: 0:00“ auf. Bis 16.10.2026 ergaben schon `7.15` und `07:15 Uhr` still 0
+(Abnahmetest).
 **Muster:** Untergrenze (D).
 
 Zwei Fälle, die leicht verwechselt werden:
@@ -146,15 +146,17 @@ zwingend — für eine Reise über mehrere Nächte schon.
 ## Rest_min — Rest-Zeit (Minuten)
 
 ```python
-$Abwesenheit_min - ($Min_privat_Abzug or 0)
-                 - ($Min_Dienststaette or 0) - ($Min_Dienstort or 0)
+$Abwesenheit_min - max(0, $Min_privat_Abzug or 0)
+                 - max(0, $Min_Dienststaette or 0) - max(0, $Min_Dienstort or 0)
 ```
 
 **Ergebnis:** Die Abwesenheit, bereinigt um privaten Zeitabzug und um die
 Aufenthalte an Dienststätte und Dienstort.
 **Rechenweg:** Von der Abwesenheit werden die drei Minutenfelder abgezogen.
 **Sonderfall:** Kann negativ werden, wenn die Aufenthalte zusammen länger sind
-als die Abwesenheit; `Tagegeld_Stufe` fängt das ab.
+als die Abwesenheit; `Tagegeld_Stufe` fängt das ab. Negative Minuten
+(Fehleingabe) zählen als 0 — vorher machte ein privater Abzug von „−60“ aus
+genau 8:00 h eine Rest-Zeit von 9:00 h und damit Tagegeld „>8h“.
 **Muster:** Ersatzwert 0 (C).
 
 Zwischenwert, in der Tabellenansicht ausgeblendet. Er bestimmt die **Stufe**;
@@ -168,7 +170,7 @@ abzüglich des privaten Abzugs — siehe [Anhang](anhang.md).
 ```python
 if not $Tagegeld_beantragt:
   return ""
-if ($Abwesenheit_min or 0) - ($Min_privat_Abzug or 0) < 481:
+if ($Abwesenheit_min or 0) - max(0, $Min_privat_Abzug or 0) < 481:
   return ""
 r = $Rest_min
 if r <= 0:   return ""
@@ -180,7 +182,7 @@ return "24h"
 
 **Statement:**
 - `if not $Tagegeld_beantragt` – ohne Antrag keine Stufe, unabhängig von der Dauer
-- `… < 481` – Anspruch dem Grunde nach: bereinigte Abwesenheit mindestens 8:01 h
+- `… < 481` – Anspruch dem Grunde nach: bereinigte Abwesenheit mindestens 8:01 h; ein negativer privater Abzug zählt als 0
 - `if r <= 0` – Rest-Zeit vollständig aufgebraucht: **keine** Stufe
 - die vier Schwellen 481 / 840 / 1440 Minuten
 

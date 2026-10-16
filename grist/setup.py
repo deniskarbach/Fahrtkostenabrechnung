@@ -99,13 +99,13 @@ EINZEILIG = '", ".join(x.strip() for x in (t or "").splitlines() if x.strip())'
 
 # ---------------------------------------------------------------- Formeln
 
-ABWESENHEIT = '''
+ABWESENHEIT = r'''
+import re
 def minuten(s):
-  try:
-    h, m = str(s).split(":")
-    return int(h) * 60 + int(m)
-  except Exception:
-    return None
+  # Nur die Zahlen zählen: "7:15", "7.15", "07:15 Uhr", "7:15 UHR", "7 Uhr 15".
+  # Eine einzelne Zahl ("715", "7") ist mehrdeutig und bleibt ungelesen.
+  z = re.findall(r"\d+", str(s or ""))
+  return int(z[0]) * 60 + int(z[1]) if len(z) >= 2 else None
 a, b = minuten($Beginn), minuten($Ende)
 if a is None or b is None or not $Datum:
   return 0
@@ -121,7 +121,8 @@ return total
 STUFE = '''
 if not $Tagegeld_beantragt:
   return ""
-if ($Abwesenheit_min or 0) - ($Min_privat_Abzug or 0) < 481:   # Anspruch dem Grunde nach
+# Negative Minuten zählen als 0 -- eine Fehleingabe darf keinen Anspruch erzeugen.
+if ($Abwesenheit_min or 0) - max(0, $Min_privat_Abzug or 0) < 481:   # Anspruch dem Grunde nach
   return ""
 r = $Rest_min
 if r <= 0:   return ""     # Abwesenheit ging vollstaendig fuer Dienststaette/
@@ -224,7 +225,10 @@ STAMMZIELE = [
     spalte("PLZ",      "PLZ", "Text"),
     spalte("Ort",      "Ort", "Text"),
     spalte("Adresse",  "Vollständige Adresse", "Text",
-           formel='", ".join(x for x in [$Strasse, ($PLZ + " " + $Ort).strip()] if x)'),
+           # "or ''": ein nie befülltes Feld ist None, nicht "" -- so bei WO/KV,
+           # die setup.py nur mit Kürzel und Name anlegt. Ohne das stand im
+           # Ortsverzeichnis "E,TypeError" (Abnahmetest 16.10.2026).
+           formel='", ".join(x for x in [$Strasse, (($PLZ or "") + " " + ($Ort or "")).strip()] if x)'),
 ]
 
 MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
@@ -312,8 +316,9 @@ REISEN = [
            formel="max(0, $KM_gesamt - ($Umweg_privat or 0))"),
     spalte("Abwesenheit_min", "Abwesenheit (Minuten)", "Int", formel=ABWESENHEIT),
     spalte("Rest_min",        "Rest-Zeit (Minuten)", "Int",
-           formel="$Abwesenheit_min - ($Min_privat_Abzug or 0) "
-                  "- ($Min_Dienststaette or 0) - ($Min_Dienstort or 0)"),
+           # negative Minuten zählen als 0 (Fehleingabe, siehe STUFE)
+           formel="$Abwesenheit_min - max(0, $Min_privat_Abzug or 0) "
+                  "- max(0, $Min_Dienststaette or 0) - max(0, $Min_Dienstort or 0)"),
     spalte("Tagegeld_Stufe",  "Tagegeld-Stufe", "Text", formel=STUFE),
     spalte("Einzelziele",     "Einzelziele (Ortsverzeichnis)", "Text", formel=EINZELZIELE),
     spalte("Reiseweg",        "Reiseweg", "Text", formel=REISEWEG),
@@ -1285,17 +1290,42 @@ def selbsttest():
     # Tagegeldstaffel: die vier Grenzen und der Fall, in dem Dienststaette und
     # Dienstort die Abwesenheit ganz aufbrauchen -- Rest <= 0 ergab vorher die
     # kleinste Stufe statt gar keiner.
-    def stufe(abw, privat=0, dst=0, dort=0, beantragt=True):
-        return lauf(STUFE, type("R", (), dict(
-            Tagegeld_beantragt=beantragt, Abwesenheit_min=abw,
-            Min_privat_Abzug=privat, Min_Dienststaette=dst, Min_Dienstort=dort,
-            Rest_min=abw - privat - dst - dort))())
+    REST = next(x["fields"]["formula"] for x in REISEN if x["id"] == "Rest_min")
 
+    def stufe(abw, privat=0, dst=0, dort=0, beantragt=True):
+        r = type("R", (), dict(Tagegeld_beantragt=beantragt, Abwesenheit_min=abw,
+                               Min_privat_Abzug=privat, Min_Dienststaette=dst,
+                               Min_Dienstort=dort))()
+        r.Rest_min = lauf("return " + REST, r)
+        return lauf(STUFE, r)
+
+    # Negative Minuten (Fehleingabe) zählen als 0: genau 8:00h mit "-60" privat
+    # ergab vorher Rest 9:00 und damit ">8h" (Abnahmetest 16.10.2026).
     for args, soll in [((600, 0, 500, 200), ""), ((600, 0, 600, 0), ""),
                        ((600, 0, 200, 0), "anteilig"), ((400,), ""),
                        ((500,), ">8h"), ((900,), ">=14h"), ((1500,), "24h"),
-                       ((1500, 0, 0, 0, False), "")]:
+                       ((1500, 0, 0, 0, False), ""),
+                       ((480, -60), ""), ((600, 0, -120), ">8h"), ((900, 0, 0, -300), ">=14h")]:
         assert stufe(*args) == soll, (args, stufe(*args), soll)
+
+    # Uhrzeiten: nur die Zahlen zählen, Schreibweise egal; eine einzelne Zahl
+    # bleibt ungelesen (0 Minuten, fällt auf S1 als "Ges.: 0:00" auf).
+    def abw(beginn, ende):
+        return lauf(ABWESENHEIT, type("R", (), dict(
+            Beginn=beginn, Ende=ende, Datum=date(2026, 1, 5), Datum_bis=date(2026, 1, 5)))())
+    for b, e, soll in [("07:15", "16:00", 525), ("7.15", "16.00", 525), ("07:15 Uhr", "16:00 UHR", 525),
+                       ("7:15 uhr", "16 Uhr 00", 525), ("7,15", "16:00", 525), ("22:00", "02:00", 240),
+                       ("715", "16:00", 0), ("7", "16:00", 0), ("", "16:00", 0), (None, None, 0)]:
+        assert abw(b, e) == soll, (b, e, abw(b, e), soll)
+
+    # Adresse: ein nie befülltes Feld ist None -- vorher TypeError und
+    # "E,TypeError" im Ortsverzeichnis.
+    ADRESSE = next(x["fields"]["formula"] for x in STAMMZIELE if x["id"] == "Adresse")
+    def adresse(strasse, plz, ort):
+        return lauf("return " + ADRESSE, type("S", (), dict(Strasse=strasse, PLZ=plz, Ort=ort))())
+    assert adresse(None, None, None) == ""
+    assert adresse("Amtsstr. 1", None, "Musterstadt") == "Amtsstr. 1, Musterstadt"
+    assert adresse("Amtsstr. 1", "00000", "Musterstadt") == "Amtsstr. 1, 00000 Musterstadt"
 
     # Layout-Knoten: verschachtelte Seiten (zwei Widgets nebeneinander) tragen
     # kein eigenes 'leaf'. Beide Funktionen muessen da hineinsteigen, sonst

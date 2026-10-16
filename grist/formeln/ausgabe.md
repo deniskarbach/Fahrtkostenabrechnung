@@ -73,7 +73,7 @@ Je Reise eine Zeile, darunter eine Übertragszeile mit den Summen.
 **Statement:**
 - `kreuz(stufe, s)` – setzt `X` in genau die Spalte, deren Name der Stufe entspricht
 - `kreuz8h(stufe)` – wie `kreuz` für `>8h`, zusätzlich `(X)` bei `anteilig`: der amtliche Vordruck hat keine eigene Spalte „Tagegeld anteilig"
-- `eur(n)` / `zahl(n)` – geben bei `0` einen **Leerstring** aus, nicht „0,00"
+- `eur(n)` / `zahl(n)` – geben bei `0` einen **Leerstring** aus, nicht „0,00"; negative Werte erscheinen mit Minus. Bis 16.10.2026 blieben sie leer, gingen aber in die Summe ein — der Übertrag passte dann nicht zu den sichtbaren Zeilen
 - die Übertragszeile summiert dieselben fünf Felder über alle gedruckten Zeilen
 
 ### Spalte „Reiseweg"
@@ -243,7 +243,10 @@ Je Reise eine Zeile, Spalten 1–15 des amtlichen Fahrtenbuchs.
 | 15 Vermerke | `Vermerk_Label` |
 
 Die **Schnittversion** bricht dieselben Daten auf zwei Seiten je Zeilenblock um:
-links die Spalten 1–6, rechts 7–15. Bei **100 %** drucken, an der bezeichneten
+links die Spalten 1–6, rechts 7–15. Ein Block hat **17 Zeilen** — so viele hat
+das Original-Fahrtenbuch, in das geklebt wird (`ROWS_PRO_SEITE`). Bis
+16.10.2026 waren es 26; gedruckt passten davon nur 25, die 26. Zeile rutschte
+auf eine eigene Seite. Bei **100 %** drucken, an der bezeichneten
 Kante schneiden, einkleben, unterschreiben.
 
 ### Spalte 11 der Schnittversion
