@@ -65,15 +65,14 @@ thead .klein { font-size: 5.6pt; }
 
 tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
 tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
-/* Spalte 11 trägt die Zeitwerte. 5,6pt und schmales Polster, weil die untere
-   Zeile bei 8pt rund 35mm bräuchte, die Spalte aber nur 28,91mm hat.
-   white-space: pre -- nur der feste Umbruch, kein automatischer: eine dritte
-   Zeile würde die Zeile höher machen als ihr Gegenstück auf Seite 1, und die
-   beiden Hälften passten beim Einkleben nicht mehr aneinander.
-   ponytail: reicht bis 99:59 je Wert; dreistellige Stunden in der unteren
-   Zeile würden abgeschnitten -- dann Schrift weiter verkleinern. */
-tbody td.zeit { font-size: 5.6pt; white-space: pre; line-height: 1.1;
-                padding-left: .4mm; padding-right: .4mm; }
+/* Spalte 11 trägt nur DSt und DO, einzeilig in der normalen Schrift (8pt).
+   Bis 14.10.2026 standen hier alle fünf Zeitwerte zweizeilig in 5,6pt --
+   zu klein zum Lesen; die volle Aufschlüsselung steht auf S1 und in der
+   Prüfliste. nowrap: ein Umbruch würde die Zeile höher machen als ihr
+   Gegenstück auf Seite 1, die Hälften passten beim Einkleben nicht mehr.
+   ponytail: "DSt 99:59 | DO 99:59" braucht rund 25mm von 28,91mm; längere
+   Werte würden abgeschnitten -- dann Schrift verkleinern. */
+tbody td.zeit { white-space: nowrap; padding-left: .4mm; padding-right: .4mm; }
 
 .schnitt-rechts { border-right: 1pt dashed #000; }
 .schnitt-links  { border-left: 1pt dashed #000; }
@@ -122,10 +121,10 @@ tbody td.zeit { font-size: 5.6pt; white-space: pre; line-height: 1.1;
 const beispielFahrten = [
   { nr:1, monat:"02", tag:"03", von:"07:15", bis:"16:40", weg:"Nr. 1 – WO > KV > E26-01 > WO",
     kmBeginn:12000, kmEnde:12087, kmDienstlich:87, kmPrivat:0, vermerk:"",
-    zeit:"Ges 9:25 | Rest 9:25\nDSt 0:00 | DO 0:00 | Pr 0:00" },
+    zeit:"DSt 0:00 | DO 0:00" },
   { nr:2, monat:"02", tag:"05", von:"08:00", bis:"12:10", weg:"Nr. 2 – WO > KV > WO",
     kmBeginn:12087, kmEnde:12111, kmDienstlich:24, kmPrivat:0, vermerk:"V26-01",
-    zeit:"Ges 4:10 | Rest 2:25\nDSt 1:00 | DO 0:30 | Pr 0:15" },
+    zeit:"DSt 1:00 | DO 0:30" },
 ];
 
 const ROWS_PRO_SEITE = 26;   // A4 quer, 190mm Nutzhöhe minus 16,4mm Kopf, bei 6,35mm/Zeile
@@ -242,13 +241,11 @@ const stunden = min => {
   return `${vz}${Math.trunc(min / 60)}:${String(min % 60).padStart(2, "0")}`;
 };
 
-/* Spalte 11: dieselben Zeiten wie in der S1-Spalte "Reiseweg", hier aber
-   immer alle fünf (auch 0:00) und zweizeilig -- wie in der Sheets-Version
-   (Druck-Fahrtenbuch K4). */
+/* Spalte 11: nur Aufenthalt Dienststätte und Dienstort, immer beide (auch
+   0:00), einzeilig. Die volle Aufschlüsselung steht auf S1 und in der
+   Prüfliste. */
 const fbZeit = r => !r.Lfd_Nr ? "" :
-    `Ges ${stunden(r.Abwesenheit_min)} | Rest ${stunden(r.Rest_min)}\n`
-  + `DSt ${stunden(r.Min_Dienststaette)} | DO ${stunden(r.Min_Dienstort)}`
-  + ` | Pr ${stunden(r.Min_privat_Abzug)}`;
+  `DSt ${stunden(r.Min_Dienststaette)} | DO ${stunden(r.Min_Dienstort)}`;
 
 const zeilen = t => t.id.map((_, i) =>
   Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));

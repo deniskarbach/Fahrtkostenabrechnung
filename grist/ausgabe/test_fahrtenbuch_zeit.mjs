@@ -1,6 +1,5 @@
-/* Prüft Spalte 11 der Fahrtenbuch-Schnittversion: sie muss die Zeitwerte der
-   Reise zeigen -- immer alle fünf, auch 0:00, in zwei Zeilen mit festem
-   Umbruch. Format wie in der Sheets-Version (Druck-Fahrtenbuch K4).
+/* Prüft Spalte 11 der Fahrtenbuch-Schnittversion: sie zeigt nur DSt und DO,
+   immer beide (auch 0:00), einzeilig. Die volle Aufschlüsselung steht auf S1.
 
        node grist/ausgabe/test_fahrtenbuch_zeit.mjs
 */
@@ -21,7 +20,7 @@ const spaltig = rows => {
 const TABELLEN = {
   Einstellungen: [{ id: 1, Zeitraum_von: d(20000), Zeitraum_bis: d(20100) }],
   Reisen: [
-    // Kein privater Zeitabzug -> Pr steht trotzdem da, als 0:00.
+    // Ohne Aufenthalt -> DSt und DO stehen trotzdem da, als 0:00.
     { id: 1, Datum: d(20010), Lfd_Nr: 67, Beginn: "08:00", Ende: "16:55",
       Abwesenheit_min: 535, Min_Dienststaette: 0, Min_Dienstort: 0,
       Min_privat_Abzug: 0, Rest_min: 535 },
@@ -54,8 +53,8 @@ const zeit = [...knoten("seiten").kinder.map(k => k.innerHTML).join("")
   .matchAll(/<td class="zeit">([\s\S]*?)<\/td>/g)].map(m => m[1]);
 
 assert.deepEqual(zeit, [
-  "Ges 8:55 | Rest 8:55\nDSt 0:00 | DO 0:00 | Pr 0:00",
-  "Ges 10:00 | Rest 7:45\nDSt 1:00 | DO 0:30 | Pr 0:45",
+  "DSt 0:00 | DO 0:00",
+  "DSt 1:00 | DO 0:30",
 ]);
 
-console.log("ok — Schnittversion zeigt Ges/Rest über DSt/DO/Pr in Spalte 11");
+console.log("ok — Schnittversion zeigt DSt | DO einzeilig in Spalte 11");

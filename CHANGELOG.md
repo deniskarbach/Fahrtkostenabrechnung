@@ -3,6 +3,13 @@
 Alle nennenswerten Änderungen an diesem Projekt.
 
 ## [Unreleased]
+- Grist S2: Unterstreichung und Fettdruck innerhalb von Zellen werden aus der
+  Vorlage übernommen (Rich Text) — u. a. die Leerstelle nach „1. KK
+  anweisen,", Buchungsjahr, „z. d. A."; nur die Ziffern „1.–3." sind fett.
+  Abteilung und Buchungsstelle kommen aus neuen Feldern in `Einstellungen`,
+  leer bleibt die Linie
+- Grist Fahrtenbuch: Spalte 11 zeigt nur noch `DSt | DO`, einzeilig in 8 pt
+  statt fünf Werten zweizeilig in 5,6 pt
 - Grist: Einzelziele vereinfacht — keine eigene Tabelle, kein Zerlegen, keine
   ⚠️-Prüfung mehr. Der Freitext steht ungeprüft unter „Adresse" im
   Ortsverzeichnis, mit Kürzel und Datum; im Reiseweg (Fahrtenbuch,

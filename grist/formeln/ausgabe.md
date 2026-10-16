@@ -144,6 +144,22 @@ nachgebaut. Das Skript bricht ab, wenn
 - der erzeugte Block höher als ein A4-Blatt wäre (sonst liefe S2 still auf
   Seite 2 über).
 
+Übernommen wird auch die Formatierung **innerhalb** einer Zelle: In der
+Vorlage sind oft nur Teile unterstrichen oder fett (die Leerstelle nach
+„1. KK anweisen,", das Buchungsjahr, „z. d. A.", die fetten Ziffern „1.",
+„2.", „3."). Das Skript liest die Vorlage deshalb als Rich Text; bis
+16.10.2026 fehlten diese Linien im Ausdruck.
+
+Von den vier geschwärzten Zellen füllt das Widget zwei aus
+[Einstellungen](einstellungen.md): `Abteilung` und `Buchungsstelle`. Ist das
+Feld leer, bleibt die Linie der Vorlage stehen. Die beiden anderen (Ort vor dem
+Datum, Behördenname) bleiben Linie.
+
+**Nach der Migration ins interne Netz** (Repo nicht mehr öffentlich) entfällt
+die Schwärzung: die Regeln in `SCHWAERZEN` löschen, S2 neu erzeugen — dann
+kommen alle vier Werte unverändert aus der Vorlage. Die Spalten `Abteilung`
+und `Buchungsstelle` und die drei Zeilen im Widget werden danach überflüssig.
+
 IBAN- und BIC-Kasten bleiben leer und werden bei Bedarf von Hand ausgefüllt.
 
 ## Vermerke
@@ -227,18 +243,17 @@ Kante schneiden, einkleben, unterschreiben.
 
 ```js
 const fbZeit = r => !r.Lfd_Nr ? "" :
-    `Ges ${stunden(r.Abwesenheit_min)} | Rest ${stunden(r.Rest_min)}\n`
-  + `DSt ${stunden(r.Min_Dienststaette)} | DO ${stunden(r.Min_Dienstort)}`
-  + ` | Pr ${stunden(r.Min_privat_Abzug)}`;
+  `DSt ${stunden(r.Min_Dienststaette)} | DO ${stunden(r.Min_Dienstort)}`;
 ```
 
-**Ergebnis:** `Ges 10:00 | Rest 7:45` über `DSt 1:00 | DO 0:30 | Pr 0:45` —
-dieselben Zeiten wie in der [S1-Spalte „Reiseweg"](#spalte-reiseweg), wie in
-der Sheets-Version (Druck-Fahrtenbuch K4).
-**Sonderfall:** Anders als auf S1 erscheint der private Abzug (Pr) immer, auch
-mit 0:00. Die Zelle ist in 5,6 pt gesetzt und bricht nur am festen Umbruch:
-eine dritte Zeile würde die Zeile höher machen als ihr Gegenstück auf der
-linken Seite, und die beiden Hälften passten nicht mehr aneinander.
+**Ergebnis:** `DSt 1:00 | DO 0:30` — Aufenthalt in Dienststätte und am
+Dienstort, beide immer, auch mit 0:00. Die volle Aufschlüsselung (Ges., Rest,
+privater Abzug) steht in der [S1-Spalte „Reiseweg"](#spalte-reiseweg) und in
+der Prüfliste.
+**Sonderfall:** Einzeilig in der normalen Schrift (8 pt), ohne Umbruch: eine
+zweite Zeile würde die Zeile höher machen als ihr Gegenstück auf der linken
+Seite, und die beiden Hälften passten nicht mehr aneinander. Bis Oktober 2026
+standen hier alle fünf Werte zweizeilig in 5,6 pt — zu klein zum Lesen.
 
 ## Prüfliste (Zeiterfassungsstelle)
 

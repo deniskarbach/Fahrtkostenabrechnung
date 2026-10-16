@@ -21,13 +21,18 @@ import pathlib
 import sys
 
 import openpyxl
+from openpyxl.cell.rich_text import CellRichText, TextBlock
 
 # S2_VORLAGE überschreibt den Pfad — braucht test_schwaerzung.py, um die
 # Wächter gegen manipulierte Kopien der Vorlage laufen zu lassen.
 VORLAGE = pathlib.Path(os.environ.get("S2_VORLAGE") or
                        pathlib.Path(__file__).resolve().parents[2]
                        / "ReisekostenabrechnungFINAL.xlsx")
-WB = openpyxl.load_workbook(VORLAGE)
+# rich_text: Unterstreichung und Fettdruck gelten in der Vorlage oft nur für
+# einen Teil der Zelle (die Leerstelle nach "KK anweisen," ist eine
+# unterstrichene Leerzeichenkette). Ohne rich_text liefert openpyxl nur den
+# blanken Text -- die Linien fehlten im Ausdruck bis 16.10.2026.
+WB = openpyxl.load_workbook(VORLAGE, rich_text=True)
 WS = WB["S2"]
 SPALTEN = list("ABCDEFG")
 DEF_W = 12.6328125
@@ -44,12 +49,23 @@ PT_MM = 25.4 / 72
 # Vorlage um eine Zeile, bricht der Lauf ab, statt den echten Wert still in die
 # öffentliche Ausgabe zu schreiben. Neue Vorlage: mit --fingerabdruecke die
 # Werte der hier eingetragenen Zellen neu ausgeben lassen und prüfen.
+#
+# Der Ersatz bildet die Formatierung des Originals nach (fett, unterstrichen,
+# Stück für Stück). Ein Stück mit id wird zum <span>, den das Widget aus
+# Einstellungen füllt; bleibt das Feld dort leer, steht die Linie zum
+# Ausfüllen von Hand da. Nach der Migration ins interne Netz entfällt die
+# Schwärzung: Regel löschen, dann kommt der Originalwert aus der Vorlage.
+def T(text, art="", id=None):
+    """Ein Stück Ersatztext. art: "b" fett, "u" unterstrichen."""
+    return (text, "b" in art, "u" in art, id)
+
+
 SCHWAERZEN = {
-    (34, 1): ("81e3e161d025", "Abteilung: __________"),
-    (34, 4): ("3df650914e3b", "_______________, _______________"),
-    (37, 1): ("719b8d22e6d7",
-              "1. KK anweisen,                         \u20ac bei: _____________________"),
-    (45, 3): ("ed6bb6080fdc", "_____________________________"),
+    (34, 1): ("81e3e161d025", [T("Abteilung: ", "bu"), T("__________", "bu", "s2-abteilung")]),
+    (34, 4): ("3df650914e3b", [T("_______________, "), T("_______________", "u")]),
+    (37, 1): ("719b8d22e6d7", [T("1.", "b"), T(" KK anweisen,"), T(" " * 25, "u"),
+                               T("\u20ac bei: "), T("_____________________", "", "s2-buchungsstelle")]),
+    (45, 3): ("ed6bb6080fdc", [T("_____________________________")]),
 }
 
 GESCHWAERZT = {}   # (Zeile, Spalte) -> Originalwert, für die Schlusskontrolle
@@ -82,9 +98,33 @@ if "--fingerabdruecke" in sys.argv:
 
 STAERKE = {"thin": "var(--rahmen)", "medium": "var(--rahmen-breit)"}
 
-# Das Widget füllt im S2-Block keine Zelle mehr: die Kontoverbindung wird
-# nicht erfasst, IBAN- und BIC-Kasten bleiben als Vordruck stehen. Daher
-# vergibt dieses Skript auch keine ids mehr.
+# Das Widget füllt im S2-Block nur die beiden <span> aus SCHWAERZEN
+# (Abteilung, Buchungsstelle). Die Kontoverbindung wird nicht erfasst, IBAN-
+# und BIC-Kasten bleiben als Vordruck stehen.
+
+
+def stuecke(zelle):
+    """Die Zelle als Liste von (Text, fett, unterstrichen, id) -- Rich Text
+    Stück für Stück, sonst die ganze Zelle mit ihrer Schrift."""
+    f = zelle.font
+    if isinstance(zelle.value, CellRichText):
+        return [(t.text, bool(t.font.b), bool(t.font.u), None) if isinstance(t, TextBlock)
+                else (t, bool(f.bold), bool(f.u), None) for t in zelle.value]
+    return [(str(zelle.value), bool(f.bold), bool(f.u), None)]
+
+
+def html_stueck(text, fett, unter, id, ganz_fett, ganz_unter):
+    """Ein Stück als HTML. Leerzeichen in unterstrichenen Stücken werden alle
+    zu &nbsp; -- sonst fasst der Browser die Linie zusammen."""
+    t = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    t = t.replace(" ", "&nbsp;") if unter else t.replace("  ", "&nbsp;&nbsp;")
+    if id:
+        t = f'<span id="{id}">{t}</span>'
+    if unter and not ganz_unter:
+        t = f"<u>{t}</u>"
+    if fett and not ganz_fett:
+        t = f"<b>{t}</b>"
+    return t
 
 
 def breite(sp):
@@ -162,14 +202,23 @@ for r in range(1, WS.max_row + 1):
         wert = "" if wert is None else str(wert).rstrip()
         if wert.startswith("="):        # Formeln der Vorlage: leer lassen
             wert = ""
+        teile = stuecke(zelle) if wert else []
         if (r, ci) in SCHWAERZEN:
-            wert = schwaerzen(r, ci, wert)
+            teile = schwaerzen(r, ci, wert)
+        while teile and not teile[-1][0].rstrip():     # dasselbe rstrip je Stück
+            teile.pop()
+        if teile:
+            teile[-1] = (teile[-1][0].rstrip(),) + teile[-1][1:]
+        ganz_fett = bool(teile) and all(t[1] for t in teile)
+        ganz_unter = bool(teile) and all(t[2] for t in teile)
 
-        if wert:
+        if teile:
             f, a = zelle.font, zelle.alignment
             stil.append(f"font-size:{f.size:g}pt")
-            if f.bold:
+            if ganz_fett:
                 stil.append("font-weight:bold")
+            if ganz_unter:
+                stil.append("text-decoration:underline")
             if a.horizontal in ("center", "right", "left"):
                 stil.append(f"text-align:{a.horizontal}")
             if a.vertical in ("top", "center", "bottom"):
@@ -184,8 +233,7 @@ for r in range(1, WS.max_row + 1):
                 if nachbar <= len(SPALTEN) and WS.cell(r, nachbar).value not in (None, ""):
                     stil.append("overflow:hidden")
 
-        inhalt = (wert.replace("&", "&amp;").replace("<", "&lt;")
-                      .replace(">", "&gt;").replace("  ", "&nbsp;&nbsp;"))
+        inhalt = "".join(html_stueck(*t, ganz_fett, ganz_unter) for t in teile)
         offen = "<td" + ("".join(" " + x for x in attr))
         if stil:
             offen += ' style="' + ";".join(stil) + '"'

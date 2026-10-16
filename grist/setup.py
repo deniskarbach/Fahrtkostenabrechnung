@@ -253,6 +253,10 @@ EINSTELLUNGEN = [
     spalte("Dienstort_Strasse", "Dienstort – Straße und Hausnummer", "Text"),
     spalte("Dienstort_PLZ", "Dienstort – PLZ", "Text"),
     spalte("Dienstort_Ort", "Dienstort – Ort", "Text"),
+    # S2, Verfügungsteil. Hier statt im Code, solange das Repo öffentlich ist;
+    # leer bleibt auf S2 die Linie zum Ausfüllen von Hand.
+    spalte("Abteilung", "Abteilung (S2)", "Text"),
+    spalte("Buchungsstelle", "Buchungsstelle (S2, nach „€ bei:“)", "Text"),
     spalte("Zeitraum_von", "Abrechnungszeitraum von", "Date"),
     spalte("Zeitraum_bis", "Abrechnungszeitraum bis", "Date"),
     # Seite Reisekorrektur: Jahr und Monat filtern nur die Liste darunter
@@ -1026,8 +1030,10 @@ WIDGET_TEXTE = {
         "sonst fehlt die Anschrift im Ortsverzeichnis und der Routenlink."),
     ("Einstellungen", "Einstellungen", "single"): ("Persönliche Angaben",
         "Name, Organisationseinheit, Wohn- und Dienstanschrift. Stehen im Kopf "
-        "von S1 und S2. Einmal eintragen, bei Änderungen anpassen. Der "
-        "Abrechnungszeitraum wird auf der Seite Ausdruck gesetzt."),
+        "von S1 und S2. Abteilung und Buchungsstelle erscheinen auf S2 im "
+        "Verfügungsteil; leer bleibt dort die Linie zum Ausfüllen. Einmal "
+        "eintragen, bei Änderungen anpassen. Der Abrechnungszeitraum wird auf "
+        "der Seite Ausdruck gesetzt."),
     ("Formularverwaltung", "Reisen", "form"): ("Formular",
         "Das Formular, mit dem die Reisen erfasst werden. Über Veröffentlichen "
         "entsteht der Link fürs Handy. Die Seite nicht löschen, sonst "
@@ -1117,7 +1123,34 @@ EINSTELLUNGEN_KARTE = [
     ("Vorname", "Name"), ("Organisationseinheit",),
     ("Wohnort_Strasse",), ("Wohnort_PLZ", "Wohnort_Ort"),
     ("Dienstort_Strasse",), ("Dienstort_PLZ", "Dienstort_Ort"),
+    ("Abteilung", "Buchungsstelle"),
 ]
+
+
+def karte_ergaenzen(sec, tabelle, reihen):
+    """Hängt an eine bestehende Karte die Reihen an, von denen dort noch keine
+    Spalte ein Feld hat. Vorhandene Felder, ihre Anordnung und Gestaltung
+    bleiben unberührt. Gibt die Zahl der ergänzten Reihen zurück."""
+    tid, col = spalten_ids(tabelle)
+    felder = sql(f"select colRef, parentPos from _grist_Views_section_field where parentId = {sec}")
+    da = {f["colRef"] for f in felder}
+    fehlt = [r for r in reihen if not any(col[c] in da for c in r)]
+    if not fehlt:
+        return 0
+    spalten = [c for r in fehlt for c in r]
+    start = max((f["parentPos"] for f in felder), default=0)
+    ids = iter(api("POST", "/apply", [
+        ["BulkAddRecord", "_grist_Views_section_field", [None] * len(spalten),
+         {"parentId": [sec] * len(spalten), "colRef": [col[c] for c in spalten],
+          "parentPos": [start + i + 1 for i in range(len(spalten))]}]])["retValues"][0])
+    layout = json.loads(sql(f"select layoutSpec from _grist_Views_section where id = {sec}")
+                        [0]["layoutSpec"] or "{}")
+    layout.setdefault("children", []).extend(
+        {"leaf": next(ids)} if len(r) == 1 else {"children": [{"leaf": next(ids)} for _ in r]}
+        for r in fehlt)
+    api("POST", "/apply", [["UpdateRecord", "_grist_Views_section", sec,
+                            {"layoutSpec": json.dumps(layout)}]])
+    return len(fehlt)
 
 
 def einstellungen_karte():
@@ -1125,7 +1158,8 @@ def einstellungen_karte():
     ein Card-Widget: eine Zeile als Formular gelesen ist unmissverständlich,
     als Tabellenzeile wirkt sie wie eine von vielen. Felder nach
     EINSTELLUNGEN_KARTE angeordnet. Idempotent: existiert bereits eine
-    angeordnete Karte auf der Seite, passiert nichts."""
+    angeordnete Karte auf der Seite, werden nur fehlende Reihen unten
+    ergänzt -- Grist nimmt neue Spalten nicht von selbst in eine Karte auf."""
     seite = seite_suchen("Einstellungen")
     et = sql("select id from _grist_Tables where tableId = 'Einstellungen'")
     if not (seite and et):
@@ -1135,7 +1169,10 @@ def einstellungen_karte():
 
     if sql(f"select id from _grist_Views_section where parentId = {vid} "
            f"and tableRef = {et} and parentKey = 'single' and layoutSpec <> ''"):
-        print("  Einstellungen-Karte: vorhanden")
+        sec = sql(f"select id from _grist_Views_section where parentId = {vid} "
+                  f"and tableRef = {et} and parentKey = 'single' and layoutSpec <> ''")[0]["id"]
+        n = karte_ergaenzen(sec, "Einstellungen", EINSTELLUNGEN_KARTE)
+        print(f"  Einstellungen-Karte: vorhanden, {n} Reihe(n) ergänzt")
         return
 
     alt = [s["id"] for s in sql(

@@ -26,7 +26,7 @@ const TABELLEN = {
   // Adresse in den WO/KV-Zeilen unten steht nur zum Schein hier -- im echten
   // Dokument liefert sie STAMMZIELE.Adresse per Formel aus genau diesen Feldern.
   Einstellungen: [{ id: 1, Name: "Musterfrau", Vorname: "Erika",
-                    Organisationseinheit: "Referat 42",
+                    Organisationseinheit: "Referat 42", Abteilung: "9-99",
                     Wohnort_Strasse: "Beispielweg 7", Wohnort_PLZ: "00000", Wohnort_Ort: "Musterstadt",
                     Dienstort_Strasse: "Verwaltungsstr. 1", Dienstort_PLZ: "00000", Dienstort_Ort: "Musterstadt",
                     Zeitraum_von: d(20000), Zeitraum_bis: d(20100) }],
@@ -98,5 +98,9 @@ assert.deepEqual(spalte(0), ["1", "2", "3", "4", "5", "6"], "Nummerierung");
 // die Stelle, die beim vorigen Umbau (Ref:Stammziele) versehentlich entfallen war.
 assert.equal(knoten("k-ov-wohnort").html, "Beispielweg 7, 00000 Musterstadt", "Wohnort-Kopf");
 assert.equal(knoten("k-ov-dienstort").html, "Verwaltungsstr. 1, 00000 Musterstadt", "Dienstort-Kopf");
+
+// S2: Abteilung aus Einstellungen in die Lücke, Buchungsstelle leer -> Linie bleibt.
+assert.equal(knoten("s2-abteilung").html, "9-99", "S2 Abteilung");
+assert.equal(knoten("s2-buchungsstelle").html, "", "S2 Buchungsstelle ohne Wert");
 
 console.log("\nok");

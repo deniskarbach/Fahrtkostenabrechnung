@@ -181,6 +181,7 @@ eindeutiger als eine Zeile in einer Tabelle.
 | Vorname, Name, Organisationseinheit | Kopfzeile jedes Ausdrucks |
 | Wohnort – Straße, PLZ, Ort | Kopfzeile („Wohnort") |
 | Dienstort – Straße, PLZ, Ort | Kopfzeile („Dienstort") |
+| Abteilung, Buchungsstelle | S2, Verfügungsteil. Leer bleibt dort die Linie zum Ausfüllen von Hand |
 
 Der Abrechnungszeitraum steht **nicht** hier, sondern nur als Karte oben auf
 der Seite `Ausdruck` — dort, wo gedruckt wird.
