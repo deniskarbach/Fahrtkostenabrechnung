@@ -79,12 +79,9 @@ Ausgegeben in S1/S2, Druck-Fahrtenbuch, Vermerke und GoogleMapsExport.
 
 ## Formular ausfüllen
 
-<figure>
-  <a href="../img/screenshot_formular.png" target="_blank" rel="noopener">
-    <img src="../img/screenshot_formular.png" alt="Formular Dienstreise (zum Vergrößern anklicken)" style="width:480px;height:300px;object-fit:cover;object-position:top;border:1px solid #ddd;">
-  </a>
-  <figcaption>Formular „Dienstreise" – Startseite (zum Vergrößern anklicken)</figcaption>
-</figure>
+![Formular Dienstreise](img/screenshot_formular.png ':size=480')
+
+*Formular „Dienstreise" – Startseite*
 
 Ausfüllbar am PC oder auf dem Handy. Voraussetzung ist ein Google-Konto —
 darüber wird die Dienstreise erfasst und in der Tabelle berechnet.
@@ -127,12 +124,9 @@ Das Formular gliedert sich in fünf Abschnitte, zwei davon mit bedingten Detailf
   Google Sheets bestätigen
 - **Abrechnungszeitraum** (C8–C10) bestimmt, welche Reisen in S1, Fahrtenbuch-Druck ausgegeben werden.
 
-<figure>
-  <a href="../img/screenshot_setup.png" target="_blank" rel="noopener">
-    <img src="../img/screenshot_setup.png" alt="Setup-Blatt (zum Vergrößern anklicken)" style="width:480px;height:300px;object-fit:cover;object-position:top;border:1px solid #ddd;">
-  </a>
-  <figcaption>Blatt „Setup" (zum Vergrößern anklicken)</figcaption>
-</figure>
+![Setup-Blatt](img/screenshot_setup.png ':size=480')
+
+*Blatt „Setup"*
 
 ---
 
