@@ -8,7 +8,7 @@
    vergessenen Eingabe aus statt nach einer bewusst erfassten Null. Das
    Fahrtenbuch (f.kmDienstlich ?? "") hatte diese Spalte schon immer richtig.
 
-       node grist/ausgabe/test_s1_null_km.mjs
+       node grist/tests/test_s1_null_km.mjs
 */
 import { readFileSync } from "node:fs";
 import { strict as assert } from "node:assert";

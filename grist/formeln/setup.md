@@ -98,16 +98,31 @@ Zelle zeigte weiter die Zeilennummer.
   die Kürzel zählen laufend je Kalenderjahr über Reisen hinweg, nach Datum
   sortiert (eine früher datierte, später erfasste Reise zählt davor; das neue
   Jahr beginnt bei `E27-01`)
-- **Tagegeld-Staffel** — acht Fälle über alle vier Schwellen, darunter der
-  Fall mit aufgebrauchter Rest-Zeit
+- **Tagegeld-Staffel** — alle vier Schwellen, der Fall mit aufgebrauchter
+  Rest-Zeit und negative Minuten (zählen als 0)
+- **Uhrzeiten** — Schreibweisen wie `7.15`, `07:15 Uhr`, `7:15 UHR`; eine
+  einzelne Zahl bleibt ungelesen
+- **Adresse** — Stammziel mit nie befüllten Feldern
 - **Layout-Knoten** — `blaetter()` und `ohne_blaetter()` steigen in
   verschachtelte Knoten hinein
 
-Weitere Tests im Repo:
+## Alle Tests
+
+Alle Offline-Tests — Selbsttest und `grist/tests/` — mit einem Aufruf, ohne
+Grist und ohne API-Kontingent:
+
+```
+sh grist/tests/alle.sh
+```
 
 | Datei | Prüft |
 |---|---|
-| [`ausgabe/test_ortsverzeichnis.mjs`](../ausgabe/test_ortsverzeichnis.mjs) | Ortsverzeichnis: Stammziele höchstens einmal, Reihenfolge, Einzelziele mit Kürzel, Datum und ungeprüftem Freitext |
-| [`ausgabe/test_escaping.py`](../ausgabe/test_escaping.py) | kein Zeilen-Template ohne `html\`\``-Präfix |
-| [`ausgabe/test_schwaerzung.py`](../ausgabe/test_schwaerzung.py) | S2-Erzeugung schwärzt und bricht bei Abweichung ab |
+| [`test_druckseiten.mjs`](../tests/test_druckseiten.mjs) | jedes Blatt hat seine Druckseite und beginnt auf einer neuen |
+| [`test_s1_null_km.mjs`](../tests/test_s1_null_km.mjs) | S1 zeigt 0 dienstliche km statt einer leeren Zelle |
+| [`test_s1_zeitaufschluesselung.mjs`](../tests/test_s1_zeitaufschluesselung.mjs) | S1-Spalte „Reiseweg" zeigt die Zeitaufschlüsselung |
+| [`test_fahrtenbuch_zeit.mjs`](../tests/test_fahrtenbuch_zeit.mjs) | Fahrtenbuch Spalte 11: `DSt \| DO` einzeilig |
+| [`test_ortsverzeichnis.mjs`](../tests/test_ortsverzeichnis.mjs) | Ortsverzeichnis: Stammziele höchstens einmal, Reihenfolge, Einzelziele mit Kürzel, Datum und ungeprüftem Freitext; S2-Felder aus Einstellungen |
+| [`test_pruefliste.mjs`](../tests/test_pruefliste.mjs) | Prüfliste: Spaltenzahl, Werte, Legende deckungsgleich mit dem Ortsverzeichnis, Druckbreite |
+| [`test_escaping.py`](../tests/test_escaping.py) | kein Zeilen-Template ohne `html\`\``-Präfix |
+| [`test_schwaerzung.py`](../tests/test_schwaerzung.py) | S2-Erzeugung schwärzt, bricht bei Abweichung ab, hat vier Füllfelder und drei Unterschriftslinien (braucht die lokale Vorlage, sonst übersprungen) |
 

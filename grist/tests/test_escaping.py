@@ -19,7 +19,7 @@ Was er NICHT fängt (nachgemessen, nicht vermutet):
 Ein JS-Parser würde das schließen und wäre länger als die zwei Dateien, die
 er prüft. Wer eine der drei Formen einführt, prüft das Escaping von Hand.
 
-    python3 grist/ausgabe/test_escaping.py
+    python3 grist/tests/test_escaping.py
 """
 import pathlib, re, sys
 
@@ -33,7 +33,7 @@ TEMPLATE = re.compile(r"`(?:[^`\\]|\\.)*`", re.S)
 fehler = []
 for datei in ["ausdruck.html", "fahrtenbuch.html", "fahrtenbuch-preview.html",
               "pruefliste.html"]:
-    text = (HIER / datei).read_text(encoding="utf-8")
+    text = (HIER.parent / "ausgabe" / datei).read_text(encoding="utf-8")
     js = "\n".join(re.findall(r"<script>(.*?)</script>", text, re.S))
 
     if "const html = " not in js or "const esc = " not in js:

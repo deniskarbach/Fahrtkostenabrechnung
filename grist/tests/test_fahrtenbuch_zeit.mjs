@@ -1,7 +1,7 @@
 /* Prüft Spalte 11 der Fahrtenbuch-Schnittversion: sie zeigt nur DSt und DO,
    immer beide (auch 0:00), einzeilig. Die volle Aufschlüsselung steht auf S1.
 
-       node grist/ausgabe/test_fahrtenbuch_zeit.mjs
+       node grist/tests/test_fahrtenbuch_zeit.mjs
 */
 import { readFileSync } from "node:fs";
 import { strict as assert } from "node:assert";

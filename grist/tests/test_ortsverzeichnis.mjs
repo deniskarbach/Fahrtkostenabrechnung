@@ -6,7 +6,7 @@
    je Ortsfeld, zwei Reisen mit Start und Ziel Wohnung ergaben vier Zeilen.
    Falsch, aber plausibel aussehend; genau dafür ist dieser Test da.
 
-       node grist/ausgabe/test_ortsverzeichnis.mjs
+       node grist/tests/test_ortsverzeichnis.mjs
 */
 import { readFileSync } from "node:fs";
 import { strict as assert } from "node:assert";

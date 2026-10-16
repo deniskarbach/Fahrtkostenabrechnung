@@ -7,7 +7,7 @@
    zur Fahrtenbuch-Spalte und ohne Bezug zur Tagegeld-Prüfung. Format und
    Rundungsbeispiel sind aus der Sheets-Version übernommen.
 
-       node grist/ausgabe/test_s1_zeitaufschluesselung.mjs
+       node grist/tests/test_s1_zeitaufschluesselung.mjs
 */
 import { readFileSync } from "node:fs";
 import { strict as assert } from "node:assert";

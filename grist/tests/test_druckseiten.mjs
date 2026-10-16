@@ -7,7 +7,7 @@
    die namenlose Standardregel fiel -- A4 hoch. Chrome unterschlug sie, Edge
    druckte sie.
 
-       node grist/ausgabe/test_druckseiten.mjs
+       node grist/tests/test_druckseiten.mjs
 */
 import { readFileSync } from "node:fs";
 import { strict as assert } from "node:assert";

@@ -208,7 +208,7 @@ for (const r of reisen)
 übrigen Stammziele, danach die Einzelziele nach Datum.
 **Sonderfall:** Ohne diese Entdopplung erschiene die Wohnung bei zwei Reisen
 viermal, je einmal als Start und als Ziel. Das war ein stiller Fehler; dagegen
-läuft [`test_ortsverzeichnis.mjs`](../ausgabe/test_ortsverzeichnis.mjs).
+läuft [`test_ortsverzeichnis.mjs`](../tests/test_ortsverzeichnis.mjs).
 
 Die Einzelziele folgen danach, jede Eintragung als eigene Zeile, nach Datum
 sortiert. Sie kommen aus der Rechenspalte
@@ -330,7 +330,7 @@ gegen 271,6mm, und dass der Knopf über ein eigenes Fenster druckt statt über
 **Sonderfall:** Die Sortierlogik der Orte-Legende steht in **zwei** Dateien
 (`pruefliste.html` und `ausdruck.html`) -- die Widgets sind bewusst
 eigenständige Einzeldateien ohne gemeinsames Modul. Gegen ein Auseinanderlaufen
-prüft [`test_pruefliste.mjs`](../ausgabe/test_pruefliste.mjs) beide Blätter auf
+prüft [`test_pruefliste.mjs`](../tests/test_pruefliste.mjs) beide Blätter auf
 dieselbe Liste; der Wächter wurde mit einer absichtlich gebrochenen Sortierung
 gegengetestet.
 
@@ -362,7 +362,7 @@ Vermerk, Freitext-Orte und Adressen kommen aus einem **öffentlich
 erreichbaren Formular**. Das Widget liest mit `requiredAccess: "full"` Name,
 Wohnanschrift und Belege — eingeschleustes Markup wäre also teuer. Gegen den
 wahrscheinlichen Rückfall (jemand ergänzt eine Zeile und vergisst das Präfix)
-läuft [`test_escaping.py`](../ausgabe/test_escaping.py); dort stehen auch die
+läuft [`test_escaping.py`](../tests/test_escaping.py); dort stehen auch die
 drei nachgemessenen Grenzen dieses Tests.
 
 ## Aktualisieren

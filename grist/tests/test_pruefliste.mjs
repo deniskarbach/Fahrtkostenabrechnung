@@ -18,7 +18,7 @@
       Hochformat öffnete (Ursache offen -- ausdruck.html druckt sein
       Fahrtenbuch aus demselben iframe korrekt quer).
 
-       node grist/ausgabe/test_pruefliste.mjs
+       node grist/tests/test_pruefliste.mjs
 */
 import { readFileSync } from "node:fs";
 import { strict as assert } from "node:assert";

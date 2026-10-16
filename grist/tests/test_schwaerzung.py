@@ -6,7 +6,7 @@ Das ist der Test zur einen Stelle, an der ein unbemerkter Fehler direkt in ein
 öffentliches Repo schreibt. Er nennt selbst keine behördenspezifischen Werte --
 er liest sie aus der lokalen Vorlage und prüft, dass keiner in der Ausgabe steht.
 
-    python3 grist/ausgabe/test_schwaerzung.py
+    python3 grist/tests/test_schwaerzung.py
 
 Braucht die Vorlage (gitignored); fehlt sie, überspringt sich der Test.
 """
@@ -15,11 +15,12 @@ import os, pathlib, shutil, subprocess, sys, tempfile
 import openpyxl
 
 HIER = pathlib.Path(__file__).resolve().parent
-SKRIPT = HIER / "s2_aus_vorlage.py"
+SKRIPT = HIER.parent / "ausgabe" / "s2_aus_vorlage.py"
 VORLAGE = HIER.parents[1] / "ReisekostenabrechnungFINAL.xlsx"
 
 if not VORLAGE.exists():
-    sys.exit(f"Übersprungen: {VORLAGE.name} liegt nicht im Repo-Wurzelverzeichnis.")
+    print(f"Übersprungen: {VORLAGE.name} liegt nicht im Repo-Wurzelverzeichnis.")
+    sys.exit(0)
 
 def lauf(vorlage):
     return subprocess.run([sys.executable, str(SKRIPT)], capture_output=True, text=True,
