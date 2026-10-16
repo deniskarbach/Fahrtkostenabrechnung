@@ -77,7 +77,7 @@ Formular.
 | | Tabelle | Wozu sie da ist | Was hier zu tun ist |
 |---|---|---|---|
 | ✍️ | Einstellungen | Stammdaten der Person, eigene Wohn- und Dienstanschrift. Die **einzige** Stelle, an der persönliche Daten stehen | **Einrichten & pflegen.** Einmalig Name, Organisationseinheit, Anschriften |
-| ✍️ | Stammziele | Stammziele mit Kürzel und vollständiger Adresse — speist die Auswahlliste im Formular, den Routenlink und die Legende auf dem Ausdruck | **Pflegen.** Links Ziel wählen, rechts ändern. `WO` und `KV` sind Pflichtzeilen, ihre Adresse eintragen; neue regelmäßige Ziele ergänzen |
+| ✍️ | Stammziele | Stammziele mit Kürzel und vollständiger Adresse — speist die Auswahlliste im Formular, den Routenlink und die Legende auf dem Ausdruck | **Pflegen.** Links Ziel wählen, rechts ändern. `WO` und `KV` sind Pflichtzeilen, ihre Adresse eintragen; neue regelmäßige Ziele in der leeren Zeile unten in der Liste ergänzen |
 | ✅ | Reisen (nur Raw Data) | Eine Zeile je Dienstreise aus dem Formular, dazu alle Rechenspalten (Kilometer, Tagegeld-Stufe, Reiseweg, laufende Nummer, Routenlink). Keine eigene Seite | **Nichts.** Korrigiert wird auf der Seite `Reisekorrektur` |
 | ✍️ | Reisekorrektur (Seite) | Oben Jahr und Monat als Filter, darunter links die Reisen dieses Zeitraums (nur das Datum), rechts die gewählte Reise als Karte mit denselben Feldern wie im Formular | **Jahr/Monat wählen, Reise anklicken, rechts ändern.** Ohne Jahr gilt das laufende, ohne Monat das ganze Jahr. |
 | 🖨️ | Ausdruck (Seite) | Abrechnungszeitraum und die Widgets Reisekostenabrechnung (S1/S2, Vermerke, Ortsverzeichnis), Fahrtenbuch zum Einkleben. Der Zeitraum wird **nur hier** gesetzt | **Pro Abrechnung Zeitraum setzen, aktualisieren, drucken** |
@@ -199,8 +199,12 @@ braucht, von Hand ausgefüllt.
 
 Die wiederkehrenden Ziele mit Kürzel und Adresse. Diese Liste ist die
 Auswahlliste im Formular und die Legende auf dem Ausdruck. Aufbau wie auf
-`Reisekorrektur`: links die Liste (Kürzel, Name), rechts die Karte des
+`Reisekorrektur`: links die Liste (nur Kürzel), rechts die Karte des
 gewählten Ziels zum Bearbeiten.
+
+**Neues Ziel anlegen:** in der leeren Zeile ganz unten in der Liste das Kürzel
+eintragen, dann rechts Name, Straße, PLZ und Ort ausfüllen. Ohne vollständige
+Anschrift bekommt keine Reise über dieses Ziel einen Routenlink.
 
 | Spalte | Inhalt |
 |---|---|

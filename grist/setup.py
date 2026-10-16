@@ -826,6 +826,9 @@ def formelfehler_melden():
 # Verworfen: eigenes Auswahl-Widget (zu aufwendig), vier Einzelkarten
 # (unübersichtlich), Grist-Kalender (bot trotz Lesezugriff Verschieben an).
 KORREKTUR_SEITE = "Reisekorrektur"
+# Breiten von Auswahlliste und Karte nebeneinander, im Editor an der
+# Reisekorrektur eingestellt und für alle Seiten dieser Art übernommen.
+BREITE_LISTE, BREITE_KARTE = 0.6, 2.4
 KORREKTUR_KARTE = [
     ("Datum", "Datum_Ende"), ("Beginn", "Ende"), ("KM_Beginn", "KM_Ende"),
     ("Umweg_privat",),
@@ -844,7 +847,7 @@ def spalten_ids(tabelle):
 
 def reisekorrektur_seite():
     """Legt die Seite KORREKTUR_SEITE an: oben die Datumskarte, darunter links
-    (1/3) die Liste der Reisen bis zu diesem Datum, neueste oben, rechts (2/3)
+    (1/5) die Liste der Reisen bis zu diesem Datum, neueste oben, rechts (4/5)
     die Karte der in der Liste gewählten Reise. Eine ältere Fassung ohne Liste
     wird ergänzt, die vorhandene Reisen-Karte bleibt. Sonst idempotent:
     eine im Editor angepasste Seite bleibt, wie sie ist."""
@@ -872,8 +875,8 @@ def reisekorrektur_seite():
     api("POST", "/apply", [
         ["UpdateRecord", "_grist_Views", vid, {"name": KORREKTUR_SEITE, "layoutSpec": json.dumps(
             {"children": [{"leaf": datum, "size": 16},
-                          {"size": 118, "children": [{"leaf": liste, "size": 1},
-                                                     {"leaf": karte, "size": 2}]}],
+                          {"size": 118, "children": [{"leaf": liste, "size": BREITE_LISTE},
+                                                     {"leaf": karte, "size": BREITE_KARTE}]}],
              "collapsed": []})}],
         ["UpdateRecord", "_grist_Views_section", datum, {"title": "Filter"}],
         ["UpdateRecord", "_grist_Views_section", liste,
@@ -957,12 +960,12 @@ def karte_anlegen(vid, tabelle, reihen):
     return karte
 
 
-# Seiten nach dem Muster der Reisekorrektur: links (1/3) eine schmale Liste
-# zum Auswählen, rechts (2/3) die Karte zum Bearbeiten. Eine Bearbeitungs-
+# Seiten nach dem Muster der Reisekorrektur: links (1/5) eine schmale Liste
+# zum Auswählen, rechts (4/5) die Karte zum Bearbeiten. Eine Bearbeitungs-
 # ansicht je Seite statt Liste und Karte, die beide alles ändern können.
 # (Seite, Tabelle, Listenspalten, Sortierung, Kartenreihen, Titel Liste, Titel Karte)
 AUSWAHL_SEITEN = [
-    ("Stammziele", "Stammziele", ["Kuerzel", "Name"], ["Kuerzel"],
+    ("Stammziele", "Stammziele", ["Kuerzel"], ["Kuerzel"],
      [("Kuerzel", "Name"), ("Strasse",), ("PLZ", "Ort")],
      "Stammziele", "Ziel bearbeiten"),
 ]
@@ -988,8 +991,8 @@ def auswahl_seiten():
         api("POST", "/apply", [
             *[["RemoveRecord", "_grist_Views_section", s["id"]] for s in da],
             ["UpdateRecord", "_grist_Views", vid, {"layoutSpec": json.dumps(
-                {"children": [{"children": [{"leaf": liste, "size": 1},
-                                            {"leaf": karte, "size": 2}]}],
+                {"children": [{"children": [{"leaf": liste, "size": BREITE_LISTE},
+                                            {"leaf": karte, "size": BREITE_KARTE}]}],
                  "collapsed": []})}],
             ["UpdateRecord", "_grist_Views_section", liste, {"title": t_liste}],
             ["UpdateRecord", "_grist_Views_section", karte,
@@ -1015,7 +1018,9 @@ WIDGET_TEXTE = {
         "Aktualisieren."),
     ("Stammziele", "Stammziele", "record"): ("Stammziele",
         "Ziele, die regelmäßig angefahren werden. Das Kürzel steht im Formular "
-        "zur Auswahl. WO und KV bitte nicht löschen."),
+        "zur Auswahl. Neues Ziel: in der leeren Zeile ganz unten das Kürzel "
+        "eintragen, dann rechts Name, Straße, PLZ und Ort. WO und KV bitte "
+        "nicht löschen."),
     ("Stammziele", "Stammziele", "single"): ("Ziel bearbeiten",
         "Das links ausgewählte Ziel. Straße, PLZ und Ort vollständig eintragen, "
         "sonst fehlt die Anschrift im Ortsverzeichnis und der Routenlink."),

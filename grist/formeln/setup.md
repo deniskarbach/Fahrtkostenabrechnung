@@ -36,10 +36,10 @@ python3 grist/setup.py --selbsttest   # prüft die Formeln ohne Grist
 | `zeitraum_widget` | Seite `Ausdruck` anlegen (falls nötig) und die Zeitraum-Karte darauf |
 | `ausgabe_widgets` | die beiden Custom-Widgets mit ihren URLs abgleichen |
 | `ausdruck_layout` | Zeitraum oben, die beiden Druck-Widgets nebeneinander darunter |
-| `reisekorrektur_seite` | Seite `Reisekorrektur` anlegen (falls ohne Liste): oben Karte mit `Einstellungen.Korrektur_Jahr`/`Korrektur_Monat`, darunter links (⅓) die Reisen dieses Zeitraums über `Korrektur_Reisen`, neueste oben, rechts (⅔) die Karte der gewählten Reise mit den Formularfeldern |
+| `reisekorrektur_seite` | Seite `Reisekorrektur` anlegen (falls ohne Liste): oben Karte mit `Einstellungen.Korrektur_Jahr`/`Korrektur_Monat`, darunter links (⅕) die Reisen dieses Zeitraums über `Korrektur_Reisen`, neueste oben, rechts (⅘) die Karte der gewählten Reise mit den Formularfeldern |
 | `seiten_entfernen` | Seite `Reisen` entfernen; die Tabelle bleibt unter Raw Data, bearbeitet wird auf `Reisekorrektur` |
 | `layouts_aufraeumen` | Layout-Knoten entfernen, die auf fremde Sections zeigen |
-| `auswahl_seiten` | Stammziele: links Liste (⅓), rechts verknüpfte Karte (⅔). Nur wenn noch keine verknüpfte Karte da ist |
+| `auswahl_seiten` | Stammziele: links Liste nur mit Kürzel (⅕), rechts verknüpfte Karte (⅘). Nur wenn noch keine verknüpfte Karte da ist |
 | `table1_entfernen` | die leere Standardtabelle `Table1` eines neuen Dokuments entfernen |
 | `seiten_ordnen` | Seitenliste nach `SEITEN_REIHENFOLGE` (Häufigkeit): Ausdruck, Reisekorrektur, Stammziele, Prüfliste, Einstellungen, Formularverwaltung |
 | `widget_texte_setzen` | Titel und Info-Text an jedem Widget aus `WIDGET_TEXTE` setzen (überschreibt Änderungen im Editor) |
