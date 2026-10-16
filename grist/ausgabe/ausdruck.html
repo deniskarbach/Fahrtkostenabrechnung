@@ -765,9 +765,9 @@ const beispielOrtsverzeichnis = [
   { kuerzel:"WO",   name:"Wohnung",           adresse:"Beispielweg 7, 00000 Musterstadt" },
   { kuerzel:"KV",   name:"Kreisverwaltung",   adresse:"Verwaltungsstraße 1, 00000 Musterstadt" },
   { kuerzel:"KITA", name:"Kita Sonnenschein", adresse:"Lindenweg 3, 00000 Musterstadt" },
-  { kuerzel:"",     name:"Café Mokka",        adresse:"Bahnhofstr. 7, 00000 Musterstadt" },
-  { kuerzel:"03.02.2026", name:"Beispieldorf", adresse:"Dorfstr. 2, 00000 Beispieldorf" },
-  { kuerzel:"26.02.2026", name:"Hof Lindenau", adresse:"" },
+  { kuerzel:"E26-01\n03.02.2026", name:"", adresse:"Beispieldorf, Dorfstr. 2, 00000 Beispieldorf" },
+  { kuerzel:"E26-02\n26.02.2026", name:"", adresse:"Hof Lindenau" },
+  { kuerzel:"E26-03\n26.02.2026", name:"", adresse:"Café Mokka, Bahnhofstr. 7, 00000 Musterstadt" },
 ];
 
 /* ---------------------------------------------------------- Hilfsfunktionen */
@@ -933,7 +933,7 @@ tb.innerHTML = "";
 orte.forEach((o, i) => {
   tb.insertAdjacentHTML("beforeend", html`<tr>
     <td class="mitte">${i + 1}</td>
-    <td>${o.kuerzel}</td>
+    <td style="white-space:pre-line">${o.kuerzel}</td>
     <td>${o.name}</td>
     <td colspan="2">${o.adresse}</td></tr>`);
 });
@@ -1019,12 +1019,15 @@ async function ausGrist() {
   }));
 
   /* Einzelziele aus den Freitextfeldern: jede Eintragung bleibt eine eigene
-     Zeile -- sie gehört zu genau einer Fahrt, und das Datum weist sie ihr zu.
-     Es steht in der Kürzel-Spalte, die bei diesen Zeilen ohnehin leer bleibt. */
-  const ausEinzelziele = zeilen(await grist.docApi.fetchTable("Einzelziele"))
-    .filter(a => a.Label && imZeitraum(a.Datum))
-    .sort((a, b) => a.Datum - b.Datum)
-    .map(a => ({ kuerzel: tag(a.Datum), name: a.Bezeichnung ?? a.Label ?? "", adresse: a.Adresse || "" }));
+     Zeile -- sie gehört zu genau einer Fahrt. Das Kürzel (E26-07, laufend
+     je Jahr) steht genauso im Reiseweg des Fahrtenbuchs, das Datum darunter.
+     Vergeben wird sie in Reisen.Einzelziele, hier nur gelesen. Der Freitext
+     steht ungeprüft unter Adresse -- kontrolliert wird beim Unterschreiben. */
+  const ausEinzelziele = reisen.flatMap(r => (r.Einzelziele || "").split("\n")
+    .filter(Boolean).map(z => {
+      const i = z.indexOf(": ");
+      return { kuerzel: `${z.slice(0, i)}\n${tag(r.Datum)}`, name: "", adresse: z.slice(i + 2) };
+    }));
 
   renderOrtsverzeichnis({ stand, ...kopfAdresse }, [...ausOrte, ...ausEinzelziele]);
 
@@ -1052,7 +1055,7 @@ if (window.self === window.top) {
   const s = document.createElement("script");
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
-    grist.ready({ requiredAccess: "full" });   // liest Einstellungen, Stammziele, Reisen, Einzelziele
+    grist.ready({ requiredAccess: "full" });   // liest Einstellungen, Stammziele, Reisen
     /* onRecords feuert beim Aufbau und danach nur bei Aenderungen an der
        Tabelle, an der das Widget haengt -- das ist 'Einstellungen', also
        praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder

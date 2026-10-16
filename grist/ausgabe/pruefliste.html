@@ -227,7 +227,7 @@ const beispielKopf = {
   dienstort:     "Verwaltungsstraße 1, 00000 Musterstadt",
 };
 const beispielReisen = [
-  { nr:1, datum:"03.02.2026", von:"07:15", bis:"16:40", weg:"WO > KV > Beispieldorf > WO",
+  { nr:1, datum:"03.02.2026", von:"07:15", bis:"16:40", weg:"WO > KV > E26-01 > WO",
     ges:"9:25", dst:"1:00", dort:"4:30", priv:"0:00", rest:"3:55", stufe:"anteilig",
     verpflegung:"Nein", kmBeginn:12000, kmEnde:12087, kmPrivat:0, kmDienst:87,
     oepnv:0, mitnahme:0, uebernachtung:0, neben:0, vermerk:"V26-01",
@@ -246,7 +246,7 @@ const beispielReisen = [
 const beispielOrte = [
   { kuerzel:"WO", name:"Wohnung", adresse:"Beispielweg 7, 00000 Musterstadt" },
   { kuerzel:"KV", name:"Kreisverwaltung", adresse:"Verwaltungsstraße 1, 00000 Musterstadt" },
-  { kuerzel:"03.02.2026", name:"Beispieldorf", adresse:"Dorfstr. 2, 00000 Beispieldorf" },
+  { kuerzel:"E26-01\n03.02.2026", name:"", adresse:"Beispieldorf, Dorfstr. 2, 00000 Beispieldorf" },
 ];
 
 /* Tabellenzellen werden als HTML zusammengesetzt. Das Präfix html`…` schiebt
@@ -312,7 +312,7 @@ function zeile(r) {
 function ortZeile(o, i) {
   return html`<tr>
     <td class="mitte">${i + 1}</td>
-    <td>${o.kuerzel}</td>
+    <td style="white-space:pre-line">${o.kuerzel}</td>
     <td>${o.name}</td>
     <td>${o.adresse}</td></tr>`;
 }
@@ -430,10 +430,16 @@ async function ausGrist() {
     adresse: orteNachId[id].Adresse || "",
   }));
 
-  const ausEinzelziele = zeilen(await grist.docApi.fetchTable("Einzelziele"))
-    .filter(a => a.Label && imZeitraum(a.Datum))
-    .sort((a, b) => a.Datum - b.Datum)
-    .map(a => ({ kuerzel: tag(a.Datum), name: a.Bezeichnung ?? a.Label ?? "", adresse: a.Adresse || "" }));
+  /* Einzelziele aus den Freitextfeldern: jede Eintragung bleibt eine eigene
+     Zeile -- sie gehört zu genau einer Fahrt. Das Kürzel (E26-07, laufend
+     je Jahr) steht genauso im Reiseweg, das Datum darunter.
+     Vergeben wird sie in Reisen.Einzelziele, hier nur gelesen. Der Freitext
+     steht ungeprüft unter Adresse -- kontrolliert wird beim Unterschreiben. */
+  const ausEinzelziele = reisen.flatMap(r => (r.Einzelziele || "").split("\n")
+    .filter(Boolean).map(z => {
+      const i = z.indexOf(": ");
+      return { kuerzel: `${z.slice(0, i)}\n${tag(r.Datum)}`, name: "", adresse: z.slice(i + 2) };
+    }));
 
   rendern(kopf, reisen.map(r => ({
       nr:    r.Lfd_Nr,

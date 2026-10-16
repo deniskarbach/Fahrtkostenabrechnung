@@ -17,7 +17,6 @@ Tabelle nur lesend zugreift. Alle Rechenspalten ziehen sofort nach.
 | `Datum_Ende` | Enddatum (nur mehrtägig) | Date |
 | `Beginn` / `Ende` | Reisebeginn / Reiseende (HH:MM) | Text |
 | `KM_Beginn` / `KM_Ende` | Kilometerstand Beginn / Ende | Int |
-| `Tacho_Fotos` | Tachofotos (Beginn und Ende) | Attachments |
 | `Umweg_privat` | Privater Umweg (km) | Int |
 | `Ort_Beginn`, `Ort_1` … `Ort_5`, `Ort_Ende` | Ort-Auswahl | Ref:Stammziele |
 | `Ort_Beginn_Text` … `Ort_Ende_Text` | Ort-Freitext | Text |
@@ -202,27 +201,88 @@ Die Staffel als Kurzregel steht im [Anhang](anhang.md).
 
 ---
 
+## Einzelziele — Einzelziele (Ortsverzeichnis)
+
+```python
+def frei(r):
+  return [", ".join(x.strip() for x in (t or "").splitlines() if x.strip())
+          for t in [r.Ort_Beginn_Text, … , r.Ort_Ende_Text]]
+if not $Datum:
+  return ""
+vorher = [r for r in Reisen.all if r.Datum and r.Datum.year == $Datum.year
+          and (r.Datum, r.id) < ($Datum, $id)]
+n = sum(1 for r in vorher for t in frei(r) if t)
+zeilen = []
+for t in frei(rec):
+  if t:
+    n += 1
+    zeilen.append("E%s-%02d: %s" % ($Datum.strftime("%y"), n, t))
+return "\n".join(zeilen)
+```
+
+**Statement:**
+- `frei(r)` – die Freitexte einer Reise, auch neben einer Auswahl (Muster B);
+  Zeilenumbrüche werden zu `, `, Leerzeilen fallen weg
+- `vorher` – die Reisen desselben Kalenderjahres, die nach Datum (bei gleichem
+  Datum nach Zeilen-Id) **vor** dieser liegen; ihre Freitext-Ziele werden gezählt
+- `"E%s-%02d: %s"` – je Ziel eine Zeile aus Kürzel (`E`, zweistelliges Jahr,
+  laufende Nummer) und Freitext
+
+**Ergebnis:**
+```
+E26-07: Café Mokka, Bahnhofstr. 7, 12345 Musterstadt
+E26-08: Hof Lindenau
+```
+**Sonderfall:** Ohne Freitext-Ziel bleibt die Zelle leer. Ein Feld nur mit
+Leerzeichen zählt nicht.
+**Muster:** Was eingetragen ist, zählt (B), Rang im Kalenderjahr (E).
+
+Die einzige Stelle, an der die Kürzel entstehen. `Reiseweg` setzt sie in die
+Wegkette, das Ortsverzeichnis druckt sie mit Datum und Freitext. Aufbau wie
+`Vermerk_Label` (`V26-01`): das Kürzel ist für sich allein eindeutig.
+
+**Zu beachten:** Eine nachträglich erfasste oder umdatierte Reise verschiebt
+die Kürzel aller späteren Einzelziele des Jahres — wie bei `Lfd_Nr` und
+`Vermerk_Label`. Ein bereits gedruckter Ausdruck passt dann nicht mehr zur
+Tabelle.
+
+Der Freitext wird **nicht** geprüft oder zerlegt. Er steht im Ortsverzeichnis
+so, wie er erfasst wurde; ob die Anschrift vollständig ist, kontrolliert die
+Person beim Unterschreiben. Korrigiert wird im Freitext der Reise.
+
+Ausgeblendet in der Tabellenansicht (Hilfsspalte).
+
+---
+
 ## Reiseweg
 
 ```python
-paare = [($Ort_Beginn, $Ort_Beginn_Text), … , ($Ort_Ende, $Ort_Ende_Text)]
-teile = [(o.Kuerzel if o else "") or t for o, t in paare]
+e = iter(z.split(":")[0] for z in $Einzelziele.splitlines())
+teile = []
+for o, t in [($Ort_Beginn, $Ort_Beginn_Text), … , ($Ort_Ende, $Ort_Ende_Text)]:
+  if o:
+    teile.append(o.Kuerzel)
+  if (t or "").strip():
+    teile.append(next(e, "?"))
 return " > ".join(x for x in teile if x)
 ```
 
 **Statement:**
-- `paare` – die sieben Ortsfelder als Paar aus Auswahl und Freitext
-- `(o.Kuerzel if o else "") or t` – Auswahl gewinnt, sonst Freitext
+- `e` – die Kürzel aus `Einzelziele` (`E26-07`, `E26-08` …) in Reihenfolge der Ortsfelder
+- `if o` – aus der Auswahl wird das Kürzel genommen
+- `next(e, "?")` – bei ausgefülltem Freitext das nächste Kürzel, auch wenn
+  daneben eine Auswahl steht (dann zwei Stopps)
 - `if x` – nicht ausgefüllte Stopps fallen heraus, statt Lücken zu erzeugen
 - `" > ".join(…)` – die verbliebenen Stopps zur Wegkette verbinden
 
-**Ergebnis:** `WO > KV > Beispieldorf > WO`
+**Ergebnis:** `WO > KV > E26-07 > E26-08 > WO`
 **Sonderfall:** Sind alle sieben Felder leer, bleibt die Zelle leer.
-**Muster:** Auswahl gewinnt (B).
+**Muster:** Was eingetragen ist, zählt (B).
 
-Erscheint auf S1 (hinter der laufenden Nummer) und in Spalte 6 des
-Fahrtenbuchs. Aus der Auswahl wird das **Kürzel** genommen — die Legende dazu
-ist das Ortsverzeichnis.
+Erscheint in Spalte 6 des Fahrtenbuchs und in der Prüfliste. Die Legende zu
+Kürzeln und Nummern ist das Ortsverzeichnis. Die Zelle im Fahrtenbuch fasst
+etwa zwei Zeilen — der volle Freitext mehrerer Ziele passte nicht hinein,
+deshalb nur das Kürzel.
 
 ---
 
@@ -230,15 +290,15 @@ ist das Ortsverzeichnis.
 
 ```python
 import urllib.parse as u
-paare = [($Ort_Beginn, $Ort_Beginn_Text, $Ort_Beginn_Sync), … ]
 adr = []
-for o, t, s in paare:
-  if not (o or t):
-    continue                 # Slot nicht belegt -- faellt still heraus
-  a = o.Adresse if o else ((s.Adresse if s else "") or t)
-  if not a:
-    return ""                # belegter Stopp ohne Anschrift -> lieber kein Link
-  adr.append(a)
+for o, t in [($Ort_Beginn, $Ort_Beginn_Text), … ]:
+  if o and not o.Adresse:
+    return ""                # Stammziel ohne Anschrift -> lieber kein Link
+  if o:
+    adr.append(o.Adresse)
+  t = ", ".join(x.strip() for x in (t or "").splitlines() if x.strip())
+  if t:
+    adr.append(t)            # leere Felder fallen still heraus
 if len(adr) < 2:
   return ""
 link = ("https://www.google.com/maps/dir/?api=1&origin=" + u.quote(adr[0])
@@ -249,14 +309,11 @@ return link
 ```
 
 **Statement:**
-- `if not (o or t)` – ein gar nicht ausgefülltes Ortsfeld ist kein Stopp
-- `o.Adresse if o else …` – wie `Reiseweg` gewinnt die Auswahl, hier aber mit
-  der **Adresse** statt dem Kürzel
-- `(s.Adresse if s else "") or t` – beim Freitext zählt die in
-  [Einzelziele](einzelziele.md) aus dem Freitext zerlegte Anschrift; folgt der
-  Freitext dem Schema nicht, der Freitext selbst
-- `if not a: return ""` – ein belegter Stopp ohne Anschrift macht die ganze
-  Route unbrauchbar, nicht nur sich selbst
+- `if o and not o.Adresse: return ""` – ein Stammziel ohne Anschrift macht
+  die ganze Route unbrauchbar, nicht nur sich selbst
+- `if o` – aus der Auswahl die **Adresse** (im `Reiseweg` das Kürzel)
+- `t = ", ".join(…)` – Freitext einzeilig, wie in `Einzelziele`
+- `if t` – der Freitext selbst als weiterer Stopp; ein leeres Feld ist keiner
 - `if len(adr) < 2` – unter zwei Stationen gibt es keine Route
 - `u.quote(…)` – Adressen für die URL kodieren (Leerzeichen, Umlaute, Komma)
 - `adr[1:-1]` – alles zwischen Start und Ziel wird zu `waypoints`, mit `|` getrennt
@@ -264,18 +321,15 @@ return link
 **Ergebnis:** Klickbarer Google-Maps-Link über alle Stationen der Reise.
 **Rechenweg:** Erste Adresse als `origin`, letzte als `destination`, alles
 dazwischen als `waypoints`.
-**Sonderfall:** Fehlt einem angefahrenen Ort die Anschrift, bleibt die Zelle
-**ganz** leer. Früher fiel nur dieser eine Stopp aus dem Link — die Route sah
-vollständig aus, war aber zu kurz, und genau das fiel niemandem auf. Deshalb
+**Sonderfall:** Fehlt einem angefahrenen Stammziel die Anschrift, bleibt die
+Zelle **ganz** leer. Früher fiel nur dieser eine Stopp aus dem Link — die Route
+sah vollständig aus, war aber zu kurz, und genau das fiel niemandem auf. Deshalb
 die Adressen von `WO` und `KV` nachtragen; `setup.py` nennt beim Lauf jeden
 Ort ohne Anschrift beim Kürzel.
-**Muster:** Auswahl gewinnt (B).
+**Muster:** Was eingetragen ist, zählt (B).
 
-Die Anschrift eines Einzelziels steht **nicht** im Freitext der Reise, sondern
-in der Zeile, die `Ort_*_Sync` in [Einzelziele](einzelziele.md) angelegt hat — dort
-trägt die Abrechnungsstelle Straße/PLZ/Ort nach. Deshalb liest die Formel die
-Sync-Spalte mit; ohne sie landete das blanke Label („Kita Sonnenschein") als
-Adresse im Link.
+Google Maps liest den Freitext mitsamt Bezeichnung („Café Mokka, Bahnhofstr. 7,
+12345 Musterstadt"). Folgt er dem Schema nicht, ist die Route eben ungenau.
 
 Dient der Prüfung der gefahrenen Strecke, nicht der Abrechnung — der Link wird
 nicht gedruckt.
@@ -305,50 +359,3 @@ Vermerke-Blatt und in Spalte 15 des Fahrtenbuchs auftaucht.
 
 Eigene Zählung, unabhängig von `Lfd_Nr`: die dritte Reise des Jahres kann den
 ersten Vermerk tragen.
-
----
-
-## Ort_*_Sync — Einzelziel-Sync
-
-Sieben unsichtbare Formelspalten, eine je Ortsfeld. Sie legen die Zeilen in
-[Einzelziele](einzelziele.md) an. Beispiel `Ort_Beginn_Sync`:
-
-```python
-if $Ort_Beginn or not $Ort_Beginn_Text:
-  return None
-return Einzelziele.lookupOrAddDerived(Reise=$id, Slot="Ort_Beginn")
-```
-
-**Statement:**
-- `if $Ort_Beginn` – ist die Auswahl gesetzt, entsteht **keine** Adresszeile
-- `or not …_Text` – ohne Freitext ebenfalls nicht
-- `lookupOrAddDerived(Reise=$id, Slot=…)` – sucht die Zeile zu diesem Paar aus Reise und Ortsfeld und legt sie an, falls es sie nicht gibt; den Freitext liest die Zeile selbst ([Einzelziele → Label](einzelziele.md#label))
-
-**Ergebnis:** Ein Verweis auf die zugehörige Adresszeile.
-**Sonderfall:** Gewinnt die Auswahl (Muster B), entsteht keine Zeile — sonst
-stünde der ignorierte Freitext trotzdem im Ortsverzeichnis.
-**Muster:** Auswahl gewinnt (B).
-
-**Zu beachten:**
-
-- Der Schlüssel ist **Reise + Ortsfeld**, beides zusammen ist eindeutig. Damit
-  bekommt jede Fahrt ihre eigene Zeile; dasselbe Ziel auf zwei Fahrten ergibt
-  zwei Zeilen, denn es sind zwei Vorgänge.
-- Bis 14.10.2026 wies die Formel danach `zeile.Label = …` zu. Das bricht in
-  Grist mit AttributeError ab und fiel nur nicht auf, weil es noch keinen
-  Freitext gab. Jetzt liest `Einzelziele.Label` den Freitext per Formel.
-- `lookupOrAddDerived` legt Zeilen an, räumt aber nie ab. Wird eine Reise
-  gelöscht, der Freitext geleert oder nachträglich eine Auswahl gesetzt, bleibt
-  die Adresszeile stehen — mit leerem `Label`, also in keiner Ausgabe
-  sichtbar. `setup.py` entfernt sie zusätzlich (`einzelziele_aufraeumen`).
-
-## Anschrift_Warnung, Anschrift_Hinweis
-
-Lesen über die sieben Sync-Spalten `Einzelziele.Anschrift_fehlt`. Die Warnung
-ist nur `⚠️` (Liste der Reisekorrektur), der Hinweis nennt Ortsfeld und
-Freitext und das erwartete Schema (Karte der Reisekorrektur). Beide leer, wenn
-alles vollständig ist.
-
-Die sieben Spalten sind in der Tabellenansicht ausgeblendet — sie haben keinen
-eigenen Aussagewert. Im Editor über *Hidden columns* jederzeit wieder
-einblendbar.

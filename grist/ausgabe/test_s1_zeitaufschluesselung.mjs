@@ -42,7 +42,6 @@ const TABELLEN = {
       Abwesenheit_min: 600, Min_Dienststaette: 60, Min_Dienstort: 30,
       Min_privat_Abzug: 45, Rest_min: 465, Tagegeld_Stufe: "anteilig" },
   ],
-  Einzelziele: [],
 };
 
 const zellen = {};

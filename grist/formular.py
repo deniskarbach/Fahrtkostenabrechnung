@@ -54,8 +54,8 @@ BESCHR_3 = ("Ankreuzen, wenn Tagegeld beantragt wird. Die Höhe ergibt sich aus 
 BESCHR_4 = "Nur ausfüllen, wenn etwas angefallen ist."
 
 BESCHR_5 = ("Ein Vermerk nur bei Besonderheiten, z. B. Umleitung wegen einer "
-            "Straßensperrung oder Fahrt mit einem anderen Auto. Belege und "
-            "Tachofotos hier hochladen.")
+            "Straßensperrung oder Fahrt mit einem anderen Auto. Belege hier "
+            "hochladen.")
 
 
 # Feldeinstellungen fürs Formular (Pflicht, Darstellung, abweichender Titel).
@@ -167,7 +167,7 @@ def bauen():
                 "### **Abschnitt 5: Sonstiges und Nachweise**", BESCHR_5,
                 feld("Vermerk"),
                 trenner(),
-                reihe("Belege", "Tacho_Fotos")),
+                reihe("Belege", None)),
 
             knoten("Submit"),
         ])

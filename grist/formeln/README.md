@@ -25,12 +25,8 @@ Grist-Formular (veröffentlichter Link, Handy, ohne Konto)
    ▼
 Reisen           Eingabespalten + Rechenspalten
    │             (Kilometer, Abwesenheit, Tagegeld-Stufe, Reiseweg,
-   │              laufende Nummer, Routenlink, Vermerk-Kennung)
-   │
-   │  Ortsfeld als Freitext ausgefüllt, ohne Auswahl?
-   ▼
-Einzelziele      eine Zeile je Fahrt und Ortsfeld — Straße/PLZ/Ort
-                 trägt die Abrechnungsstelle nach
+   │              laufende Nummer, Routenlink, Vermerk-Kennung,
+   │              Einzelziele E26-01 … aus dem Freitext)
 
 Einstellungen    Stammdaten + Abrechnungszeitraum  ──┐
 Stammziele       Stammziele mit Adresse            ──┤
@@ -40,9 +36,9 @@ Stammziele       Stammziele mit Adresse            ──┤
                                    S1/S2 · Vermerke · Ortsverzeichnis
 ```
 
-Gearbeitet wird ausschließlich im Formular sowie in `Einstellungen` und `Stammziele`;
-in `Einzelziele` wird die Anschrift nachgetragen. Alle Rechenspalten sind reine
-Formelergebnisse.
+Gearbeitet wird ausschließlich im Formular sowie in `Einstellungen` und `Stammziele`.
+Der Freitext eines Ortsfelds geht ungeprüft ins Ortsverzeichnis. Alle
+Rechenspalten sind reine Formelergebnisse.
 
 ## Erklärschema
 
@@ -72,26 +68,35 @@ und damit auch keine Zeilengrenzen zu pflegen. Das ist der wesentliche
 Unterschied zur Google-Sheets-Umsetzung, in der Muster A und D genau dieses
 Problem lösen mussten.
 
-### Muster B – Auswahl gewinnt vor Freitext
+### Muster B – Was eingetragen ist, zählt
 
 ```
-paare = [($Ort_Beginn, $Ort_Beginn_Text), … ]
-teile = [(o.Kuerzel if o else "") or t for o, t in paare]
+for o, t in [($Ort_Beginn, $Ort_Beginn_Text), … ]:
+  if o:
+    adr.append(o.Adresse)
+  if t:
+    adr.append(t)
 ```
 
 **Statement:**
-- `paare` – die sieben Ortsfelder als Paar aus Auswahl (`Ref:Stammziele`) und Freitext
-- `o.Kuerzel if o else ""` – ist eine Auswahl gesetzt, ihren Wert nehmen
-- `… or t` – sonst den Freitext
+- die sieben Ortsfelder als Paar aus Auswahl (`Ref:Stammziele`) und Freitext
+- `if o` – ist eine Auswahl gesetzt, zählt sie als Stopp
+- `if t` – ist Freitext eingetragen, zählt er **ebenfalls** als Stopp, danach
 
-Jeder Stopp ist ein Paar: Auswahlliste für die Stammziele, Freitext für die
-Einzelziele. Sind versehentlich beide gefüllt, gewinnt die Auswahl —
-stillschweigend. Dieselbe Weiche steckt in `Reiseweg`, `Maps_Link` und in den
-`_Sync`-Spalten; dort sorgt sie dafür, dass ein ignorierter Freitext **keine**
-Adresszeile anlegt und deshalb auch nicht im Ortsverzeichnis auftaucht.
+Jedes Ortsfeld ist ein Paar: Auswahlliste für die Stammziele, Freitext für die
+Einzelziele. Es gibt **keine Rangfolge**: sind beide gefüllt, sind es zwei
+Stopps, erst die Auswahl, dann der Freitext. So verschwindet nichts still —
+ein Versehen steht sichtbar im Reiseweg (`WO > KITA > E26-07 > WO`) und fällt
+beim Unterschreiben auf. Korrigiert wird durch Leeren des falschen Felds.
+Dieselbe Regel steckt in `Einzelziele`, `Reiseweg` und `Maps_Link`.
+
+Früher gewann die Auswahl stillschweigend. Ein Freitext daneben tauchte dann
+nirgends auf — auch nicht auf dem Ausdruck, wo die Person hätte merken können,
+dass er fehlt.
 
 **Zu beachten:** `Reiseweg` nimmt aus der Auswahl das **Kürzel**,
-`Maps_Link` die **Adresse**. Fehlt einem angefahrenen Ort die Adresse, bleibt
+`Maps_Link` die **Adresse**; beim Freitext setzt `Reiseweg` die Nummer
+(`E26-07`), `Maps_Link` den Freitext selbst. Fehlt einem angefahrenen Ort die Adresse, bleibt
 `Maps_Link` leer — der `Reiseweg` steht trotzdem vollständig da. Ein Stopp
 verschwindet nie einzeln aus dem Link, sonst wäre die Route still zu kurz.
 
@@ -156,7 +161,6 @@ Je ein eigenes Dokument, in Datenfluss-Reihenfolge:
 1. [Einstellungen](einstellungen.md)
 2. [Stammziele](stammziele.md)
 3. [Reisen](reisen.md)
-4. [Einzelziele](einzelziele.md)
-5. [Ausgabe](ausgabe.md)
-6. [Einrichtung (setup.py)](setup.md)
-7. [Anhang](anhang.md)
+4. [Ausgabe](ausgabe.md)
+5. [Einrichtung (setup.py)](setup.md)
+6. [Anhang](anhang.md)

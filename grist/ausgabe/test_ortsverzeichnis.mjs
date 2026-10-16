@@ -1,5 +1,6 @@
 /* Prüft das Ortsverzeichnis in ausdruck.html: Stammziele höchstens einmal,
-   Wohnung und Dienststätte vorn, Einzelziele mit Datum.
+   Wohnung und Dienststätte vorn, Einzelziele mit Datum und Nummer, der
+   Freitext unverändert unter Adresse.
 
    Das war ein stiller Fehler -- die Liste sammelte einen Eintrag je Reise UND
    je Ortsfeld, zwei Reisen mit Start und Ziel Wohnung ergaben vier Zeilen.
@@ -35,14 +36,14 @@ const TABELLEN = {
     { id: 3, Kuerzel: "KITA", Name: "Kita Sonnenschein", Adresse: "Lindenweg 3, Musterstadt" },
   ],
   // Zwei Reisen, beide von der Wohnung zur Wohnung -- der gemeldete Fall.
+  // Einzelziele: so, wie die Formel Reisen.Einzelziele sie liefert.
   Reisen: [
-    { id: 1, Datum: d(20010), Ort_Beginn: 1, Ort_1: 2, Ort_Ende: 1, Lfd_Nr: 1 },
-    { id: 2, Datum: d(20020), Ort_Beginn: 1, Ort_1: 2, Ort_2: 3, Ort_Ende: 1, Lfd_Nr: 2 },
-  ],
-  Einzelziele: [
-    { id: 1, Datum: d(20010), Label: "Beispieldorf", Adresse: "Dorfstr. 2, Beispieldorf" },
-    { id: 2, Datum: d(20020), Label: "Beispieldorf", Adresse: "Dorfstr. 2, Beispieldorf" },
-    { id: 3, Datum: d(20500), Label: "Ausserhalb",   Adresse: "" },   // ausserhalb des Zeitraums
+    { id: 1, Datum: d(20010), Ort_Beginn: 1, Ort_1: 2, Ort_Ende: 1, Lfd_Nr: 1,
+      Einzelziele: "E24-01: Beispieldorf, Dorfstr. 2, Beispieldorf" },
+    { id: 2, Datum: d(20020), Ort_Beginn: 1, Ort_1: 2, Ort_2: 3, Ort_Ende: 1, Lfd_Nr: 2,
+      Einzelziele: "E24-02: Beispieldorf, Dorfstr. 2, Beispieldorf\nE24-03: Hof Lindenau" },
+    { id: 3, Datum: d(20500), Ort_Beginn: 1, Ort_Ende: 1,    // ausserhalb des Zeitraums
+      Einzelziele: "E25-01: Ausserhalb" },
   ],
 };
 
@@ -80,12 +81,18 @@ assert.equal(spalte(1).filter(k => k === "WO").length, 1, "Wohnung mehrfach in d
 assert.equal(spalte(1).filter(k => k === "KV").length, 1, "Dienststaette mehrfach in der Liste");
 assert.deepEqual(spalte(1).slice(0, 3), ["WO", "KV", "KITA"], "Reihenfolge der Stammziele");
 assert.equal(spalte(2)[0], "Wohnung");
-// Beide Beispieldorf-Zeilen bleiben stehen, mit ihrem Datum; die dritte liegt
-// ausserhalb des Zeitraums.
-assert.deepEqual(spalte(2).slice(3), ["Beispieldorf", "Beispieldorf"], "Einzelziele");
-assert.ok(spalte(1)[3].includes("."), "Einzelziel ohne Datum: " + spalte(1)[3]);
-assert.equal(zeilen.length, 5, "unerwartete Zeilenzahl: " + zeilen.length);
-assert.deepEqual(spalte(0), ["1", "2", "3", "4", "5"], "Nummerierung");
+// Beide Beispieldorf-Zeilen bleiben stehen, mit Datum und Nummer; die Reise
+// ausserhalb des Zeitraums fehlt. Der Freitext steht ganz unter Adresse.
+// Kürzel oben, Datum darunter (zweizeilig per pre-line).
+const [t1, t2] = spalte(1).slice(3, 5).map(k => k.split("\n")[1]);
+assert.ok(t1?.includes(".") && t1 !== t2, "Einzelziel ohne Datum: " + t1);
+assert.deepEqual(spalte(1).slice(3).map(k => k.split("\n")[0]), ["E24-01", "E24-02", "E24-03"], "Kürzel");
+assert.deepEqual(spalte(2).slice(3), ["", "", ""], "Name bleibt leer");
+assert.deepEqual(spalte(3).slice(3),
+  ["Beispieldorf, Dorfstr. 2, Beispieldorf", "Beispieldorf, Dorfstr. 2, Beispieldorf", "Hof Lindenau"],
+  "Freitext unter Adresse");
+assert.equal(zeilen.length, 6, "unerwartete Zeilenzahl: " + zeilen.length);
+assert.deepEqual(spalte(0), ["1", "2", "3", "4", "5", "6"], "Nummerierung");
 
 // Kopfzeile: anschrift() setzt Wohnort/Dienstort aus Einstellungen zusammen --
 // die Stelle, die beim vorigen Umbau (Ref:Stammziele) versehentlich entfallen war.

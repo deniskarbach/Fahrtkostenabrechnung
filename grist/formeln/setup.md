@@ -23,14 +23,13 @@ python3 grist/setup.py --selbsttest   # prüft die Formeln ohne Grist
 
 | Schritt | Wirkung |
 |---|---|
-| `tabellen_umbenennen` | ältere Dokumente: `Orte`/`Adressen` per `RenameTable` in `Stammziele`/`Einzelziele` umbenennen |
+| `tabellen_umbenennen` | ältere Dokumente: `Orte` per `RenameTable` in `Stammziele` umbenennen |
 | `anlegen` je Tabelle | fehlende Tabellen und Spalten ergänzen, Beschriftungen nachziehen |
 | `formeln_angleichen` | Rechenspalten auf den Stand des Codes bringen |
-| Sync-Spalten | die sieben `Ort_*_Sync` anlegen (brauchen `Einzelziele`, deshalb zuletzt) |
+| `altlasten_entfernen` | ältere Dokumente: Tabelle `Einzelziele` (früher `Adressen`), die sieben `Ort_*_Sync` und `Anschrift_Warnung`/`Anschrift_Hinweis` entfernen — alles reine Formeln, es geht nichts verloren. Außerdem `Tacho_Fotos` (Datenminimierung, GPS in EXIF) — **die vorhandenen Fotos gehen dabei mit** |
 | `reihenfolge_ordnen` | jede `_Text`-Spalte direkt hinter ihre Auswahlspalte setzen |
 | `ort_anzeige_setzen` | die Ort-Auswahlspalten zeigen das **Kürzel** statt der Zeilennummer |
 | `hilfsspalten_ausblenden` | Zwischenwerte aus den Tabellenansichten nehmen |
-| `einzelziele_aufraeumen` | verwaiste Adresszeilen entfernen |
 | leere `Einstellungen`-Zeile | anlegen, falls die Tabelle leer ist |
 | `feste_orte_anlegen` | `WO` und `KV` als Pflichtzeilen in `Stammziele` (ohne Adresse) |
 | `einstellungen_karte` | Tabellenansicht der Einstellungen durch ein Card-Widget ersetzen |
@@ -38,7 +37,7 @@ python3 grist/setup.py --selbsttest   # prüft die Formeln ohne Grist
 | `ausgabe_widgets` | die beiden Custom-Widgets mit ihren URLs abgleichen |
 | `ausdruck_layout` | Zeitraum oben, die beiden Druck-Widgets nebeneinander darunter |
 | `reisekorrektur_seite` | Seite `Reisekorrektur` anlegen (falls ohne Liste): oben Karte mit `Einstellungen.Korrektur_Jahr`/`Korrektur_Monat`, darunter links (⅓) die Reisen dieses Zeitraums über `Korrektur_Reisen`, neueste oben, rechts (⅔) die Karte der gewählten Reise mit den Formularfeldern |
-| `seiten_entfernen` | Seiten `Reisen` und `Einzelziele` entfernen; beide Tabellen bleiben unter Raw Data, bearbeitet wird auf `Reisekorrektur` |
+| `seiten_entfernen` | Seite `Reisen` entfernen; die Tabelle bleibt unter Raw Data, bearbeitet wird auf `Reisekorrektur` |
 | `layouts_aufraeumen` | Layout-Knoten entfernen, die auf fremde Sections zeigen |
 | `auswahl_seiten` | Stammziele: links Liste (⅓), rechts verknüpfte Karte (⅔). Nur wenn noch keine verknüpfte Karte da ist |
 | `table1_entfernen` | die leere Standardtabelle `Table1` eines neuen Dokuments entfernen |
@@ -92,8 +91,13 @@ Zelle zeigte weiter die Zeilennummer.
 
 `--selbsttest` führt die Formeln ohne Grist aus und prüft:
 
-- **Reiseweg / Routenlink** — Auswahl gewinnt vor Freitext (Muster B), ein
-  gesetzter Freitext neben einer Auswahl darf nicht im Link auftauchen
+- **Einzelziele / Reiseweg / Routenlink** — was eingetragen ist, zählt
+  (Muster B): Auswahl und Freitext im selben Ortsfeld ergeben zwei Stopps, in
+  Reihenfolge; ein Feld nur mit Leerzeichen zählt nicht; mehrzeiliger
+  Freitext wird einzeilig;
+  die Kürzel zählen laufend je Kalenderjahr über Reisen hinweg, nach Datum
+  sortiert (eine früher datierte, später erfasste Reise zählt davor; das neue
+  Jahr beginnt bei `E27-01`)
 - **Tagegeld-Staffel** — acht Fälle über alle vier Schwellen, darunter der
   Fall mit aufgebrauchter Rest-Zeit
 - **Layout-Knoten** — `blaetter()` und `ohne_blaetter()` steigen in
@@ -103,10 +107,7 @@ Weitere Tests im Repo:
 
 | Datei | Prüft |
 |---|---|
-| [`ausgabe/test_ortsverzeichnis.mjs`](../ausgabe/test_ortsverzeichnis.mjs) | Ortsverzeichnis: Stammziele höchstens einmal, Reihenfolge, Einzelziele mit Datum |
+| [`ausgabe/test_ortsverzeichnis.mjs`](../ausgabe/test_ortsverzeichnis.mjs) | Ortsverzeichnis: Stammziele höchstens einmal, Reihenfolge, Einzelziele mit Kürzel, Datum und ungeprüftem Freitext |
 | [`ausgabe/test_escaping.py`](../ausgabe/test_escaping.py) | kein Zeilen-Template ohne `html\`\``-Präfix |
 | [`ausgabe/test_schwaerzung.py`](../ausgabe/test_schwaerzung.py) | S2-Erzeugung schwärzt und bricht bei Abweichung ab |
-| [`test_lookuporadd.py`](../test_lookuporadd.py) | `lookupOrAddDerived` gegen eine normale Tabelle |
 
-> **Zu beachten:** `test_lookuporadd.py` läuft gegen das **echte** Dokument aus
-> `grist/.env`. Es legt zwei Wegwerf-Tabellen an und räumt sie wieder ab.

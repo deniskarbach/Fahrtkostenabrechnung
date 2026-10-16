@@ -33,10 +33,6 @@ Routenlink und die Legende im Ortsverzeichnis.
 drei leer, bleibt die Zelle leer — und jede Reise über diesen Ort bekommt
 **keinen** `Maps_Link`. `setup.py` nennt solche Orte bei jedem Lauf.
 
-Dieselbe Formel steht in [Einzelziele](einzelziele.md) — beide Tabellen sind bewusst
-gleich aufgebaut, damit die Abrechnungsstelle nicht zwei Schemata im Kopf haben
-muss.
-
 ## Die Pflichtzeilen WO und KV
 
 `setup.py` legt zwei Zeilen zwingend an:
@@ -61,6 +57,7 @@ eingetragene Adresse wird nie überschrieben.
 ## Was nicht hierher gehört
 
 Ein Ziel, das nur einmal vorkommt. Dafür ist das Freitextfeld im Formular da;
-es legt automatisch eine Zeile in [Einzelziele](einzelziele.md) an. Einmalorte sind
+sein Text steht mit Kürzel (`E26-07`) und Datum im Ortsverzeichnis
+([Reisen → Einzelziele](reisen.md#einzelziele--einzelziele-ortsverzeichnis)). Einmalorte sind
 der Normalfall, nicht die Ausnahme — eine reine Auswahlliste würde daran
 scheitern.

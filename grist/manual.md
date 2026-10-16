@@ -72,15 +72,14 @@ eigene Handgriffe nötig — alles dazwischen übernimmt die Tabelle automatisch
 ## Die Tabellen im Überblick
 
 Von Hand gepflegt werden nur `Einstellungen` und `Stammziele`. `Reisen` füllt das
-Formular, `Einzelziele` entsteht von selbst.
+Formular.
 
 | | Tabelle | Wozu sie da ist | Was hier zu tun ist |
 |---|---|---|---|
 | ✍️ | Einstellungen | Stammdaten der Person, eigene Wohn- und Dienstanschrift. Die **einzige** Stelle, an der persönliche Daten stehen | **Einrichten & pflegen.** Einmalig Name, Organisationseinheit, Anschriften |
 | ✍️ | Stammziele | Stammziele mit Kürzel und vollständiger Adresse — speist die Auswahlliste im Formular, den Routenlink und die Legende auf dem Ausdruck | **Pflegen.** Links Ziel wählen, rechts ändern. `WO` und `KV` sind Pflichtzeilen, ihre Adresse eintragen; neue regelmäßige Ziele ergänzen |
 | ✅ | Reisen (nur Raw Data) | Eine Zeile je Dienstreise aus dem Formular, dazu alle Rechenspalten (Kilometer, Tagegeld-Stufe, Reiseweg, laufende Nummer, Routenlink). Keine eigene Seite | **Nichts.** Korrigiert wird auf der Seite `Reisekorrektur` |
-| ✍️ | Reisekorrektur (Seite) | Oben Jahr und Monat als Filter, darunter links die Reisen dieses Zeitraums (nur das Datum), rechts die gewählte Reise als Karte mit denselben Feldern wie im Formular | **Jahr/Monat wählen, Reise anklicken, rechts ändern.** Ohne Jahr gilt das laufende, ohne Monat das ganze Jahr. ⚠️ in der Liste: bei einem frei eingetragenen Ort fehlt die vollständige Anschrift, der Hinweis in der Karte sagt, wo |
-| ✅ | Einzelziele (nur Raw Data) | Je frei eingetragenem Ort eine Zeile, Bezeichnung und Anschrift aus dem Freitext zerlegt. Keine eigene Seite | **Nichts.** Unvollständige Anschriften zeigt die Reisekorrektur mit ⚠️ |
+| ✍️ | Reisekorrektur (Seite) | Oben Jahr und Monat als Filter, darunter links die Reisen dieses Zeitraums (nur das Datum), rechts die gewählte Reise als Karte mit denselben Feldern wie im Formular | **Jahr/Monat wählen, Reise anklicken, rechts ändern.** Ohne Jahr gilt das laufende, ohne Monat das ganze Jahr. |
 | 🖨️ | Ausdruck (Seite) | Abrechnungszeitraum und die Widgets Reisekostenabrechnung (S1/S2, Vermerke, Ortsverzeichnis), Fahrtenbuch zum Einkleben. Der Zeitraum wird **nur hier** gesetzt | **Pro Abrechnung Zeitraum setzen, aktualisieren, drucken** |
 | 🖨️ | Prüfliste (eigene Seite) | Alles aus allen Blättern in einer Zeile je Reise — für die Zeiterfassungsstelle, die den Antrag final bearbeitet | **Nichts.** Getrennt freigebbar, siehe unten |
 | ⚙️ | Formularverwaltung (Seite, letzte) | Das Formular-Widget, über das jede Reise in die Tabelle `Reisen` geschrieben wird. Ohne diese Seite gibt es keinen Formularlink: die Veröffentlichung hängt an ihr | **Nur beim Einrichten:** Formular veröffentlichen, Link aufs Handy. Die Seite nicht löschen, sonst funktioniert der Link nicht mehr |
@@ -135,7 +134,6 @@ Abschnitte:
 - Reisebeginn und Reiseende als Uhrzeit `HH:MM`
 - Kilometerstand bei Beginn und Ende
 - Privater Umweg (km, optional)
-- Tachofotos (Beginn und Ende)
 
 **2. Angefahrene Orte**
 
@@ -145,14 +143,17 @@ ist ein **Paar**:
 - **Auswahlliste** aus `Stammziele` — für die regelmäßigen Ziele
 - **Freitext** daneben — für alles, was nicht in der Liste steht
 
-Ist die Auswahl gesetzt, gewinnt sie; der Freitext wird dann ignoriert.
+Je Ort **entweder** aus der Liste wählen **oder** darunter eintragen. Was
+eingetragen ist, wird gedruckt: Sind beide Felder gefüllt, erscheinen im
+Reiseweg zwei Stopps (`WO > KITA > E26-07 > WO`). Dann in der Reisekorrektur
+das falsche Feld leeren.
 
 Im Freitext steht **Bezeichnung, Straße Hausnummer, PLZ Ort**, getrennt durch
 Kommas oder Zeilenumbrüche, z. B. `Café Mokka, Bahnhofstr. 7, 12345
-Musterstadt`. Daraus entstehen Bezeichnung und Anschrift für Ortsverzeichnis
-und Routenlink — nachgetragen wird nichts. Das letzte Stück muss mit der
-fünfstelligen PLZ beginnen; was dem Schema nicht folgt, gilt als
-unvollständig und erscheint in der Reisekorrektur mit ⚠️.
+Musterstadt`. Der Text wird nicht geprüft: Er steht so, wie er erfasst wurde,
+im Ortsverzeichnis — mit Kürzel und Datum (`E26-07`, darunter `03.02.2026`).
+Im Reiseweg steht nur das Kürzel (`WO > E26-07 > KV > WO`). Ob die Anschrift vollständig ist, sieht
+die Person beim Unterschreiben im Ortsverzeichnis.
 
 **3. Tagegeld**
 - Tagegeld beantragen? (Ja/Nein)
@@ -213,7 +214,7 @@ gewählten Ziels zum Bearbeiten.
 auch.
 
 Ein Ziel, das nur einmal vorkommt, gehört **nicht** hierher: dafür ist das
-Freitextfeld im Formular da. Es landet automatisch in `Einzelziele`.
+Freitextfeld im Formular da. Es landet mit Kürzel und Datum im Ortsverzeichnis.
 
 ---
 
@@ -222,9 +223,9 @@ Freitextfeld im Formular da. Es landet automatisch in `Einzelziele`.
 - **Abrechnungszeitraum** gesetzt? Er entscheidet, welche Reisen erscheinen.
 - **Aktualisieren** im Widget gedrückt? Eine neu erfasste Reise erreicht den
   Ausdruck nicht von selbst — siehe [Drucken](#drucken).
-- **Anschriften** vollständig? In der Reisekorrektur darf keine Reise ein ⚠️
-  tragen; sonst bleibt im Ortsverzeichnis die Adressspalte leer. Korrigiert
-  wird im Freitext der Reise.
+- **Anschriften** vollständig? Im Ortsverzeichnis steht jedes Einzelziel
+  (`E26-07`, `E26-08` …) mit dem Freitext, wie er erfasst wurde. Fehlt etwas, wird es
+  im Freitext der Reise auf der Seite `Reisekorrektur` ergänzt.
 - **Kilometer** plausibel? Ein Zahlendreher im Tachostand ergibt 0 dienstliche
   Kilometer, keine negative Zahl — er fällt also nicht durch einen Fehlerwert
   auf, sondern durch eine auffällig niedrige Zahl. Eine `0` auf S1 ist nicht

@@ -85,14 +85,16 @@ ORT_SLOTS = ["Ort_Beginn"] + [f"Ort_{i}" for i in range(1, ZWISCHENZIELE + 1)] +
 ORT_LABEL = {"Ort_Beginn": "Ort Reisebeginn", "Ort_Ende": "Ort Reiseende",
              **{f"Ort_{i}": f"Ort {i}" for i in range(1, ZWISCHENZIELE + 1)}}
 
-# Jeder Stopp ist ein Paar: Auswahl aus 'Stammziele' für die Stammziele, Freitext
-# für die Einzelziele. Ist die Auswahl gesetzt, gewinnt sie — stillschweigend.
+# Jedes Ortsfeld ist ein Paar: Auswahl aus 'Stammziele' für die Stammziele,
+# Freitext für die Einzelziele. Keine Rangfolge: was eingetragen ist, wird
+# gedruckt. Sind beide gefüllt, sind es zwei Stopps -- erst die Auswahl, dann
+# der Freitext. Ein Versehen steht so sichtbar im Reiseweg, statt still zu
+# verschwinden; korrigiert wird durch Leeren des falschen Felds.
 PAARE = "[" + ", ".join(f"(${s}, ${s}_Text)" for s in ORT_SLOTS) + "]"
 
-# Dasselbe fuer MAPS, aber mit der Einzelziel-Zeile als drittem Glied: die echte
-# Anschrift eines Einzelziels traegt die Abrechnungsstelle dort nach, nicht im
-# Freitext der Reise.
-PAARE_ADR = "[" + ", ".join(f"(${s}, ${s}_Text, ${s}_Sync)" for s in ORT_SLOTS) + "]"
+# Freitext einzeilig: Zeilenumbrüche werden zu ", ", Leerzeilen fallen weg.
+# Bleibt danach nichts übrig, gilt das Feld als leer.
+EINZEILIG = '", ".join(x.strip() for x in (t or "").splitlines() if x.strip())'
 
 
 # ---------------------------------------------------------------- Formeln
@@ -139,23 +141,50 @@ alle.sort(key=lambda r: (r.Datum, r.id))
 return [r.id for r in alle].index($id) + 1
 '''.strip()
 
+# Einzelziele der Reise, je Zeile "E26-07: Freitext". Gezählt wird wie bei
+# VERMERK_LABEL: laufend über das Kalenderjahr, sortiert nach (Datum, Zeilen-Id)
+# wie LFD_NR -- das Kürzel ist damit für sich allein eindeutig. Preis: eine
+# nachträglich erfasste oder umdatierte Reise verschiebt die späteren Nummern
+# des Jahres, wie bei Lfd_Nr und Vermerk_Label auch.
+# Einzige Quelle der Nummern: REISEWEG und das Ortsverzeichnis lesen sie hier.
+EINZELZIELE = f'''
+def frei(r):
+  return [{EINZEILIG} for t in [{", ".join(f"r.{s}_Text" for s in ORT_SLOTS)}]]
+if not $Datum:
+  return ""
+vorher = [r for r in Reisen.all if r.Datum and r.Datum.year == $Datum.year
+          and (r.Datum, r.id) < ($Datum, $id)]
+n = sum(1 for r in vorher for t in frei(r) if t)
+zeilen = []
+for t in frei(rec):
+  if t:
+    n += 1
+    zeilen.append("E%s-%02d: %s" % ($Datum.strftime("%y"), n, t))
+return "\\n".join(zeilen)
+'''.strip()
+
 REISEWEG = f'''
-paare = {PAARE}
-teile = [(o.Kuerzel if o else "") or t for o, t in paare]
+e = iter(z.split(":")[0] for z in $Einzelziele.splitlines())
+teile = []
+for o, t in {PAARE}:
+  if o:
+    teile.append(o.Kuerzel)
+  if (t or "").strip():
+    teile.append(next(e, "?"))
 return " > ".join(x for x in teile if x)
 '''.strip()
 
 MAPS = f'''
 import urllib.parse as u
-paare = {PAARE_ADR}
 adr = []
-for o, t, s in paare:
-  if not (o or t):
-    continue                 # Slot nicht belegt -- faellt still heraus
-  a = o.Adresse if o else ((s.Adresse if s else "") or t)
-  if not a:
-    return ""                # belegter Stopp ohne Anschrift -> lieber kein Link
-  adr.append(a)
+for o, t in {PAARE}:
+  if o and not o.Adresse:
+    return ""                # Stammziel ohne Anschrift -> lieber kein Link
+  if o:
+    adr.append(o.Adresse)
+  t = {EINZEILIG}
+  if t:
+    adr.append(t)            # leere Felder fallen still heraus
 if len(adr) < 2:
   return ""
 link = ("https://www.google.com/maps/dir/?api=1&origin=" + u.quote(adr[0])
@@ -176,27 +205,6 @@ return "V%s-%02d" % ($Datum.strftime("%y"), n)
 
 JA_NEIN = {"choices": ["Ja", "Nein"]}
 
-def SYNC(slot):
-    """Legt bei ausgefülltem Freitext automatisch die zugehörige Zeile in
-    Einzelziele an (Reise+Slot als Schlüssel -> nie ein Treffer auf eine
-    fremde Zeile, jede Fahrt bekommt ihre eigene). Gewinnt die Auswahl (wie in
-    REISEWEG/MAPS), entsteht keine Einzelziel-Zeile -- sonst taucht der
-    ignorierte Freitext trotzdem im Ortsverzeichnis auf.
-
-    Den Freitext liest die Einzelziel-Zeile selbst per Formel (Label). Eine
-    Zuweisung hier (zeile.Label = ...) bricht mit AttributeError ab -- so
-    stand es bis 14.10.2026 da und fiel nur nicht auf, weil es noch keinen
-    Freitext gab. Freitext im Schlüssel ginge, ließe aber bei jeder Korrektur
-    die alte Zeile stehen, und die würde mitgedruckt.
-
-    Keine lokale Variable 'rec': Grist ersetzt jedes $Feld durch rec.Feld und
-    übergibt die eigene Zeile als Parameter 'rec' -- eine Zuweisung daran ist
-    ein SyntaxError in allen sieben Sync-Spalten."""
-    return f'''
-if ${slot} or not ${slot}_Text:
-  return None
-return Einzelziele.lookupOrAddDerived(Reise=$id, Slot="{slot}")
-'''.strip()
 
 # ---------------------------------------------------------------- Tabellen
 
@@ -276,7 +284,6 @@ REISEN = [
     spalte("Ende",              "Reiseende (HH:MM)", "Text"),
     spalte("KM_Beginn",         "Kilometerstand Beginn", "Int"),
     spalte("KM_Ende",           "Kilometerstand Ende", "Int"),
-    spalte("Tacho_Fotos",       "Tachofotos (Beginn und Ende)", "Attachments"),
     spalte("Umweg_privat",      "Privater Umweg (km)", "Int"),
     *ort_spalten(),
     spalte("Tagegeld_beantragt","Tagegeld beantragen?", "Bool"),
@@ -302,94 +309,11 @@ REISEN = [
            formel="$Abwesenheit_min - ($Min_privat_Abzug or 0) "
                   "- ($Min_Dienststaette or 0) - ($Min_Dienstort or 0)"),
     spalte("Tagegeld_Stufe",  "Tagegeld-Stufe", "Text", formel=STUFE),
+    spalte("Einzelziele",     "Einzelziele (Ortsverzeichnis)", "Text", formel=EINZELZIELE),
     spalte("Reiseweg",        "Reiseweg", "Text", formel=REISEWEG),
     spalte("Maps_Link",       "Routenlink", "Text", formel=MAPS),
     spalte("Vermerk_Label",   "Vermerk-Kennung", "Text", formel=VERMERK_LABEL),
 ]
-
-# Ein Freitext-Ziel je Fahrt und Ort-Slot, automatisch von den Sync-Spalten
-# unten befüllt -- keine Dropdown-Auswahl, keine Zusammenführung gleicher
-# Texte (jede Fahrt bleibt eine eigene Zeile). Strasse/PLZ/Ort bleiben leer,
-# bis die Abrechnungsstelle sie beim Prüfen einer Fahrt nachträgt; der
-# Sync-Mechanismus fasst diese Felder nie an. Aufbau bewusst analog zu STAMMZIELE
-# (gleiche Spalten Strasse/PLZ/Ort + zusammengesetzte Adresse-Formel).
-# Der Freitext ist die einzige Quelle: Schema "Bezeichnung, Straße Hausnummer,
-# PLZ Ort", Kommas oder Zeilenumbrüche trennen. Entscheidend ist die Position,
-# nicht die Zahl: das letzte Stück muss mit fünf Ziffern beginnen, das davor
-# ist die Straße (fünfstellige Hausnummern stören also nicht), alles davor die
-# Bezeichnung. Was nicht passt, gilt als unvollständig -- geraten wird nichts.
-# Korrigiert wird im Freitext der Reise, hier wird nichts eingetragen.
-# Kein "$" als Zeilenende im Muster -- Grist liest $… als Spaltenbezug.
-ZERLEGT = r"""
-import re
-teile = [t.strip() for t in re.split(r"[,\n]", $Label or "") if t.strip()]
-m = re.fullmatch(r"(\d{5})\s+(\S.*)", teile[-1]) if len(teile) >= 2 else None
-if not m:
-  return [$Label or "", "", "", ""]
-return [", ".join(teile[:-2]), teile[-2], m.group(1), m.group(2)]
-""".strip()
-
-LABEL = """
-r = $Reise
-if not r or getattr(r, $Slot):
-  return ""
-return getattr(r, $Slot + "_Text") or ""
-""".strip()
-
-EINZELZIELE = [
-    spalte("Reise",   "Reise", "Ref:Reisen"),
-    spalte("Slot",    "Ort-Feld", "Text"),
-    # leer, sobald die Reise dort eine Auswahl hat oder der Freitext fehlt --
-    # solche Zeilen sind verwaist und erscheinen in keiner Ausgabe
-    spalte("Label",   "Freitext (wie erfasst)", "Text", formel=LABEL),
-    spalte("Zerlegt", "Freitext zerlegt", "Any", formel=ZERLEGT),
-    spalte("Bezeichnung", "Bezeichnung", "Text", formel="$Zerlegt[0]"),
-    spalte("Strasse", "Straße und Hausnummer", "Text", formel="$Zerlegt[1]"),
-    spalte("PLZ",     "PLZ", "Text", formel="$Zerlegt[2]"),
-    spalte("Ort",     "Ort", "Text", formel="$Zerlegt[3]"),
-    spalte("Adresse", "Vollständige Adresse", "Text",
-           formel='", ".join(x for x in [$Strasse, ($PLZ + " " + $Ort).strip()] if x)'),
-    spalte("Datum",   "Reisedatum", "Date", formel="$Reise.Datum"),
-    # speist den Hinweis in der Reisekorrektur
-    spalte("Anschrift_fehlt", "Anschrift fehlt", "Bool",
-           formel="bool($Label) and not ($Strasse and $PLZ and $Ort)"),
-]
-
-def einzelziele_sync_spalten():
-    """Je Ort-Slot eine unsichtbare Formelspalte auf Reisen (kein Eingabefeld,
-    taucht daher nie im Formular auf), dazu Warnung und Hinweis für
-    unvollständige Anschriften. Braucht die Tabelle Einzelziele -- erst nach
-    deren Anlage aufrufen."""
-    paare = ", ".join(f'("{ORT_LABEL[s]}", ${s}_Sync)' for s in ORT_SLOTS)
-    fehlt = (f"fehlt = [(name, z.Label) for name, z in [{paare}] "
-             f"if z and z.Anschrift_fehlt]\n")
-    return [spalte(f"{sid}_Sync", f"{ORT_LABEL[sid]} – Einzelziel-Sync", "Ref:Einzelziele",
-                    formel=SYNC(sid))
-            for sid in ORT_SLOTS] + [
-        # Liste der Reisekorrektur: nur das Zeichen, der Text steht in der Karte
-        spalte("Anschrift_Warnung", "⚠️", "Text",
-               formel=fehlt + 'return "⚠️" if fehlt else ""'),
-        spalte("Anschrift_Hinweis", "Hinweis zur Anschrift", "Text",
-               formel=fehlt + 'if not fehlt:\n  return ""\n'
-                      'return ("Anschrift unvollständig bei " + "; ".join('
-                      'n + ": „" + t.replace("\\n", ", ") + "“" for n, t in fehlt)'
-                      ' + ". Bitte im Freitext so eintragen: Bezeichnung, Straße Hausnummer, PLZ Ort.")'),
-    ]
-
-def einzelziele_aufraeumen():
-    """Entfernt Einzelziel-Zeilen, deren Reise gelöscht, deren Freitext geleert
-    oder deren Auswahl nachträglich gesetzt wurde (Auswahl gewinnt dann, wie
-    in REISEWEG/MAPS). lookupOrAddDerived legt Zeilen an, räumt aber nie ab --
-    ohne das hier bleibt so eine Zeile für immer stehen."""
-    reisen = {r["id"]: r["fields"] for r in api("GET", "/tables/Reisen/records")["records"]}
-    adressen = api("GET", "/tables/Einzelziele/records")["records"]
-    weg = [a["id"] for a in adressen
-           if not reisen.get(a["fields"]["Reise"])
-           or reisen[a["fields"]["Reise"]].get(a["fields"]["Slot"])
-           or not reisen[a["fields"]["Reise"]].get(f"{a['fields']['Slot']}_Text")]
-    if weg:
-        api("POST", "/apply", [["BulkRemoveRecord", "Einzelziele", weg]])
-    print(f"  Einzelziele: {len(weg)} verwaiste Zeile(n) entfernt")
 
 
 # ---------------------------------------------------------------- Ausführung
@@ -490,14 +414,12 @@ def ort_anzeige_setzen():
 # Aussagewert für die Fachkraft -- bleiben im Datenmodell (Formeln greifen
 # weiter darauf zu), verschwinden nur aus der Tabellenansicht.
 HILFSSPALTEN = {
-    "Reisen": ["Datum_bis", "KM_gesamt", "Abwesenheit_min", "Rest_min"]
-              + [f"{s}_Sync" for s in ORT_SLOTS],
-    "Einzelziele": ["Reise", "Slot", "Zerlegt", "Adresse", "Anschrift_fehlt"],
+    "Reisen": ["Datum_bis", "KM_gesamt", "Abwesenheit_min", "Rest_min", "Einzelziele"],
     # Adresse ist wie in Stammziele nur die zusammengesetzte Formel aus
     # Strasse/PLZ/Ort -- die Fachkraft trägt in den Einzelfeldern ein.
     "Stammziele": ["Adresse"],
     # Zeitraum nur auf 'Ausdruck', Korrektur_* nur auf 'Reisekorrektur' --
-    # beide Seiten nimmt hilfsspalten_ausblenden() aus.
+    # für Einstellungen nimmt hilfsspalten_ausblenden() beide Seiten aus.
     "Einstellungen": ["Zeitraum_von", "Zeitraum_bis", "Korrektur_Jahr", "Korrektur_Monat",
                       "Korrektur_Reisen"],
 }
@@ -516,12 +438,17 @@ def hilfsspalten_ausblenden():
         if not treffer:
             continue
         tid, raw = treffer[0]["id"], treffer[0]["rawViewSectionRef"]
+        # Nur für Einstellungen: deren Karten dort zeigen genau diese Felder.
+        # Reisen-Hilfsspalten müssen auch auf der Reisekorrektur weg -- Grist
+        # hängt eine neu angelegte Spalte (zuletzt 'Einzelziele') an jedes
+        # Widget der Tabelle, auch an die dort gestaltete Karte.
         frei = ",".join(str(v["id"]) for n in ("Ausdruck", KORREKTUR_SEITE)
-                        for v in seite_suchen(n)) or "0"
+                        for v in seite_suchen(n)) if tabelle == "Einstellungen" else ""
+        frei = frei or "0"
         # rawViewSectionRef ist die interne "Raw Data"-Ansicht -- Grist
         # verweigert das Entfernen von Feldern dort (jede Spalte muss dort
         # vollständig bleiben); ausgeblendet wird nur in echten Grid-/
-        # Card-Ansichten (Reisen-Seite, Einzelziele-Seite, Record-Card-Popup).
+        # Card-Ansichten (Reisekorrektur, Record-Card-Popup).
         for sek in sql(f"select id from _grist_Views_section "
                        f"where tableRef = {tid} and parentKey <> 'form' and id <> {raw} "
                        f"and parentId not in ({frei})"):
@@ -544,7 +471,7 @@ def formeln_angleichen(tabelle, spalten):
     live = {c["id"]: (c.get("fields") or {})
             for c in api("GET", f"/tables/{tabelle}/columns")["columns"]}
     # isFormula wird mitgeschickt, nicht nur formula -- fängt auch den Fall
-    # ab, dass eine Spalte (wie Einzelziele!Adresse) von einer Eingabe- zu einer
+    # ab, dass eine Spalte (wie einst Stammziele!Adresse) von einer Eingabe- zu einer
     # Rechenspalte umgewidmet wird, nicht nur ihr Formeltext sich ändert.
     patch = [{"id": s["id"], "fields": {"isFormula": True, "formula": s["fields"]["formula"]}}
              for s in spalten
@@ -878,7 +805,7 @@ def formelfehler_melden():
     Sync-Spalten lange kaputt. /tables/X/data reicht den Rohwert
     ["E", "SyntaxError"] durch -- daher dieser Endpunkt."""
     fehler = []
-    for name in ("Stammziele", "Einstellungen", "Reisen", "Einzelziele"):
+    for name in ("Stammziele", "Einstellungen", "Reisen"):
         for spalte_id, werte in api("GET", f"/tables/{name}/data").items():
             art = {w[1] for w in werte if isinstance(w, list) and w and w[0] == "E"}
             if art:
@@ -901,11 +828,11 @@ def formelfehler_melden():
 KORREKTUR_SEITE = "Reisekorrektur"
 KORREKTUR_KARTE = [
     ("Datum", "Datum_Ende"), ("Beginn", "Ende"), ("KM_Beginn", "KM_Ende"),
-    ("Umweg_privat",), ("Anschrift_Hinweis",),
+    ("Umweg_privat",),
     *[(s, f"{s}_Text") for s in ORT_SLOTS],
     ("Tagegeld_beantragt",), ("Min_Dienststaette", "Min_Dienstort", "Min_privat_Abzug"),
     ("OePNV", "Nebenkosten"), ("Uebernachtung", "Verpflegung"), ("Mitnahme_Personen",),
-    ("Vermerk",), ("Belege", "Tacho_Fotos"),
+    ("Vermerk",), ("Belege",),
 ]
 
 
@@ -938,7 +865,7 @@ def reisekorrektur_seite():
         vid, datum, karte = neu["viewRef"], neu["sectionRef"], None
     datum = datum or api("POST", "/apply", [["CreateViewSection", et, vid, "single", None, None]]
                          )["retValues"][0]["sectionRef"]
-    liste = liste_anlegen(vid, "Reisen", ["Datum", "Anschrift_Warnung"], ["-Datum", "-Beginn"])
+    liste = liste_anlegen(vid, "Reisen", ["Datum"], ["-Datum", "-Beginn"])
     karte = karte or karte_anlegen(vid, "Reisen", KORREKTUR_KARTE)
 
     filter_karte(datum, ecol)
@@ -978,8 +905,7 @@ def filter_karte(sec, ecol):
 def liste_anlegen(vid, tabelle, spalten, sortierung):
     """Schmale Tabelle auf Seite `vid` zum Auswählen, rechts daneben steht die
     Karte zum Bearbeiten. Möglichst nur Datenspalten -- eine Rechenspalte lädt
-    in einer Tabelle zum Bearbeiten der Formel ein (Ausnahme: das ⚠️ der
-    Reisekorrektur). `sortierung`: Spalten-Ids, ein
+    in einer Tabelle zum Bearbeiten der Formel ein. `sortierung`: Spalten-Ids, ein
     '-' davor sortiert absteigend."""
     tid, col = spalten_ids(tabelle)
     liste = api("POST", "/apply", [["CreateViewSection", tid, vid, "record", None, None]]
@@ -1109,10 +1035,11 @@ WIDGET_TEXTE = {
         "Ohne Jahr gilt das laufende, ohne Monat das ganze Jahr."),
     ("Reisekorrektur", "Reisen", "record"): ("Reisen",
         "Die Reisen im gewählten Jahr bzw. Monat, die neueste oben. Reise "
-        "anklicken, rechts bearbeiten. ⚠️ heißt: Bei einem frei eingetragenen "
-        "Ort fehlt die vollständige Anschrift."),
+        "anklicken, rechts bearbeiten."),
     ("Reisekorrektur", "Reisen", "single"): ("Reise bearbeiten",
-        "Die links gewählte Reise. Was hier geändert wird, gilt sofort."),
+        "Die links gewählte Reise. Was hier geändert wird, gilt sofort. Bei "
+        "den Orten wird gedruckt, was eingetragen ist -- ein falsches Feld "
+        "leeren."),
 }
 
 
@@ -1148,11 +1075,10 @@ def table1_entfernen():
 
 
 def seiten_entfernen():
-    """Entfernt die Seiten 'Reisen' und 'Einzelziele'; beide Tabellen bleiben
-    unter Raw Data vollständig erhalten. Reisen wird auf KORREKTUR_SEITE
-    bearbeitet, Einzelziele entsteht aus dem Freitext und wird dort über den
-    Freitext korrigiert. Idempotent: ohne Seite passiert nichts."""
-    for name in ("Reisen", "Einzelziele"):
+    """Entfernt die Seite 'Reisen'; die Tabelle bleibt unter Raw Data
+    vollständig erhalten und wird auf KORREKTUR_SEITE bearbeitet.
+    Idempotent: ohne Seite passiert nichts."""
+    for name in ("Reisen",):
         seite = seite_suchen(name)
         if seite:
             api("POST", "/apply", [["RemoveView", seite[0]["id"]]])
@@ -1226,57 +1152,75 @@ def einstellungen_karte():
 
 
 def selbsttest():
-    """Führt REISEWEG und MAPS ohne Grist aus: Auswahl gewinnt, sonst Freitext."""
+    """Führt EINZELZIELE, REISEWEG und MAPS ohne Grist aus: was eingetragen
+    ist, zählt (beide Felder gefüllt = zwei Stopps); Einzelziele zählen
+    laufend je Kalenderjahr."""
+    from datetime import date
     class Ort:
         def __init__(self, k="", a=""):
             self.Kuerzel, self.Adresse = k, a
         def __bool__(self):
             return bool(self.Kuerzel or self.Adresse)
 
-    class Adr:                                # eine Zeile aus 'Einzelziele'
-        def __init__(self, a=""):
-            self.Adresse = a
+    alle = []                                 # Reisen.all
 
-    def leer():
+    def leer(id=1, datum=date(2026, 2, 3)):
         rec = type("Rec", (), {})()
+        rec.id, rec.Datum = id, datum
         for s in ORT_SLOTS:                   # alles leer als Ausgangslage
             setattr(rec, s, Ort())
             setattr(rec, f"{s}_Text", "")
-            setattr(rec, f"{s}_Sync", None)
+        alle.append(rec)
         return rec
 
-    rec = leer()
-    rec.Ort_Beginn = Ort("BÜR", "Hauptstr. 1, Musterstadt")
-    rec.Ort_1_Text = "Café Mokka, Bahnhofstr. 7, Musterstadt"   # Einzelziel
-    rec.Ort_2 = Ort("KITA", "Lindenweg 3, Musterstadt")
-    rec.Ort_2_Text = "darf nicht gewinnen"                      # beides gefüllt
-    rec.Ort_Ende = Ort("BÜR", "Hauptstr. 1, Musterstadt")
+    reisen = type("T", (), {"all": alle})
 
     def lauf(formel, r=None):
         rumpf = "\n".join("  " + z for z in formel.replace("$", "rec.").splitlines())
-        raum = {}
+        raum = {"Reisen": reisen}
         exec("def f(rec):\n" + rumpf, raum)
         return raum["f"](rec if r is None else r)
 
+    def rechnen(r):
+        r.Einzelziele = lauf(EINZELZIELE, r)
+        return r
+
+    rec = leer()
+    rec.Ort_Beginn = Ort("BÜR", "Hauptstr. 1, Musterstadt")
+    rec.Ort_1_Text = "Café Mokka\nBahnhofstr. 7, Musterstadt"  # Einzelziel, zweizeilig
+    rec.Ort_2 = Ort("KITA", "Lindenweg 3, Musterstadt")
+    rec.Ort_2_Text = "Haus B"                                   # beides gefüllt: zwei Stopps
+    rec.Ort_3_Text = "  "                                       # nur Leerzeichen = leer
+    rec.Ort_4_Text = "Hof Lindenau"
+    rec.Ort_Ende = Ort("BÜR", "Hauptstr. 1, Musterstadt")
+    rechnen(rec)
+
+    assert rec.Einzelziele == ("E26-01: Café Mokka, Bahnhofstr. 7, Musterstadt\n"
+                               "E26-02: Haus B\nE26-03: Hof Lindenau"), rec.Einzelziele
     weg = lauf(REISEWEG)
-    assert weg == "BÜR > Café Mokka, Bahnhofstr. 7, Musterstadt > KITA > BÜR", weg
+    assert weg == "BÜR > E26-01 > KITA > E26-02 > E26-03 > BÜR", weg
     link = lauf(MAPS)
-    assert "Bahnhofstr" in link and "Lindenweg" in link, link
-    assert "darf%20nicht" not in link, link
+    assert link.count("%7C") == 3, link           # vier Zwischenstopps, in Reihenfolge
+    assert link.index("Lindenweg") < link.index("Haus") < link.index("Lindenau"), link
+    assert "%0A" not in link, link
 
-    # Einzelziel: die in 'Einzelziele' nachgetragene Anschrift schlaegt den
-    # Freitext -- vorher landete das blosse Label im Link.
-    r = leer()
-    r.Ort_Beginn = Ort("BÜR", "Hauptstr. 1, Musterstadt")
-    r.Ort_1_Text = "Kita Sonnenschein"
-    r.Ort_1_Sync = Adr("Lindenweg 3, 00000 Musterstadt")
-    r.Ort_Ende = Ort("BÜR", "Hauptstr. 1, Musterstadt")
-    link = lauf(MAPS, r)
-    assert "Lindenweg" in link and "Sonnenschein" not in link, link
-
-    # Noch nichts nachgetragen -> Freitext als Notbehelf, kein leerer Link.
-    r.Ort_1_Sync = None
-    assert "Sonnenschein" in lauf(MAPS, r)
+    # Laufend über das Jahr: zweite Reise am selben Tag und eine spätere zählen
+    # weiter; eine früher datierte Reise (höhere Id) zählt nach Datum davor;
+    # das neue Jahr beginnt bei 01.
+    zweite = leer(id=2)
+    zweite.Ort_1_Text = "Bauhof"
+    assert rechnen(zweite).Einzelziele == "E26-04: Bauhof", zweite.Einzelziele
+    assert lauf(REISEWEG, zweite) == "E26-04", lauf(REISEWEG, zweite)
+    spaeter = leer(id=3, datum=date(2026, 3, 1))
+    spaeter.Ort_1_Text = "Bauhof"
+    assert rechnen(spaeter).Einzelziele == "E26-05: Bauhof", spaeter.Einzelziele
+    frueher = leer(id=4, datum=date(2026, 1, 9))
+    frueher.Ort_1_Text = "Bauhof"
+    assert rechnen(frueher).Einzelziele == "E26-01: Bauhof", frueher.Einzelziele
+    neujahr = leer(id=5, datum=date(2027, 1, 2))
+    neujahr.Ort_1_Text = "Bauhof"
+    assert rechnen(neujahr).Einzelziele == "E27-01: Bauhof", neujahr.Einzelziele
+    alle.clear()
 
     # Stammziel ohne Adresse (WO/KV frisch angelegt): frueher fiel der Stopp
     # still aus dem Link und die Route war zu kurz -- jetzt gar kein Link.
@@ -1320,7 +1264,6 @@ def selbsttest():
     assert ohne_blaetter(baum, set()) == baum
 
     # Reisekorrektur-Filter: Jahr leer = laufendes Jahr, Monat leer = ganzes Jahr.
-    from datetime import date
     reisen = [type("R", (), {"Datum": d})() for d in
               (date(2025, 12, 3), date(2026, 3, 1), date(2026, 10, 2), None)]
     def filter_lauf(jahr, monat):
@@ -1334,25 +1277,6 @@ def selbsttest():
     assert filter_lauf(2026, "Oktober") == [date(2026, 10, 2)]
     assert filter_lauf(None, "Mai") == []
 
-    # Freitext zerlegen: Position entscheidet, nicht die Zahl.
-    def zerlegt(text):
-        return lauf(ZERLEGT, type("E", (), {"Label": text})())
-    for text, soll in [
-        ("Café Mokka, Bahnhofstr. 7, 12345 Musterstadt",
-         ["Café Mokka", "Bahnhofstr. 7", "12345", "Musterstadt"]),
-        ("Café Mokka\nBahnhofstr. 7, 12345 Musterstadt",
-         ["Café Mokka", "Bahnhofstr. 7", "12345", "Musterstadt"]),
-        ("Kita Sonnenschein, Haus B, Lindenweg 3, 12345 Musterstadt",
-         ["Kita Sonnenschein, Haus B", "Lindenweg 3", "12345", "Musterstadt"]),
-        ("Industriestr. 10234, 12345 Musterstadt",
-         ["", "Industriestr. 10234", "12345", "Musterstadt"]),
-        ("Café Mokka, Bahnhofstr. 7 12345 Musterstadt",       # Komma fehlt
-         ["Café Mokka, Bahnhofstr. 7 12345 Musterstadt", "", "", ""]),
-        ("Café Mokka Musterstadt", ["Café Mokka Musterstadt", "", "", ""]),
-        ("", ["", "", "", ""]),
-    ]:
-        assert zerlegt(text) == soll, (text, zerlegt(text))
-
     print(f"Selbsttest ok ({ZWISCHENZIELE} Zwischenziele)\n  Reiseweg: {weg}")
 
 
@@ -1365,7 +1289,7 @@ if __name__ == "__main__" and SELBSTTEST:
 # Frühere Tabellennamen. Ein Dokument von vor der Umbenennung bekäme sonst
 # leere neue Tabellen neben den alten. RenameTable zieht Formeln, Ref-Typen
 # und gleichnamige Seiten selbst nach.
-ALTE_TABELLEN = {"Orte": "Stammziele", "Adressen": "Einzelziele"}
+ALTE_TABELLEN = {"Orte": "Stammziele"}
 
 
 def tabellen_umbenennen():
@@ -1377,6 +1301,31 @@ def tabellen_umbenennen():
     print(f"  Tabellen: {len(aktionen)} umbenannt")
 
 
+# Frühere Fassung: eigene Tabelle je Freitext-Ziel, die den Freitext in
+# Straße/PLZ/Ort zerlegte und unvollständige Anschriften mit ⚠️ meldete.
+# Zurückgebaut -- der Freitext geht unverändert ins Ortsverzeichnis, geprüft
+# wird beim Unterschreiben. Alles darin war Formel, verloren geht nichts.
+# Ref-Spalten vor ihrer Zieltabelle entfernen.
+#
+# Tacho_Fotos: am 14.10.2026 gestrichen -- Handyfotos tragen je nach Gerät
+# GPS-Koordinaten in den EXIF-Daten (oft Wohnung oder Klientenadresse), Grist
+# speichert sie unverändert, und der Kilometerstand steht ohnehin im
+# Fahrtenbuch. Datenminimierung. ACHTUNG: entfernt vorhandene Fotos mit.
+ALTE_SPALTEN = ([f"{s}_Sync" for s in ORT_SLOTS] + ["Anschrift_Warnung", "Anschrift_Hinweis"]
+                + ["Tacho_Fotos"])
+ALTE_TABELLEN_WEG = ["Einzelziele", "Adressen"]
+
+
+def altlasten_entfernen():
+    spalten = {c["id"] for c in api("GET", "/tables/Reisen/columns")["columns"]}
+    tabellen = {t["id"] for t in api("GET", "/tables")["tables"]}
+    aktionen = ([["RemoveColumn", "Reisen", c] for c in ALTE_SPALTEN if c in spalten]
+                + [["RemoveTable", t] for t in ALTE_TABELLEN_WEG if t in tabellen])
+    if aktionen:
+        api("POST", "/apply", aktionen)
+    print(f"  Altlasten: {len(aktionen)} Spalte(n)/Tabelle(n) entfernt")
+
+
 if __name__ == "__main__":
     print(f"Dokument {DOC} auf {URL}")
     tabellen_umbenennen()       # vor allem anderen -- sonst entstehen Doppel
@@ -1384,16 +1333,11 @@ if __name__ == "__main__":
         anlegen(name, spalten)      # Reihenfolge = Ref-Abhängigkeiten
         formeln_angleichen(name, spalten)
 
-    anlegen("Einzelziele", EINZELZIELE)              # braucht Reisen (Ref-Spalte)
-    formeln_angleichen("Einzelziele", EINZELZIELE)
-    sync_spalten = einzelziele_sync_spalten()
-    anlegen("Reisen", sync_spalten)            # braucht Einzelziele (Ref-Spalte)
-    formeln_angleichen("Reisen", sync_spalten)
+    altlasten_entfernen()       # nach formeln_angleichen: Maps_Link liest _Sync nicht mehr
 
     reihenfolge_ordnen()
     ort_anzeige_setzen()
     hilfsspalten_ausblenden()
-    einzelziele_aufraeumen()
     formelfehler_melden()
 
     if not api("GET", "/tables/Einstellungen/records")["records"]:

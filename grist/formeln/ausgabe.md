@@ -32,7 +32,7 @@ Grist.
 |---|---|---|
 | S1 / S2 | Einstellungen | Reisen im Zeitraum |
 | Vermerke | Einstellungen | Reisen im Zeitraum **mit** `Vermerk` |
-| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Datum) |
+| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Kürzel und Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 | Prüfliste | Einstellungen | Reisen im Zeitraum + Stammziele/Einzelziele als Legende |
 
@@ -43,7 +43,7 @@ const imZeitraum = d => d != null
   && (von == null || d >= von) && (bis == null || d <= bis);
 ```
 
-Angewandt auf `Reisen.Datum` und auf `Einzelziele.Datum`. Maßgeblich ist der
+Angewandt auf `Reisen.Datum`; die Einzelziele kommen aus denselben Reisen. Maßgeblich ist der
 **Reisebeginn** — Begründung siehe [Einstellungen](einstellungen.md#abrechnungszeitraum).
 
 Grist liefert Datumswerte als Sekunden seit 1970, UTC-Mitternacht. Die Anzeige
@@ -183,9 +183,24 @@ for (const r of reisen)
 viermal, je einmal als Start und als Ziel. Das war ein stiller Fehler; dagegen
 läuft [`test_ortsverzeichnis.mjs`](../ausgabe/test_ortsverzeichnis.mjs).
 
-Die Einzelziele aus `Einzelziele` folgen danach, jede Eintragung als eigene Zeile,
-nach Datum sortiert. Das Datum steht in der Kürzel-Spalte — die bleibt bei
-diesen Zeilen ohnehin leer. Daher die Überschrift *Kürzel / Datum*.
+Die Einzelziele folgen danach, jede Eintragung als eigene Zeile, nach Datum
+sortiert. Sie kommen aus der Rechenspalte
+[`Reisen.Einzelziele`](reisen.md#einzelziele--einzelziele-ortsverzeichnis),
+die auch das Kürzel vergibt — das Widget zählt nicht selbst, sonst könnten
+Fahrtenbuch und Ortsverzeichnis auseinanderlaufen.
+
+```js
+const ausEinzelziele = reisen.flatMap(r => (r.Einzelziele || "").split("\n")
+  .filter(Boolean).map(z => {
+    const i = z.indexOf(": ");
+    return { kuerzel: `${z.slice(0, i)}\n${tag(r.Datum)}`, name: "", adresse: z.slice(i + 2) };
+  }));
+```
+
+In der Spalte *Kürzel / Datum* steht oben das Kürzel aus dem Reiseweg
+(`E26-07`), darunter das Datum der Fahrt. Der Freitext steht vollständig und **ungeprüft** unter
+*Adresse*, die Namensspalte bleibt leer. Ob die Anschrift vollständig ist,
+kontrolliert die Person beim Unterschreiben.
 
 ## Fahrtenbuch
 

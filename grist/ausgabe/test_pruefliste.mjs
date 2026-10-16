@@ -73,10 +73,8 @@ const TABELLEN = {
       Verpflegung: "Nein", KM_Beginn: 12087, KM_Ende: 12100,
       Umweg_privat: 3, KM_dienstlich: 10,
       OePNV: 0, Mitnahme_Personen: 0, Uebernachtung: 0, Nebenkosten: 0,
-      Vermerk_Label: "", Ort_Ende: 1, Maps_Link: "" },
-  ],
-  Einzelziele: [
-    { id: 1, Datum: d(20030), Label: "Hof Lindenau", Adresse: "Dorfstr. 2, 00000 Beispieldorf" },
+      Vermerk_Label: "", Ort_Ende: 1, Maps_Link: "",
+      Einzelziele: "E24-01: Hof Lindenau, Dorfstr. 2, 00000 Beispieldorf" },
   ],
 };
 

@@ -21,7 +21,6 @@
     - [Einstellungen](grist/formeln/einstellungen.md)
     - [Stammziele](grist/formeln/stammziele.md)
     - [Reisen](grist/formeln/reisen.md)
-    - [Einzelziele](grist/formeln/einzelziele.md)
     - [Ausgabe](grist/formeln/ausgabe.md)
     - [Einrichtung (setup.py)](grist/formeln/setup.md)
     - [Anhang](grist/formeln/anhang.md)

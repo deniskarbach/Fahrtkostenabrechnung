@@ -42,7 +42,6 @@ const TABELLEN = {
       Beginn: "08:00", Ende: "09:00", Reiseweg: "WO > KV > WO",
       KM_Beginn: 1020, KM_Ende: 1044, Umweg_privat: 0, KM_dienstlich: 24 },
   ],
-  Einzelziele: [],
 };
 
 const zellen = {};

@@ -29,14 +29,12 @@ Drucken — steckt im selben Dokument, ohne zweite Datei und ohne Import.
 | `Einstellungen` | Stammdaten und Abrechnungszeitraum — die einzige Stelle mit persönlichen Daten |
 | `Stammziele` | Seite „Stammziele“: Stammziele mit vollständiger Adresse; speist Auswahlliste, Routenlink und Legende |
 | `Reisen` | eine Zeile je Dienstreise, gespeist aus dem veröffentlichten Formular |
-| `Einzelziele` | Seite „Einzelziele“: Einzelziele aus den Freitextfeldern; entsteht automatisch |
-| Formelspalten | Tagegeld-Staffel, bereinigte Kilometer, laufende Nummer, Reiseweg, Routenlink |
+| Formelspalten | Tagegeld-Staffel, bereinigte Kilometer, laufende Nummer, Reiseweg, Routenlink, Einzelziele (E26-01, E26-02 …) |
 | Ausgabe-Widget | „Reisekostenabrechnung“: rendert S1/S2, Vermerke und Ortsverzeichnis zum Drucken |
 
 ## Aufbau der Tabellen
 
-Vier Tabellen. Zwei werden am PC gepflegt, eine füllt das Formular, eine
-entsteht von selbst.
+Drei Tabellen. Zwei werden am PC gepflegt, eine füllt das Formular.
 
 ```
 Einstellungen  (genau 1 Zeile, PC, Card-Widget)   Stammziele  (PC, selten)
@@ -50,17 +48,17 @@ Einstellungen  (genau 1 Zeile, PC, Card-Widget)   Stammziele  (PC, selten)
      │  Reisen — eine Zeile je Dienstreise                 │ ◀── Handy-Formular
      │  Datum, Uhrzeiten, km-Stände, Kosten, Vermerk,      │
      │  Fotos + 7 Ortsfelder (Beginn, 1–5, Ende)           │
-     └────────────────────────┬────────────────────────────┘
-                              │ Ort als Freitext getippt statt ausgewählt?
-                              ▼
-                   Einzelziele  (entsteht automatisch)
-                     Reise, welches Ortsfeld, der Text
+     └─────────────────────────────────────────────────────┘
 ```
 
 Jedes der sieben Ortsfelder ist ein **Paar**: eine Auswahlliste aus `Stammziele` und
-daneben ein Freitextfeld für Ziele, die nicht in der Liste stehen. Ist die
-Auswahl gesetzt, gewinnt sie. Einzelziele sind der Normalfall, nicht die
-Ausnahme — eine reine Auswahlliste würde daran scheitern.
+daneben ein Freitextfeld für Ziele, die nicht in der Liste stehen. Was
+eingetragen ist, wird gedruckt — sind beide gefüllt, sind es zwei Stopps.
+Einzelziele sind der Normalfall, nicht die
+Ausnahme — eine reine Auswahlliste würde daran scheitern. Im Reiseweg steht
+für jedes Einzelziel ein Kürzel (`E26-07`: Jahr und laufende Nummer, wie bei
+den Vermerken), im Ortsverzeichnis Kürzel, Datum und der Freitext, wie er
+erfasst wurde.
 
 Einzelheiten zu jeder Tabelle und jeder Formel:
 [Formeln](formeln/README.md).
@@ -81,7 +79,7 @@ Blättern in einer Zeile je Reise, für die Zeiterfassungsstelle.
 |---|---|---|
 | S1 / S2 | Einstellungen | Reisen im Zeitraum |
 | Vermerke | Einstellungen | Reisen mit Vermerk |
-| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Datum) |
+| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Datum und Nummer) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 | Prüfliste (eigene Seite) | Einstellungen | Reisen im Zeitraum + Orte-Legende |
 
