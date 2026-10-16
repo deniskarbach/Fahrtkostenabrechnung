@@ -12,6 +12,8 @@ Alle nennenswerten Änderungen an diesem Projekt.
   - negative Beträge erscheinen im Ausdruck mit Minus, statt leer zu bleiben
     und trotzdem in die Summe einzugehen
   - Uhrzeiten: Trennzeichen und Zusätze egal (`7.15`, `07:15 Uhr`, `7:15 UHR`)
+  - S1 über mehrere Seiten: jede Folgeseite wiederholt den Spaltenkopf; Titel
+    und Antragsteller nur auf Seite 1 (vorher hatten Folgeseiten gar keinen Kopf)
 - Grist S2: Unterstreichung und Fettdruck innerhalb von Zellen werden aus der
   Vorlage übernommen (Rich Text) — u. a. die Leerstelle nach „1. KK
   anweisen,", Buchungsjahr, „z. d. A."; nur die Ziffern „1.–3." sind fett.

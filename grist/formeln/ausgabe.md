@@ -121,9 +121,13 @@ als `0` erkennbar bleiben — eine leere Zelle sähe nach vergessener Eingabe au
 Das Fahrtenbuch (`f.kmDienstlich ?? ""`) hatte das schon richtig; S1 zog vorher
 fälschlich `zahl()` heran und blendete die `0` aus.
 
-Der Kopfblock (Titel, Antragsteller, Wohnort, Dienstort) steht im `<thead>` der
-Datentabelle, nicht in einer eigenen Tabelle davor — so wiederholt er sich beim
-Druck auf jeder Folgeseite.
+Läuft S1 über mehrere Seiten, wiederholt sich auf jeder Folgeseite der
+**Spaltenkopf** (Reisedatum bis Nebenkosten, mit der Zeile „Beginn / Ende /
+bitte ankreuzen / EUR …"): er steht im `<thead>` der Datentabelle. Titel und
+Antragsteller-Block stehen nur auf der ersten Seite, in einer eigenen Tabelle
+davor. Bis 16.10.2026 stand beides zusammen im `<thead>` — rund 81 mm hoch,
+und Chrome wiederholte einen so hohen Kopf gar nicht: Folgeseiten hatten
+überhaupt keinen Kopf (Abnahmetest mit 31 Reisen).
 
 ## S2
 
