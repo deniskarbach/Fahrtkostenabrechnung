@@ -64,7 +64,11 @@ thead .weg { text-align: left; }
 thead .klein { font-size: 5.6pt; }
 
 tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
-tbody td.weg { text-align: left; white-space: pre-line; line-height: 1.1; }
+/* Reiseweg zweizeilig in fester Zeilenhöhe: 2 x 7pt = 4,9mm passen in 6,35mm,
+   die Zeile wächst nicht, Seite 1 und 2 bleiben deckungsgleich.
+   ponytail: ab einer dritten Textzeile (~120 Zeichen, 14 Stopps) wüchse die
+   Zeile doch -- dann Schrift kleiner oder Fahrt auf zwei Zeilen verteilen. */
+tbody td.weg { text-align: left; white-space: pre-line; font-size: 7pt; line-height: 1; }
 /* Spalte 11 trägt nur DSt und DO, einzeilig in der normalen Schrift (8pt).
    Bis 14.10.2026 standen hier alle fünf Zeitwerte zweizeilig in 5,6pt --
    zu klein zum Lesen; die volle Aufschlüsselung steht auf S1 und in der

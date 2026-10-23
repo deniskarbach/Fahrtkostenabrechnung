@@ -27,6 +27,9 @@ Alle nennenswerten Änderungen an diesem Projekt.
   Feldern in `Einstellungen`, leer bleibt die Linie. Die drei gezeichneten
   Unterschriftslinien über „(Datum)" / „(Unterschrift, Dienstbezeichnung)"
   werden aus dem Zeichnungsteil der Vorlage übernommen
+- Grist Fahrtenbuch: Reiseweg zweizeilig in 7 pt, die Zeilenhöhe bleibt fest
+  bei 6,35 mm. Vorher machte ein umbrechender Reiseweg die Zeile auf Seite 1
+  höher als auf Seite 2, die Hälften passten nicht mehr aufeinander
 - Grist Fahrtenbuch: Spalte 11 zeigt nur noch `DSt | DO`, einzeilig in 8 pt
   statt fünf Werten zweizeilig in 5,6 pt
 - Grist: Einzelziele vereinfacht — keine eigene Tabelle, kein Zerlegen, keine
