@@ -215,17 +215,21 @@ function zeileSeite2(f) {
 function rendern(fahrten) {
   const wrap = document.getElementById("seiten");
   wrap.innerHTML = "";
-  for (let i = 0; i < fahrten.length; i += ROWS_PRO_SEITE) {
+  /* Mindestens ein Blattpaar: ohne Reisen im Zeitraum stehen sonst nicht
+     einmal die Spaltenköpfe da. */
+  const bloecke = Math.max(1, Math.ceil(fahrten.length / ROWS_PRO_SEITE));
+  for (let b = 0; b < bloecke; b++) {
+    const i = b * ROWS_PRO_SEITE;
     const block = fahrten.slice(i, i + ROWS_PRO_SEITE);
     const seite = document.createElement("div");
     seite.className = "blatt";
-    seite.innerHTML = `<div class="hinweis">Seite ${i / ROWS_PRO_SEITE * 2 + 1} von ${Math.ceil(fahrten.length / ROWS_PRO_SEITE) * 2} — Spalten 1–6, rechte Kante ausschneiden</div>
+    seite.innerHTML = `<div class="hinweis">Seite ${b * 2 + 1} von ${bloecke * 2} — Spalten 1–6, rechte Kante ausschneiden</div>
       <table class="schnitt-rechts">${kopfSeite1()}<tbody>${block.map(zeileSeite1).join("")}</tbody></table>`;
     wrap.appendChild(seite);
 
     const seite2 = document.createElement("div");
     seite2.className = "blatt";
-    seite2.innerHTML = `<div class="hinweis">Seite ${i / ROWS_PRO_SEITE * 2 + 2} von ${Math.ceil(fahrten.length / ROWS_PRO_SEITE) * 2} — Spalten 7–15, linke Kante ausschneiden, an Seite ${i / ROWS_PRO_SEITE * 2 + 1} ankleben</div>
+    seite2.innerHTML = `<div class="hinweis">Seite ${b * 2 + 2} von ${bloecke * 2} — Spalten 7–15, linke Kante ausschneiden, an Seite ${b * 2 + 1} ankleben</div>
       <table class="schnitt-links">${kopfSeite2()}<tbody>${block.map(zeileSeite2).join("")}</tbody></table>`;
     wrap.appendChild(seite2);
   }
@@ -270,7 +274,6 @@ async function ausGrist() {
             + "dann 'Aktualisieren'.");
     return;
   }
-  hinweis(HINWEIS_STANDARD);
   const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
 
   /* Gefiltert wird ueber den Reisebeginn -- siehe ausdruck.html: eine Reise,
@@ -294,6 +297,8 @@ async function ausGrist() {
       zeit:         fbZeit(r),
     }));
 
+  hinweis(fahrten.length ? HINWEIS_STANDARD
+                         : "Keine Reisen im Abrechnungszeitraum -- leeres Blatt.");
   rendern(fahrten);
 }
 
