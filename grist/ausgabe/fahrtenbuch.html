@@ -10,12 +10,9 @@
    daher zwei Seiten je Zeilenblock -- Seite 1 Spalten A-F, Seite 2
    Spalten G-O, exakt am Original-Spaltenumbruch der Vorlage (Grist
    kennt keinen Spaltenumbruch, das Original-XLSX schon: manueller
-   Umbruch nach Spalte F). Breiten sind aus dem tatsächlichen
-   PDF-Druckergebnis der Vorlage gemessen (LibreOffice, Skalierung
-   100%), nicht aus der Spaltenbreiten-Einheit zurückgerechnet -- die
-   beiden Blöcke werden unterschiedlich skaliert (168,08mm bzw.
-   168,71mm), das lässt sich aus den Excel-Einheiten allein nicht
-   herleiten. Innerhalb jedes Blocks bleiben die Originalproportionen.
+   Umbruch nach Spalte F). Breiten sind am gedruckten Original-
+   Fahrtenbuch mit dem Lineal gemessen (180mm bzw. 180,5mm), nicht aus
+   der Vorlage übernommen -- deren Proportionen weichen vom Buch ab.
    Zum Zusammenfügen: rechte Kante von Seite 1 und linke Kante von
    Seite 2 (gestrichelt markiert) an der Tischkante ausschneiden,
    Zeilenhöhe ist auf beiden Seiten identisch (6,35mm = 18pt Original).
@@ -162,8 +159,8 @@ const ROWS_PRO_SEITE = 17;
 
 function kopfSeite1() {
   return `<colgroup>
-      <col class="rb" style="width:7.88mm"><col style="width:20.41mm"><col class="rb" style="width:20.41mm">
-      <col style="width:15.56mm"><col class="rb" style="width:20.41mm"><col style="width:83.41mm">
+      <col class="rb" style="width:10mm"><col style="width:10mm"><col class="rb" style="width:10mm">
+      <col style="width:20.5mm"><col class="rb" style="width:20.5mm"><col style="width:109mm">
     </colgroup>
     <thead>
       <tr>
@@ -186,9 +183,9 @@ function kopfSeite1() {
 
 function kopfSeite2() {
   return `<colgroup>
-      <col style="width:20.19mm"><col class="rb" style="width:17.68mm"><col style="width:12.39mm">
-      <col class="rb" style="width:23.19mm"><col style="width:28.91mm"><col style="width:8.96mm">
-      <col class="rb" style="width:11.01mm"><col class="rb" style="width:23.19mm"><col style="width:23.19mm">
+      <col style="width:23mm"><col class="rb" style="width:20.5mm"><col style="width:14mm">
+      <col class="rb" style="width:14mm"><col style="width:33mm"><col style="width:10mm">
+      <col class="rb" style="width:13mm"><col class="rb" style="width:26.5mm"><col style="width:26.5mm">
     </colgroup>
     <thead>
       <tr>
