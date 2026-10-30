@@ -90,10 +90,6 @@ ein Versehen steht sichtbar im Reiseweg (`WO > KITA > E26-07 > WO`) und fällt
 beim Unterschreiben auf. Korrigiert wird durch Leeren des falschen Felds.
 Dieselbe Regel steckt in `Einzelziele`, `Reiseweg` und `Maps_Link`.
 
-Früher gewann die Auswahl stillschweigend. Ein Freitext daneben tauchte dann
-nirgends auf — auch nicht auf dem Ausdruck, wo die Person hätte merken können,
-dass er fehlt.
-
 **Zu beachten:** `Reiseweg` nimmt aus der Auswahl das **Kürzel**,
 `Maps_Link` die **Adresse**; beim Freitext setzt `Reiseweg` die Nummer
 (`E26-07`), `Maps_Link` den Freitext selbst. Fehlt einem angefahrenen Ort die Adresse, bleibt

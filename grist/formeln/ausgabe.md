@@ -70,7 +70,7 @@ Je Reise eine Zeile, darunter eine Übertragszeile mit den Summen.
 **Statement:**
 - `kreuz(stufe, s)` – setzt `X` in genau die Spalte, deren Name der Stufe entspricht
 - `kreuz8h(stufe)` – wie `kreuz` für `>8h`, zusätzlich `(X)` bei `anteilig`: der amtliche Vordruck hat keine eigene Spalte „Tagegeld anteilig"
-- `eur(n)` / `zahl(n)` – geben bei `0` einen **Leerstring** aus, nicht „0,00"; negative Werte erscheinen mit Minus. Bis 16.10.2026 blieben sie leer, gingen aber in die Summe ein — der Übertrag passte dann nicht zu den sichtbaren Zeilen
+- `eur(n)` / `zahl(n)` – geben bei `0` einen **Leerstring** aus, nicht „0,00"; negative Werte erscheinen mit Minus — blieben sie leer, gingen sie trotzdem in die Summe ein, und der Übertrag passte nicht zu den sichtbaren Zeilen
 - die Übertragszeile summiert dieselben fünf Felder über alle gedruckten Zeilen
 
 ### Spalte „Reiseweg"
@@ -101,11 +101,6 @@ const s1Zeile = r => {
 **Rechenweg:** Ges. = `Abwesenheit_min`, DSt = `Min_Dienststaette`,
 DO = `Min_Dienstort`, Rest = `Rest_min` — dieselben vier Werte, aus denen
 `Tagegeld_Stufe` die Stufe ableitet (siehe [Reisen](reisen.md#tagegeld_stufe--tagegeld-stufe)).
-**Sonderfall:** War die Sache vorher (bis inkl. Commit `e0db8dc`): die Spalte
-zeigte `Reiseweg` — identisch zu dem, was ohnehin im Fahrtenbuch steht, und
-ohne jeden Bezug zur Tagegeld-Prüfung, die diese Spalte laut Vordruck
-eigentlich leisten soll.
-
 **Sonderfall:** Bei ÖPNV, Mitnahme, Übernachtung und Nebenkosten erscheint eine
 Null als leere Zelle — ein amtlicher Vordruck mit lauter Nullen ist schwerer zu
 lesen als einer mit leeren Feldern für tatsächlich nicht angefallene Kosten.
@@ -115,16 +110,16 @@ anders als die vier Kostenfelder ist die Spalte nicht optional, sondern zu
 jeder Reise berechnet. Eine Fahrt, die vollständig als privater Umweg erfasst
 wurde (z. B. eine reine Verwaltungsfahrt ohne erstattungsfähige Strecke), muss
 als `0` erkennbar bleiben — eine leere Zelle sähe nach vergessener Eingabe aus.
-Das Fahrtenbuch (`f.kmDienstlich ?? ""`) hatte das schon richtig; S1 zog vorher
-fälschlich `zahl()` heran und blendete die `0` aus.
+S1 nimmt hier deshalb nicht `zahl()`, das die `0` ausblenden würde; das
+Fahrtenbuch druckt sie ebenso (`f.kmDienstlich ?? ""`).
 
 Läuft S1 über mehrere Seiten, wiederholt sich auf jeder Folgeseite der
 **Spaltenkopf** (Reisedatum bis Nebenkosten, mit der Zeile „Beginn / Ende /
 bitte ankreuzen / EUR …"): er steht im `<thead>` der Datentabelle. Titel und
 Antragsteller-Block stehen nur auf der ersten Seite, in einer eigenen Tabelle
-davor. Bis 16.10.2026 stand beides zusammen im `<thead>` — rund 81 mm hoch,
-und Chrome wiederholte einen so hohen Kopf gar nicht: Folgeseiten hatten
-überhaupt keinen Kopf (Abnahmetest mit 31 Reisen).
+davor. Getrennt, weil Chrome einen so hohen `<thead>` nicht wiederholt: Titel,
+Antragsteller und Spaltenkopf zusammen messen rund 81 mm, Folgeseiten hätten
+dann gar keinen Kopf.
 
 ## S2
 
@@ -148,8 +143,8 @@ nachgebaut. Das Skript bricht ab, wenn
 Übernommen wird auch die Formatierung **innerhalb** einer Zelle: In der
 Vorlage sind oft nur Teile unterstrichen oder fett (die Leerstelle nach
 „1. KK anweisen,", das Buchungsjahr, „z. d. A.", die fetten Ziffern „1.",
-„2.", „3."). Das Skript liest die Vorlage deshalb als Rich Text; bis
-16.10.2026 fehlten diese Linien im Ausdruck.
+„2.", „3."). Das Skript liest die Vorlage deshalb als Rich Text; sonst
+fehlten diese Linien im Ausdruck.
 
 Die Unterschriftslinien über „(Datum)" und „(Unterschrift,
 Dienstbezeichnung)" sind in der Vorlage **gezeichnete Linien**, keine
@@ -245,9 +240,7 @@ Je Reise eine Zeile, Spalten 1–15 des amtlichen Fahrtenbuchs.
 
 Die **Schnittversion** bricht dieselben Daten auf zwei Seiten je Zeilenblock um:
 links die Spalten 1–6, rechts 7–15. Ein Block hat **17 Zeilen** — so viele hat
-das Original-Fahrtenbuch, in das geklebt wird (`ROWS_PRO_SEITE`). Bis
-16.10.2026 waren es 26; gedruckt passten davon nur 25, die 26. Zeile rutschte
-auf eine eigene Seite. Bei **100 %** drucken, an der bezeichneten
+das Original-Fahrtenbuch, in das geklebt wird (`ROWS_PRO_SEITE`). Bei **100 %** drucken, an der bezeichneten
 Kante schneiden, einkleben, unterschreiben.
 
 ### Spalte 11 der Schnittversion
@@ -263,8 +256,8 @@ privater Abzug) steht in der [S1-Spalte „Reiseweg"](#spalte-reiseweg) und in
 der Prüfliste.
 **Sonderfall:** Einzeilig in der normalen Schrift (8 pt), ohne Umbruch: eine
 zweite Zeile würde die Zeile höher machen als ihr Gegenstück auf der linken
-Seite, und die beiden Hälften passten nicht mehr aneinander. Bis Oktober 2026
-standen hier alle fünf Werte zweizeilig in 5,6 pt — zu klein zum Lesen.
+Seite, und die beiden Hälften passten nicht mehr aneinander. Alle fünf Werte
+passten nur zweizeilig in 5,6 pt hinein — zu klein zum Lesen.
 
 ## Prüfliste (Zeiterfassungsstelle)
 
@@ -292,22 +285,19 @@ auflösbar sind.
 
 ### Drucken: eigenes Fenster, und warum nicht 277mm
 
-Zwei Fallen, beide aufgetreten:
+Zwei Fallen:
 
-- **`window.print()` aus dem Widget öffnete den Dialog in Hochformat.**
-  Beobachtet, Ursache **nicht abschließend geklärt**: eine naheliegende
-  Erklärung wäre, dass der Dialog die `@page`-Regel aus dem iframe nicht
-  übernimmt — die galt zunächst als widerlegt, weil `ausdruck.html` sein
-  damaliges Fahrtenbuch (`@page fahrtenbuch { size: A4 landscape }`) unter
-  macOS/Chrome korrekt quer druckte; unter Windows/Edge fiel es später
-  genauso auf Hochformat zurück. `drucken()` schreibt das fertige Blatt deshalb in ein
-  **eigenes Fenster**, wo es Top-Level-Dokument ist und `@page` in jedem Fall
-  greift — das umgeht die offene Frage, statt sie zu beantworten.
-- **Auch im Querformat wurde rechts abgeschnitten.** A4 quer misst 297mm;
-  greift `@page` mit 10mm Rand, bleiben 277mm — greift sie nicht, gelten die
-  Standardränder des Dialogs (~12,7mm je Seite) und es bleiben nur
-  **271,6mm**. Die Tabelle war auf 275mm ausgelegt, also genau dazwischen.
-  Jetzt 252mm, damit sie in beiden Fällen passt.
+- **`window.print()` aus dem Widget öffnet den Dialog in Hochformat.** Die
+  `@page`-Regel aus dem iframe greift nicht zuverlässig: unter Windows/Edge
+  nicht, unter macOS/Chrome schon. Die Ursache ist **nicht abschließend
+  geklärt**. `drucken()` schreibt das fertige Blatt deshalb in ein **eigenes
+  Fenster**, wo es Top-Level-Dokument ist und `@page` in jedem Fall greift —
+  das umgeht die offene Frage, statt sie zu beantworten. `ausdruck.html`
+  druckt auf demselben Weg.
+- **Auch im Querformat kann rechts etwas abgeschnitten werden.** A4 quer misst
+  297mm; greift `@page` mit 10mm Rand, bleiben 277mm — greift sie nicht,
+  gelten die Standardränder des Dialogs (~12,7mm je Seite) und es bleiben nur
+  **271,6mm**. Die Tabelle ist deshalb 252mm breit und passt in beiden Fällen.
 
 `test_pruefliste.mjs` prüft beides: die Breitensumme jeder der drei Tabellen
 gegen 271,6mm, und dass der Knopf über ein eigenes Fenster druckt statt über

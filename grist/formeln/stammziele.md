@@ -22,7 +22,7 @@ Routenlink und die Legende im Ortsverzeichnis.
 ```
 
 **Statement:**
-- `(($PLZ or "") + " " + ($Ort or ""))` – PLZ und Ort zu einem Block verbinden; ein nie befülltes Feld ist leer (`None`), nicht `""` — ohne `or ""` stand im Ortsverzeichnis „E,TypeError“, etwa bei den frisch angelegten `WO`/`KV`
+- `(($PLZ or "") + " " + ($Ort or ""))` – PLZ und Ort zu einem Block verbinden; ein nie befülltes Feld ist leer (`None`), nicht `""` — ohne `or ""` stünde im Ortsverzeichnis „E,TypeError“, etwa bei den frisch angelegten `WO`/`KV`
 - `.strip()` – fehlt eines von beiden, bleibt kein einzelnes Leerzeichen übrig
 - `if x` – leere Teile fallen heraus, statt einen doppelten Trenner zu erzeugen
 - `", ".join(…)` – die verbliebenen Teile mit Komma verbinden

@@ -229,8 +229,8 @@ STAMMZIELE = [
     spalte("Ort",      "Ort", "Text"),
     spalte("Adresse",  "Vollständige Adresse", "Text",
            # "or ''": ein nie befülltes Feld ist None, nicht "" -- so bei WO/KV,
-           # die setup.py nur mit Kürzel und Name anlegt. Ohne das stand im
-           # Ortsverzeichnis "E,TypeError" (Abnahmetest 16.10.2026).
+           # die setup.py nur mit Kürzel und Name anlegt. Ohne das stünde im
+           # Ortsverzeichnis "E,TypeError".
            formel='", ".join(x for x in [$Strasse, (($PLZ or "") + " " + ($Ort or "")).strip()] if x)'),
 ]
 
@@ -582,10 +582,9 @@ def zeitraum_widget():
                   )["retValues"][0]["sectionRef"]
     else:
         # Ein frisch angelegtes Dokument hat die Seite noch nicht. Ohne sie
-        # blieb die komplette Ausgabeseite ungebaut -- Zeitraum-Karte, beide
-        # Druck-Widgets, Anordnung: alles übersprungen, kommentarlos. Beim
-        # Lauf gegen ein leeres Testdokument aufgefallen, nicht im Betrieb,
-        # weil dort immer ein Vorlagendokument kopiert wird.
+        # bliebe die ganze Ausgabeseite ungebaut (Zeitraum-Karte, Druck-
+        # Widgets, Anordnung). Im Betrieb kommt das nicht vor, dort wird immer
+        # ein Vorlagendokument kopiert.
         # parentId 0 legt Seite und Section zusammen an; die Seite trägt
         # danach den Tabellennamen und wird umbenannt.
         neu = api("POST", "/apply",
@@ -1191,9 +1190,9 @@ def einstellungen_karte():
 
     sec = karte_anlegen(vid, "Einstellungen", EINSTELLUNGEN_KARTE)
     # Nur die ersetzten Tabellen-Sections fallen aus dem Layout; alles andere
-    # auf der Seite bleibt stehen. Vorher wurde die layoutSpec plattgemacht --
-    # ein zweites Widget auf der Seite war danach unsichtbar (die Section blieb
-    # als Karteileiche im Dokument zurueck).
+    # auf der Seite bleibt stehen. Eine plattgemachte layoutSpec machte ein
+    # zweites Widget auf der Seite unsichtbar; seine Section bliebe als
+    # Karteileiche im Dokument zurück.
     api("POST", "/apply", [
         ["UpdateRecord", "_grist_Views", vid,
          {"layoutSpec": json.dumps({"children": [{"leaf": sec}] + seiten_kinder(vid, alt),

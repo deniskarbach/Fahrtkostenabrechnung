@@ -34,7 +34,7 @@ VORLAGE = pathlib.Path(os.environ.get("S2_VORLAGE") or
 # rich_text: Unterstreichung und Fettdruck gelten in der Vorlage oft nur für
 # einen Teil der Zelle (die Leerstelle nach "KK anweisen," ist eine
 # unterstrichene Leerzeichenkette). Ohne rich_text liefert openpyxl nur den
-# blanken Text -- die Linien fehlten im Ausdruck bis 16.10.2026.
+# blanken Text, und diese Linien fehlen im Ausdruck.
 WB = openpyxl.load_workbook(VORLAGE, rich_text=True)
 WS = WB["S2"]
 SPALTEN = list("ABCDEFG")
@@ -173,7 +173,7 @@ def rahmen(r, c, rs, cs):
 # ---------------------------------------------------------------- Linien
 # Die Unterschriftslinien über "(Datum)" und "(Unterschrift,
 # Dienstbezeichnung)" sind in der Vorlage gezeichnete Formen, keine
-# Zellrahmen -- openpyxl liest sie nicht ein, sie fehlten bis 16.10.2026.
+# Zellrahmen -- openpyxl liest sie nicht ein.
 # Hier direkt aus dem Zeichnungsteil der XLSX: jede waagrechte Linie wird ein
 # absolut positioniertes <div> in der Zelle, an der sie beginnt. Versatz in
 # echten mm (EMU / 36000); die Spalten skaliert dieses Skript auf SATZ, die

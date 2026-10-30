@@ -127,8 +127,7 @@ return total
 **Rechenweg:** Je angefangenem Zusatztag 1440 Minuten, dazu die Uhrzeitdifferenz.
 **Sonderfall:** Unlesbare oder fehlende Uhrzeit ergibt 0, nicht einen Fehler —
 der Fehler stünde sonst in der ganzen Spalte und leerte S1. Auf S1 fällt das als
-„Ges.: 0:00“ auf. Bis 16.10.2026 ergaben schon `7.15` und `07:15 Uhr` still 0
-(Abnahmetest).
+„Ges.: 0:00“ auf.
 **Muster:** Untergrenze (D).
 
 Zwei Fälle, die leicht verwechselt werden:
@@ -155,7 +154,7 @@ Aufenthalte an Dienststätte und Dienstort.
 **Rechenweg:** Von der Abwesenheit werden die drei Minutenfelder abgezogen.
 **Sonderfall:** Kann negativ werden, wenn die Aufenthalte zusammen länger sind
 als die Abwesenheit; `Tagegeld_Stufe` fängt das ab. Negative Minuten
-(Fehleingabe) zählen als 0 — vorher machte ein privater Abzug von „−60“ aus
+(Fehleingabe) zählen als 0 — sonst machte ein privater Abzug von „−60“ aus
 genau 8:00 h eine Rest-Zeit von 9:00 h und damit Tagegeld „>8h“.
 **Muster:** Ersatzwert 0 (C).
 
@@ -324,8 +323,8 @@ return link
 **Rechenweg:** Erste Adresse als `origin`, letzte als `destination`, alles
 dazwischen als `waypoints`.
 **Sonderfall:** Fehlt einem angefahrenen Stammziel die Anschrift, bleibt die
-Zelle **ganz** leer. Früher fiel nur dieser eine Stopp aus dem Link — die Route
-sah vollständig aus, war aber zu kurz, und genau das fiel niemandem auf. Deshalb
+Zelle **ganz** leer. Fiele nur dieser eine Stopp aus dem Link, sähe die Route
+vollständig aus und wäre doch zu kurz — das fiele niemandem auf. Deshalb
 die Adressen von `WO` und `KV` nachtragen; `setup.py` nennt beim Lauf jeden
 Ort ohne Anschrift beim Kürzel.
 **Muster:** Was eingetragen ist, zählt (B).

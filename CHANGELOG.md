@@ -20,6 +20,13 @@ Alle nennenswerten Änderungen an diesem Projekt.
   - Uhrzeiten: Trennzeichen und Zusätze egal (`7.15`, `07:15 Uhr`, `7:15 UHR`)
   - S1 über mehrere Seiten: jede Folgeseite wiederholt den Spaltenkopf; Titel
     und Antragsteller nur auf Seite 1 (vorher hatten Folgeseiten gar keinen Kopf)
+- Grist S1: Spalte „Reiseweg“ zeigt die Zeitaufschlüsselung zur
+  Tagegeld-Prüfung (`Nr. 67 – (Ges.: … | DSt: … | DO: … | Rest: …)`) statt
+  des Reisewegs, der ohnehin im Fahrtenbuch steht. Dienstliche Kilometer
+  erscheinen auch als `0`, statt die Zelle leer zu lassen
+- Grist Routenlink: fehlt einem angefahrenen Stammziel die Anschrift, bleibt
+  der Link ganz leer — vorher fiel nur dieser Stopp still heraus, und die
+  Route war zu kurz
 - Grist S2: Unterstreichung und Fettdruck innerhalb von Zellen werden aus der
   Vorlage übernommen (Rich Text) — u. a. die Leerstelle nach „1. KK
   anweisen,", Buchungsjahr, „z. d. A."; nur die Ziffern „1.–3." sind fett.
