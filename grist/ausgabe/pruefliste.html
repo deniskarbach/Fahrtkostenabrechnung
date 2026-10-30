@@ -5,24 +5,15 @@
 <title>Prüfliste – Reisekostenabrechnung</title>
 <style>
 /* ---------------------------------------------------------------
-   Prüfblatt für die Zeiterfassungsstelle: alles, was sonst auf fünf
-   Blättern verteilt liegt (S1, Vermerke, Ortsverzeichnis, Fahrtenbuch,
-   Routenlinks), kompakt in EINER Zeile je Reise -- damit die Stelle,
-   die den Antrag final bearbeitet, nicht zwischen Blättern blättern
-   muss.
+   Prüfblatt für die Zeiterfassungsstelle: alles aus S1, Vermerken,
+   Ortsverzeichnis und Fahrtenbuch in EINER Zeile je Reise. Spaltenbegriffe
+   aus S1, Kopf und Orte-Legende aus dem Ortsverzeichnis -- die Stelle soll
+   die gewohnte Ansicht wiedererkennen.
 
-   Spaltenbegriffe absichtlich aus S1 übernommen (Tagegeld für /
-   Unentgeltliche Verpflegung / ÖPNV / Wegstrecke / Mitnahme von
-   Personen / Übernachtungskosten / Nebenkosten), Kopfblock und
-   Orte-Legende aus dem Ortsverzeichnis -- die Stelle soll die
-   gewohnte Ansicht wiedererkennen, nicht eine neue lernen.
-
-   A4 quer: 22 Spalten passen nicht auf Hochformat. Die Spaltenbreiten
-   summieren sich auf 266mm -- bewusst NICHT auf die theoretisch möglichen
-   277mm (A4 quer minus 2x10mm @page-Rand). Greift die @page-Regel naemlich
-   nicht, gelten die Standardränder des Druckdialogs (~12,7mm je Seite),
-   und es bleiben nur 271,6mm. Mit 252mm passt es in beiden Fällen.
-   Gedruckt wird über ein eigenes Fenster, siehe drucken() weiter unten.
+   A4 quer, 22 Spalten, zusammen 266mm: nicht die möglichen 277mm (A4 quer
+   minus 2 x 10mm Rand), weil ohne greifende @page-Regel die Standardränder
+   des Dialogs gelten und nur 271,6mm bleiben. Gedruckt wird über ein
+   eigenes Fenster, siehe drucken().
    --------------------------------------------------------------- */
 @page { size: A4 landscape; margin: 10mm; }
 
@@ -348,7 +339,7 @@ function rendern(kopf, reisen, orte) {
    Das fertige Blatt wandert deshalb in ein eigenes Fenster, wo es
    Top-Level-Dokument ist und @page in jedem Fall greift -- wie in
    ausdruck.html.
-   Die Breiten sind zusätzlich so gewählt (252mm statt der möglichen 277mm),
+   Die Breiten sind zusätzlich so gewählt (266mm statt der möglichen 277mm),
    dass sie auch bei den größeren Standardrändern des Dialogs passen --
    falls jemand doch über Grists eigenes "Widget drucken" geht. */
 function drucken() {
@@ -469,13 +460,10 @@ async function ausGrist() {
 if (window.self === window.top) {
   rendern(beispielKopf, beispielReisen, beispielOrte);
 } else {
-  /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
-     Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
-     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy löscht
-     document.referrer, und ein fest verdrahtetes docs.getgrist.com wäre dann
-     doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
-     Host bekäme einen Request aus dem Dokument. Lieber nichts laden und es
-     sagen. */
+  /* Plugin-API von der einbettenden Grist-Instanz laden (referrer, sonst
+     ancestorOrigins), nicht von einer festen Adresse: kein Hostname im
+     öffentlichen Repo, keine Anfrage an fremde Hosts. Ohne Quelle lieber
+     nichts laden und es sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
                 : window.location.ancestorOrigins?.[0] || "";
   if (!quelle) {

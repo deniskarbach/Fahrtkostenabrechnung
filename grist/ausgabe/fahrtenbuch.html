@@ -5,17 +5,12 @@
 <title>Fahrtenbuch – Schnittversion</title>
 <style>
 /* ---------------------------------------------------------------
-   Ausschneidbare Version des Fahrtenbuchs (Vorschau: fahrtenbuch-preview.html): die 15 Spalten passen
-   bei echter (nicht gestauchter) Größe nicht auf eine A4-Querseite,
-   daher zwei Seiten je Zeilenblock -- Seite 1 Spalten A-F, Seite 2
-   Spalten G-O, exakt am Original-Spaltenumbruch der Vorlage (Grist
-   kennt keinen Spaltenumbruch, das Original-XLSX schon: manueller
-   Umbruch nach Spalte F). Breiten sind am gedruckten Original-
-   Fahrtenbuch mit dem Lineal gemessen (180mm bzw. 180,5mm), nicht aus
-   der Vorlage übernommen -- deren Proportionen weichen vom Buch ab.
-   Zum Zusammenfügen: rechte Kante von Seite 1 und linke Kante von
-   Seite 2 (gestrichelt markiert) an der Tischkante ausschneiden,
-   Zeilenhöhe ist auf beiden Seiten identisch (6,35mm = 18pt Original).
+   Fahrtenbuch zum Einkleben. Die 15 Spalten passen in echter Größe nicht
+   auf A4 quer, daher zwei Seiten je Zeilenblock: Spalten A–F und G–O, wie
+   der Umbruch im Original-XLSX. Breiten am gedruckten Fahrtenbuch gemessen
+   (180 / 180,5mm), nicht aus der Vorlage -- deren Proportionen weichen ab.
+   Zeilenhöhe auf beiden Seiten 6,35mm (18pt wie im Original), damit die
+   Hälften beim Kleben decken. Ganzes Querblatt: fahrtenbuch-preview.html.
    --------------------------------------------------------------- */
 @page { size: A4 landscape; margin: 10mm; }
 
@@ -90,11 +85,9 @@ tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
    ponytail: ab einer dritten Textzeile (~120 Zeichen, 14 Stopps) wüchse die
    Zeile doch -- dann Schrift kleiner oder Fahrt auf zwei Zeilen verteilen. */
 tbody td.weg { text-align: left; white-space: pre-line; font-size: 7pt; line-height: 1; }
-/* Spalte 11 trägt nur DSt und DO, einzeilig in der normalen Schrift (8pt).
-   Bis 14.10.2026 standen hier alle fünf Zeitwerte zweizeilig in 5,6pt --
-   zu klein zum Lesen; die volle Aufschlüsselung steht auf S1 und in der
-   Prüfliste. nowrap: ein Umbruch würde die Zeile höher machen als ihr
-   Gegenstück auf Seite 1, die Hälften passten beim Einkleben nicht mehr.
+/* Spalte 11 trägt nur DSt und DO, einzeilig in 8pt; die volle Aufschlüsselung
+   steht auf S1 und in der Prüfliste. nowrap: ein Umbruch machte die Zeile
+   höher als ihr Gegenstück auf Seite 1.
    ponytail: "DSt 99:59 | DO 99:59" braucht rund 25mm von 28,91mm; längere
    Werte würden abgeschnitten -- dann Schrift verkleinern. */
 tbody td.zeit { white-space: nowrap; padding-left: .4mm; padding-right: .4mm; }
@@ -324,13 +317,10 @@ async function ausGrist() {
 if (window.self === window.top) {
   rendern(beispielFahrten);
 } else {
-  /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
-     Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
-     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy löscht
-     document.referrer, und ein fest verdrahtetes docs.getgrist.com wäre dann
-     doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
-     Host bekäme einen Request aus dem Dokument. Lieber nichts laden und es
-     sagen. */
+  /* Plugin-API von der einbettenden Grist-Instanz laden (referrer, sonst
+     ancestorOrigins), nicht von einer festen Adresse: kein Hostname im
+     öffentlichen Repo, keine Anfrage an fremde Hosts. Ohne Quelle lieber
+     nichts laden und es sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
                 : window.location.ancestorOrigins?.[0] || "";
   if (!quelle) {
@@ -342,13 +332,10 @@ if (window.self === window.top) {
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
     grist.ready({ requiredAccess: "full" });
-    /* onRecords feuert beim Aufbau und danach nur bei Änderungen an der
-       Tabelle, an der das Widget hängt -- das ist 'Einstellungen', also
-       praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder
-       korrigierte Reise erreicht das Widget NICHT.
-       ponytail: sichtbarer Knopf statt Polling -- die Plugin-API kennt
-       keinen Haken auf fremde Tabellen, und still veraltet drucken ist der
-       teurere Fehler. */
+    /* onRecords feuert nur bei Änderungen an 'Einstellungen' (praktisch am
+       Zeitraum), nicht an Reisen -- dafür der Knopf "Aktualisieren".
+       ponytail: sichtbarer Knopf statt Polling; die Plugin-API kennt keinen
+       Haken auf fremde Tabellen. */
     grist.onRecords(ausGrist);
     const knopf = document.getElementById("neu-laden");
     knopf.hidden = false;

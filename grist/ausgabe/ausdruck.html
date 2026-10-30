@@ -14,10 +14,6 @@
    Unterschiedliche Seitenränder je Blatt gehen in einem einzigen Druckjob
    nur über benannte @page-Regeln -- die "page"-Eigenschaft weist jedem
    Blatt seine Seite zu.
-
-   Das Fahrtenbuch (quer) ist ein eigenes Widget: fahrtenbuch.html, die
-   Schnittversion zum Einkleben. fahrtenbuch-preview.html zeigt es als
-   ganzes Querblatt, ist aber noch kein Widget.
    --------------------------------------------------------------- */
 @page            { size: A4 portrait;  margin: 15mm; }              /* S1 */
 @page s2         { size: A4 portrait;  margin: 10mm 17.78mm 0; }
@@ -207,19 +203,12 @@ body {
 
 @media print {
   body { background: #fff; }
-  /* Umbruch VOR jedem Blatt, nicht dahinter. Beides trennt die
-     Dokumente gleich gut, aber die Richtung entscheidet, welche @page-Regel
-     für die erzeugte Seite gilt: ein Umbruch gilt der Seite, auf der das
-     nächste Blatt beginnt, und dieses Blatt bringt sein "page: …" mit.
-     Hinter dem letzten Blatt (damals das Fahrtenbuch, quer) kam keines mehr -- die
-     Seite, die "break-after" dort erzwang, fiel deshalb auf die namenlose
-     Standardregel zurück und damit auf A4 HOCH. Chrome unterschlug diese
-     leere Schlussseite, Edge druckte sie: dasselbe Dokument sah je nach
-     Browser anders aus. "break-before" erzeugt am Anfang keine Seite --
-     ein erzwungener Umbruch vor dem ersten Blatt wird verworfen --, also
-     bleibt kein Blatt ohne @page-Regel. Kein :last-child über Namensräume
-     nötig. !important nötig, da die Bildschirm-Regeln oben je Dokument
-     spezifischer sind (zwei Klassen statt einer). */
+  /* Umbruch VOR jedem Blatt, nicht dahinter: der Umbruch gehört zur Seite,
+     auf der das nächste Blatt beginnt, und dieses bringt sein "page: …" mit.
+     break-after hinter dem letzten Blatt erzeugt eine leere Seite ohne
+     @page-Regel (Edge druckt sie, Chrome nicht); break-before vor dem ersten
+     Blatt wird verworfen. !important, weil die Bildschirm-Regeln oben je
+     Dokument spezifischer sind. */
   .blatt { width: auto !important; margin: 0 !important; padding: 0 !important;
            box-shadow: none !important; break-before: page; }
   thead { display: table-header-group; }
@@ -831,12 +820,9 @@ const stunden = min => {
   return `${vz}${Math.trunc(min / 60)}:${String(min % 60).padStart(2, "0")}`;
 };
 
-/* Spalte "Reiseweg" auf S1: der amtliche Vordruck verlangt dort nur die
-   laufende Nummer, wenn ein Fahrtenbuch geführt wird (steht so im
-   Spaltenkopf) -- der Weg selbst steht bereits im Fahrtenbuch. Statt der
-   Nummer allein zeigt diese Zeile zusätzlich die Zeiten, aus denen sich die
-   Tagegeld-Stufe ergibt, zur Prüfung beim Unterschreiben. Format identisch
-   zur Sheets-Version. */
+/* Spalte "Reiseweg" auf S1: die laufende Nummer, die der Vordruck bei
+   Fahrtenbuch verlangt, plus die Zeiten, aus denen sich die Tagegeld-Stufe
+   ergibt. Der Reiseweg selbst steht im Fahrtenbuch. */
 const s1Zeile = r => {
   if (!r.Lfd_Nr) return "";
   const priv = r.Min_privat_Abzug > 0 ? ` | Priv: ${stunden(r.Min_privat_Abzug)}` : "";
@@ -993,12 +979,9 @@ async function ausGrist() {
       datum: tag(r.Datum),
     })));
 
-  /* Das Ortsverzeichnis ist die Legende zum Reiseweg, kein Fahrtenprotokoll.
-     Stammziele stehen deshalb höchstens einmal darin -- sonst erscheint die
-     Wohnung bei zwei Reisen viermal, je einmal als Start und als Ziel.
-     Wohnung und Dienststätte führen die Liste fest an: sie erklären die
-     beiden Kürzel, die in fast jedem Reiseweg vorkommen. Danach die übrigen
-     Stammziele in der Reihenfolge ihres ersten Vorkommens im Zeitraum. */
+  /* Legende zum Reiseweg, kein Fahrtenprotokoll: jedes Stammziel höchstens
+     einmal, WO und KV zuerst, dann die übrigen in der Reihenfolge ihres
+     ersten Vorkommens im Zeitraum. */
   const orteListe = Object.values(orteNachId);
   const stammIds = ["WO", "KV"]
     .map(k => orteListe.find(o => o.Kuerzel === k))
@@ -1034,13 +1017,10 @@ if (window.self === window.top) {
   renderVermerke(beispielKopfVermerke, beispielVermerke);
   renderOrtsverzeichnis(beispielKopfOrtsverzeichnis, beispielOrtsverzeichnis);
 } else {
-  /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
-     Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
-     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy löscht
-     document.referrer, und ein fest verdrahtetes docs.getgrist.com wäre dann
-     doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
-     Host bekäme einen Request aus dem Dokument. Lieber nichts laden und es
-     sagen. */
+  /* Plugin-API von der einbettenden Grist-Instanz laden (referrer, sonst
+     ancestorOrigins), nicht von einer festen Adresse: kein Hostname im
+     öffentlichen Repo, keine Anfrage an fremde Hosts. Ohne Quelle lieber
+     nichts laden und es sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
                 : window.location.ancestorOrigins?.[0] || "";
   if (!quelle) {
@@ -1052,13 +1032,10 @@ if (window.self === window.top) {
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
     grist.ready({ requiredAccess: "full" });   // liest Einstellungen, Stammziele, Reisen
-    /* onRecords feuert beim Aufbau und danach nur bei Änderungen an der
-       Tabelle, an der das Widget hängt -- das ist 'Einstellungen', also
-       praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder
-       korrigierte Reise erreicht das Widget NICHT.
-       ponytail: sichtbarer Knopf statt Polling -- die Plugin-API kennt
-       keinen Haken auf fremde Tabellen, und still veraltet drucken ist der
-       teurere Fehler. */
+    /* onRecords feuert nur bei Änderungen an 'Einstellungen' (praktisch am
+       Zeitraum), nicht an Reisen -- dafür der Knopf "Aktualisieren".
+       ponytail: sichtbarer Knopf statt Polling; die Plugin-API kennt keinen
+       Haken auf fremde Tabellen. */
     grist.onRecords(ausGrist);
     const knopf = document.getElementById("neu-laden");
     knopf.hidden = false;

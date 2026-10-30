@@ -145,12 +145,9 @@ alle.sort(key=lambda r: (r.Datum, r.id))
 return [r.id for r in alle].index($id) + 1
 '''.strip()
 
-# Einzelziele der Reise, je Zeile "E26-07: Freitext". Gezählt wird wie bei
-# VERMERK_LABEL: laufend über das Kalenderjahr, sortiert nach (Datum, Zeilen-Id)
-# wie LFD_NR -- das Kürzel ist damit für sich allein eindeutig. Preis: eine
-# nachträglich erfasste oder umdatierte Reise verschiebt die späteren Nummern
-# des Jahres, wie bei Lfd_Nr und Vermerk_Label auch.
-# Einzige Quelle der Nummern: REISEWEG und das Ortsverzeichnis lesen sie hier.
+# Einzelziele der Reise, je Zeile "E26-07: Freitext", gezählt wie LFD_NR
+# laufend über das Kalenderjahr. Einzige Quelle der Kürzel: REISEWEG und das
+# Ortsverzeichnis lesen sie hier.
 EINZELZIELE = f'''
 def frei(r):
   return [{EINZEILIG} for t in [{", ".join(f"r.{s}_Text" for s in ORT_SLOTS)}]]
@@ -212,15 +209,9 @@ JA_NEIN = {"choices": ["Ja", "Nein"]}
 
 # ---------------------------------------------------------------- Tabellen
 
-# Reiseziele mit vollständiger Adresse -- gepflegt wird ausschließlich hier,
-# für jeden Ort gleich, auch für WO (Wohnung) und KV (Dienststelle). Keine
-# Formel, kein Verweis auf 'Einstellungen': jeder Versuch, diese beiden Zeilen
-# automatisch aus 'Einstellungen' zu befüllen, hat mehr Verwirrung erzeugt als
-# die Dopplung, die er vermeiden sollte -- Ref-Spalten mit leerem Datenfeld,
-# eine Formel, die Strasse/PLZ/Ort editierbar aussehen aber wirkungslos bleiben
-# ließ. Bewusst zurückgebaut: bei einem Umzug ändert sich die Adresse an zwei
-# Stellen (hier und in 'Einstellungen'); vergisst man eine, ist der Ausdruck
-# einmal falsch -- ein Anruf bei der Abrechnungsstelle klärt das.
+# Reiseziele mit Adresse, gepflegt nur hier -- auch WO und KV. Bewusst nicht
+# aus 'Einstellungen' befüllt: das ergab Felder, die bearbeitbar aussahen und
+# wirkungslos blieben. Bei einem Umzug ändert sich die Adresse an zwei Stellen.
 STAMMZIELE = [
     spalte("Kuerzel",  "Kürzel", "Text"),
     spalte("Name",     "Name der Einrichtung", "Text"),
@@ -581,12 +572,9 @@ def zeitraum_widget():
         sec = api("POST", "/apply", [["CreateViewSection", et, vid, "single", None, None]]
                   )["retValues"][0]["sectionRef"]
     else:
-        # Ein frisch angelegtes Dokument hat die Seite noch nicht. Ohne sie
-        # bliebe die ganze Ausgabeseite ungebaut (Zeitraum-Karte, Druck-
-        # Widgets, Anordnung). Im Betrieb kommt das nicht vor, dort wird immer
-        # ein Vorlagendokument kopiert.
-        # parentId 0 legt Seite und Section zusammen an; die Seite trägt
-        # danach den Tabellennamen und wird umbenannt.
+        # Ein frisch angelegtes Dokument hat die Seite noch nicht (im Betrieb
+        # wird immer die Vorlage kopiert). parentId 0 legt Seite und Section
+        # zusammen an; die Seite trägt danach den Tabellennamen und wird umbenannt.
         neu = api("POST", "/apply",
                   [["CreateViewSection", et, 0, "single", None, None]])["retValues"][0]
         vid, sec = neu["viewRef"], neu["sectionRef"]
@@ -605,12 +593,9 @@ def zeitraum_widget():
     print(f"  Zeitraum-Widget: angelegt (Section {sec})")
 
 
-# Reihenfolge = Reihenfolge auf der Ausdruck-Seite. S1/S2, Vermerke und
-# Ortsverzeichnis stecken zusammen in einer Datei (ausdruck.html) -- ein
-# Widget statt drei, ein Grist-Fetch statt drei. Daneben das Fahrtenbuch in
-# der Schnittversion zum Einkleben (fahrtenbuch.html). Das ganze Fahrtenbuch
-# als ein Querblatt (fahrtenbuch-preview.html) ist noch kein Widget.
-# Widgets mit einer URL, die hier fehlt, entfernt ausgabe_widgets().
+# Reihenfolge = Reihenfolge auf der Ausdruck-Seite; ausdruck.html enthält
+# S1/S2, Vermerke und Ortsverzeichnis in einem Widget. Widgets mit einer URL,
+# die hier fehlt, entfernt ausgabe_widgets().
 AUSGABE_WIDGETS = [
     ("Reisekostenabrechnung",        "ausdruck.html"),
     ("Fahrtenbuch",                  "fahrtenbuch.html"),
@@ -1377,16 +1362,10 @@ def tabellen_umbenennen():
     print(f"  Tabellen: {len(aktionen)} umbenannt")
 
 
-# Frühere Fassung: eigene Tabelle je Freitext-Ziel, die den Freitext in
-# Straße/PLZ/Ort zerlegte und unvollständige Anschriften mit ⚠️ meldete.
-# Zurückgebaut -- der Freitext geht unverändert ins Ortsverzeichnis, geprüft
-# wird beim Unterschreiben. Alles darin war Formel, verloren geht nichts.
-# Ref-Spalten vor ihrer Zieltabelle entfernen.
-#
-# Tacho_Fotos: am 14.10.2026 gestrichen -- Handyfotos tragen je nach Gerät
-# GPS-Koordinaten in den EXIF-Daten (oft Wohnung oder Klientenadresse), Grist
-# speichert sie unverändert, und der Kilometerstand steht ohnehin im
-# Fahrtenbuch. Datenminimierung. ACHTUNG: entfernt vorhandene Fotos mit.
+# Altlasten älterer Dokumente: die frühere Einzelziel-Tabelle samt Hilfsspalten
+# (nur Formeln, verloren geht nichts) und Tacho_Fotos (gestrichen: Handyfotos
+# tragen GPS-Koordinaten in den EXIF-Daten). ACHTUNG: entfernt vorhandene Fotos
+# mit. Ref-Spalten vor ihrer Zieltabelle entfernen.
 ALTE_SPALTEN = ([f"{s}_Sync" for s in ORT_SLOTS] + ["Anschrift_Warnung", "Anschrift_Hinweis"]
                 + ["Tacho_Fotos"])
 ALTE_TABELLEN_WEG = ["Einzelziele", "Adressen"]

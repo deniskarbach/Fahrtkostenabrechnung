@@ -106,7 +106,7 @@ als HTML.
 **Drucken:** nie per `window.print()` im Widget. Im Grist-Iframe greifen die
 `@page`-Regeln nicht zuverlässig (Windows/Edge druckt dann hoch, die Ursache
 ist nicht abschließend geklärt). `drucken()` öffnet die fertigen Blätter in
-einem eigenen Fenster, wo `@page` immer gilt. Die Prüfliste ist 252 mm breit:
+einem eigenen Fenster, wo `@page` immer gilt. Die Prüfliste ist 266 mm breit:
 Sie passt so auch bei den Standardrändern des Dialogs (271,6 mm nutzbar),
 falls jemand über Grists „Widget drucken“ geht. Der S1-Kopf ist zweigeteilt,
 weil Chrome einen `<thead>` von rund 81 mm Höhe nicht auf Folgeseiten
