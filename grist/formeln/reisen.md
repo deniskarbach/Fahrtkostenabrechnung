@@ -2,12 +2,10 @@
 
 # Reisen
 
-Kerntabelle: eine Zeile je Dienstreise, aus dem Formular. Die Eingabespalten
-füllt das Formular, die Rechenspalten stehen unten einzeln.
-
-Anders als in der Google-Sheets-Umsetzung darf eine Reise hier **direkt
-korrigiert** werden — es gibt keine getrennte Antwortendatei, auf die die
-Tabelle nur lesend zugreift. Alle Rechenspalten ziehen sofort nach.
+Eine Zeile je Dienstreise. Die Eingabespalten füllt das Formular, die
+Rechenspalten stehen unten einzeln. Wird eine Reise korrigiert, rechnen alle
+Rechenspalten sofort neu. Die Zwischenwerte `KM_gesamt`, `Rest_min` und
+`Einzelziele` sind in der Tabellenansicht ausgeblendet.
 
 ## Eingabespalten
 
@@ -30,11 +28,8 @@ Tabelle nur lesend zugreift. Alle Rechenspalten ziehen sofort nach.
 | `Vermerk` | Sonstige Informationen | Text |
 | `Belege` | Belege | Attachments |
 
-Die **Uhrzeiten sind Text**, nicht Zeitwerte — das Formular liefert sie als
-`HH:MM`. Geparst werden sie erst in `Abwesenheit_min`, die dort eingebaute
-`minuten()`-Funktion macht die Formel gegen unlesbare Eingaben unempfindlich.
-
----
+Die Uhrzeiten sind Text, so wie sie eingetippt wurden; gelesen werden sie erst
+in `Abwesenheit_min`.
 
 ## Datum_bis — Reisedatum bis
 
@@ -42,15 +37,8 @@ Die **Uhrzeiten sind Text**, nicht Zeitwerte — das Formular liefert sie als
 $Datum_Ende or $Datum
 ```
 
-**Ergebnis:** Das Enddatum der Reise; bei eintägigen Reisen das Startdatum.
-**Rechenweg:** Ist das optionale Feld `Datum_Ende` leer, gilt `Datum`.
-**Muster:** Spaltenformel (A).
-
-Wird von `Abwesenheit_min` gebraucht und im Ausdruck für die Datumsspanne
-(`03.02.2026 - 04.02.2026`). Ist sie gleich `Datum`, druckt das Widget nur ein
-Datum.
-
----
+Das Enddatum der Reise, ohne Enddatum das Reisedatum. Im Ausdruck erscheint
+eine mehrtägige Reise als Spanne (`03.02.2026 - 04.02.2026`).
 
 ## Lfd_Nr — Laufende Nummer
 
@@ -62,16 +50,11 @@ alle.sort(key=lambda r: (r.Datum, r.id))
 return [r.id for r in alle].index($id) + 1
 ```
 
-**Ergebnis:** Fortlaufende Nummer der Reise innerhalb ihres Kalenderjahres.
-**Sonderfall:** Zeilen ohne Datum bekommen keine Nummer (`None`).
-**Muster:** Rang im Kalenderjahr (E).
-
-Erscheint auf S1 in der Spalte „Reiseweg“ (siehe [Ausgabe → S1](ausgabe.md#s1--reisekostenabrechnung))
-und in Spalte 1 des Fahrtenbuchs. Wird eine ältere Reise nachgetragen,
-vergeben sich alle Nummern des Jahres neu — die Nummer ist also keine
-Belegnummer, sondern eine Position.
-
----
+Fortlaufende Nummer je Kalenderjahr, nach Datum sortiert, bei gleichem Datum
+in der Reihenfolge der Erfassung ([Muster E](README.md#muster-e--rang-im-kalenderjahr)).
+Ohne Datum gibt es keine Nummer. Wird eine ältere Reise nachgetragen,
+verschieben sich die Nummern danach — die Nummer ist eine Position, keine
+Belegnummer. Steht auf S1 (Spalte „Reiseweg“) und im Fahrtenbuch (Spalte 1).
 
 ## KM_gesamt / KM_dienstlich — Kilometer
 
@@ -80,21 +63,9 @@ KM_gesamt:     max(0, ($KM_Ende or 0) - ($KM_Beginn or 0))
 KM_dienstlich: max(0, $KM_gesamt - ($Umweg_privat or 0))
 ```
 
-**Statement:**
-- `($KM_Ende or 0)` – leeres Tachofeld zählt als 0 statt Fehler
-- `max(0, …)` – negative Differenz wird abgeschnitten
-
-**Ergebnis:** Gefahrene Strecke insgesamt bzw. der dienstlich veranlasste
-Anteil nach Abzug des privaten Umwegs.
-**Rechenweg:** Endstand minus Anfangsstand, davon der private Umweg.
-**Sonderfall:** Zahlendreher im Tachostand oder ein Umweg größer als die
-Gesamtstrecke ergeben 0, nicht eine negative Zahl.
-**Muster:** Ersatzwert 0 (C), Untergrenze (D).
-
-`KM_dienstlich` geht nach S1 (Spalte „km“) und ins Fahrtenbuch (Spalte 9).
-`KM_gesamt` ist nur ein Zwischenwert und in der Tabellenansicht ausgeblendet.
-
----
+Endstand minus Anfangsstand, davon der private Umweg. Leere Felder zählen als
+0. Ein negatives Ergebnis, etwa durch einen Zahlendreher, wird 0.
+`KM_dienstlich` steht auf S1 (Spalte km) und im Fahrtenbuch (Spalte 9).
 
 ## Abwesenheit_min — Abwesenheit (Minuten)
 
@@ -115,32 +86,17 @@ if total < 0:
 return total
 ```
 
-**Statement:**
-- `minuten(s)` – nimmt die ersten beiden Zahlen als Stunden und Minuten; Trennzeichen und Zusätze sind egal (`07:15`, `7.15`, `7,15`, `07:15 Uhr`, `7:15 UHR`, `7 Uhr 15`). Eine einzelne Zahl (`715`, `7`) ist mehrdeutig und ergibt `None`
-- `if a is None or b is None …` – fehlt eine Uhrzeit oder das Datum, ist die Abwesenheit 0
-- `tage = ($Datum_bis - $Datum).days` – volle Tage zwischen Beginn und Ende
-- `if tage < 0` – Enddatum vor dem Startdatum: 0 statt einer negativen Dauer
-- `total = tage * 1440 + b - a` – ganze Tage plus die Differenz der Uhrzeiten
-- `if total < 0: total += 1440` – Reise über Mitternacht ohne Enddatum
+Die Dauer der Abwesenheit, Grundlage des Tagegelds: je zusätzlichem
+Kalendertag 1440 Minuten, dazu die Differenz der Uhrzeiten.
 
-**Ergebnis:** Dauer der Abwesenheit in Minuten — Grundlage der Tagegeld-Staffel.
-**Rechenweg:** Je angefangenem Zusatztag 1440 Minuten, dazu die Uhrzeitdifferenz.
-**Sonderfall:** Unlesbare oder fehlende Uhrzeit ergibt 0, nicht einen Fehler —
-der Fehler stünde sonst in der ganzen Spalte und leerte S1. Auf S1 fällt das als
-„Ges.: 0:00“ auf.
-**Muster:** Untergrenze (D).
-
-Zwei Fälle, die leicht verwechselt werden:
-
-| Eingabe | `tage` | Rechnung | Ergebnis |
-|---|---|---|---|
-| 01.02., 22:00 → 06:00, **ohne** Enddatum | 0 | −960 → +1440 | 480 (8 h) |
-| 01.02.→02.02., 22:00 → 06:00 | 1 | 1440 − 960 | 480 (8 h) |
-
-Beide liefern dasselbe. Das Enddatum ist für eine Nachtfahrt also nicht
-zwingend — für eine Reise über mehrere Nächte schon.
-
----
+- **Uhrzeiten:** Die ersten beiden Zahlen gelten als Stunden und Minuten, die
+  Schreibweise ist egal (`7:15`, `7.15`, `07:15 Uhr`). Eine einzelne Zahl
+  (`715`) ist mehrdeutig und gilt als fehlend.
+- **Fehlende Angaben:** Fehlt eine Uhrzeit oder das Datum, oder liegt das
+  Enddatum vor dem Reisedatum, ist das Ergebnis 0. Auf S1 fällt das als
+  „Ges.: 0:00“ auf.
+- **Über Mitternacht** ohne Enddatum wird ein Tag addiert (22:00 → 06:00 =
+  8 h). Für mehrere Nächte ist das Enddatum nötig.
 
 ## Rest_min — Rest-Zeit (Minuten)
 
@@ -149,20 +105,10 @@ $Abwesenheit_min - max(0, $Min_privat_Abzug or 0)
                  - max(0, $Min_Dienststaette or 0) - max(0, $Min_Dienstort or 0)
 ```
 
-**Ergebnis:** Die Abwesenheit, bereinigt um privaten Zeitabzug und um die
-Aufenthalte an Dienststätte und Dienstort.
-**Rechenweg:** Von der Abwesenheit werden die drei Minutenfelder abgezogen.
-**Sonderfall:** Kann negativ werden, wenn die Aufenthalte zusammen länger sind
-als die Abwesenheit; `Tagegeld_Stufe` fängt das ab. Negative Minuten
-(Fehleingabe) zählen als 0 — sonst machte ein privater Abzug von „−60“ aus
-genau 8:00 h eine Rest-Zeit von 9:00 h und damit Tagegeld „>8h“.
-**Muster:** Ersatzwert 0 (C).
-
-Zwischenwert, in der Tabellenansicht ausgeblendet. Er bestimmt die **Stufe**;
-über den Anspruch **dem Grunde nach** entscheidet dagegen `Abwesenheit_min`
-abzüglich des privaten Abzugs — siehe [Anhang](anhang.md).
-
----
+Die Abwesenheit abzüglich privatem Zeitabzug und der Aufenthalte an
+Dienststätte und Dienstort. Negative Eingaben zählen als 0, damit ein Minus
+keine Zeit hinzufügt. Das Ergebnis kann negativ werden; `Tagegeld_Stufe`
+vergibt dann keine Stufe.
 
 ## Tagegeld_Stufe — Tagegeld-Stufe
 
@@ -179,28 +125,16 @@ if r < 1440: return ">=14h"
 return "24h"
 ```
 
-**Statement:**
-- `if not $Tagegeld_beantragt` – ohne Antrag keine Stufe, unabhängig von der Dauer
-- `… < 481` – Anspruch dem Grunde nach: bereinigte Abwesenheit mindestens 8:01 h; ein negativer privater Abzug zählt als 0
-- `if r <= 0` – Rest-Zeit vollständig aufgebraucht: **keine** Stufe
-- die vier Schwellen 481 / 840 / 1440 Minuten
+Drei Prüfungen nacheinander:
 
-**Ergebnis:** Einer der Werte `anteilig`, `>8h`, `>=14h`, `24h` oder leer.
-**Rechenweg:** Zuerst die Anspruchsprüfung über die Abwesenheit, dann die
-Einstufung über die Rest-Zeit.
-**Sonderfall:** Fressen Dienststätte und Dienstort die Abwesenheit vollständig
-auf, ist die Stufe leer, nicht die kleinste.
-**Muster:** Ersatzwert 0 (C), Untergrenze (D).
+1. Tagegeld beantragt? Sonst bleibt die Zelle leer.
+2. **Anspruch dem Grunde nach:** Abwesenheit minus privater Abzug mindestens
+   481 Minuten (8:01 h). Sonst leer.
+3. **Stufe** nach `Rest_min`: 0 oder weniger leer, unter 481 `anteilig`,
+   unter 840 `>8h`, unter 1440 `>=14h`, sonst `24h`.
 
-Das Widget setzt aus diesem Wert das Kreuz in eine der vier S1-Spalten:
-
-```js
-const kreuz = (stufe, s) => stufe === s ? "X" : "";
-```
-
-Die Staffel als Kurzregel steht im [Anhang](anhang.md).
-
----
+S1 kreuzt die passende Spalte an; `anteilig` erscheint als `(X)` unter „mehr
+als 8 Stunden“. Die Staffel als Tabelle steht im [Anhang](anhang.md).
 
 ## Einzelziele — Einzelziele (Ortsverzeichnis)
 
@@ -221,39 +155,23 @@ for t in frei(rec):
 return "\n".join(zeilen)
 ```
 
-**Statement:**
-- `frei(r)` – die Freitexte einer Reise, auch neben einer Auswahl (Muster B);
-  Zeilenumbrüche werden zu `, `, Leerzeilen fallen weg
-- `vorher` – die Reisen desselben Kalenderjahres, die nach Datum (bei gleichem
-  Datum nach Zeilen-Id) **vor** dieser liegen; ihre Freitext-Ziele werden gezählt
-- `"E%s-%02d: %s"` – je Ziel eine Zeile aus Kürzel (`E`, zweistelliges Jahr,
-  laufende Nummer) und Freitext
+Je Freitext-Ziel der Reise eine Zeile aus Kürzel und Text:
 
-**Ergebnis:**
 ```
 E26-07: Café Mokka, Bahnhofstr. 7, 12345 Musterstadt
-E26-08: Hof Lindenau
 ```
-**Sonderfall:** Ohne Freitext-Ziel bleibt die Zelle leer. Ein Feld nur mit
-Leerzeichen zählt nicht.
-**Muster:** Was eingetragen ist, zählt (B), Rang im Kalenderjahr (E).
 
-Die einzige Stelle, an der die Kürzel entstehen. `Reiseweg` setzt sie in die
-Wegkette, das Ortsverzeichnis druckt sie mit Datum und Freitext. Aufbau wie
-`Vermerk_Label` (`V26-01`): das Kürzel ist für sich allein eindeutig.
+Das Kürzel zählt laufend über alle Einzelziele des Kalenderjahres
+([Muster E](README.md#muster-e--rang-im-kalenderjahr)). Ein Freitext zählt
+auch dann, wenn im selben Ortsfeld eine Auswahl steht
+([Muster B](README.md#muster-b--was-eingetragen-ist-zählt)). Zeilenumbrüche
+werden zu Kommas, ein Feld nur mit Leerzeichen zählt nicht. Der Text wird
+nicht geprüft: Ob die Anschrift vollständig ist, sieht die Person im
+Ortsverzeichnis.
 
-**Zu beachten:** Eine nachträglich erfasste oder umdatierte Reise verschiebt
-die Kürzel aller späteren Einzelziele des Jahres — wie bei `Lfd_Nr` und
-`Vermerk_Label`. Ein bereits gedruckter Ausdruck passt dann nicht mehr zur
-Tabelle.
-
-Der Freitext wird **nicht** geprüft oder zerlegt. Er steht im Ortsverzeichnis
-so, wie er erfasst wurde; ob die Anschrift vollständig ist, kontrolliert die
-Person beim Unterschreiben. Korrigiert wird im Freitext der Reise.
-
-Ausgeblendet in der Tabellenansicht (Hilfsspalte).
-
----
+Hier entstehen die Kürzel, die `Reiseweg` und Ortsverzeichnis verwenden. Wie
+bei `Lfd_Nr` verschiebt eine nachgetragene Reise die späteren Kürzel des
+Jahres.
 
 ## Reiseweg
 
@@ -268,24 +186,12 @@ for o, t in [($Ort_Beginn, $Ort_Beginn_Text), … , ($Ort_Ende, $Ort_Ende_Text)]
 return " > ".join(x for x in teile if x)
 ```
 
-**Statement:**
-- `e` – die Kürzel aus `Einzelziele` (`E26-07`, `E26-08` …) in Reihenfolge der Ortsfelder
-- `if o` – aus der Auswahl wird das Kürzel genommen
-- `next(e, "?")` – bei ausgefülltem Freitext das nächste Kürzel, auch wenn
-  daneben eine Auswahl steht (dann zwei Stopps)
-- `if x` – nicht ausgefüllte Stopps fallen heraus, statt Lücken zu erzeugen
-- `" > ".join(…)` – die verbliebenen Stopps zur Wegkette verbinden
-
-**Ergebnis:** `WO > KV > E26-07 > E26-08 > WO`
-**Sonderfall:** Sind alle sieben Felder leer, bleibt die Zelle leer.
-**Muster:** Was eingetragen ist, zählt (B).
-
-Erscheint in Spalte 6 des Fahrtenbuchs und in der Prüfliste. Die Legende zu
-Kürzeln und Nummern ist das Ortsverzeichnis. Die Zelle im Fahrtenbuch fasst
-etwa zwei Zeilen — der volle Freitext mehrerer Ziele passte nicht hinein,
-deshalb nur das Kürzel.
-
----
+Die angefahrenen Orte als Kette, z. B. `WO > KV > E26-07 > WO`: für eine
+Auswahl das Kürzel des Stammziels, für einen Freitext das Kürzel aus
+`Einzelziele`. Sind beide Felder eines Orts gefüllt, sind es zwei Stopps
+([Muster B](README.md#muster-b--was-eingetragen-ist-zählt)); leere Felder
+fallen heraus. Steht im Fahrtenbuch (Spalte 6) und in der Prüfliste,
+aufgelöst werden die Kürzel im Ortsverzeichnis.
 
 ## Maps_Link — Routenlink
 
@@ -294,12 +200,12 @@ import urllib.parse as u
 adr = []
 for o, t in [($Ort_Beginn, $Ort_Beginn_Text), … ]:
   if o and not o.Adresse:
-    return ""                # Stammziel ohne Anschrift -> lieber kein Link
+    return ""
   if o:
     adr.append(o.Adresse)
   t = ", ".join(x.strip() for x in (t or "").splitlines() if x.strip())
   if t:
-    adr.append(t)            # leere Felder fallen still heraus
+    adr.append(t)
 if len(adr) < 2:
   return ""
 link = ("https://www.google.com/maps/dir/?api=1&origin=" + u.quote(adr[0])
@@ -309,33 +215,14 @@ if len(adr) > 2:
 return link
 ```
 
-**Statement:**
-- `if o and not o.Adresse: return ""` – ein Stammziel ohne Anschrift macht
-  die ganze Route unbrauchbar, nicht nur sich selbst
-- `if o` – aus der Auswahl die **Adresse** (im `Reiseweg` das Kürzel)
-- `t = ", ".join(…)` – Freitext einzeilig, wie in `Einzelziele`
-- `if t` – der Freitext selbst als weiterer Stopp; ein leeres Feld ist keiner
-- `if len(adr) < 2` – unter zwei Stationen gibt es keine Route
-- `u.quote(…)` – Adressen für die URL kodieren (Leerzeichen, Umlaute, Komma)
-- `adr[1:-1]` – alles zwischen Start und Ziel wird zu `waypoints`, mit `|` getrennt
+Ein Google-Maps-Link über alle Stationen: die erste als Start, die letzte als
+Ziel, dazwischen die Zwischenhalte. Für eine Auswahl wird die Adresse des
+Stammziels genommen, für einen Freitext der Text selbst. Unter zwei Stationen
+gibt es keinen Link.
 
-**Ergebnis:** Klickbarer Google-Maps-Link über alle Stationen der Reise.
-**Rechenweg:** Erste Adresse als `origin`, letzte als `destination`, alles
-dazwischen als `waypoints`.
-**Sonderfall:** Fehlt einem angefahrenen Stammziel die Anschrift, bleibt die
-Zelle **ganz** leer. Fiele nur dieser eine Stopp aus dem Link, sähe die Route
-vollständig aus und wäre doch zu kurz — das fiele niemandem auf. Deshalb
-die Adressen von `WO` und `KV` nachtragen; `setup.py` nennt beim Lauf jeden
-Ort ohne Anschrift beim Kürzel.
-**Muster:** Was eingetragen ist, zählt (B).
-
-Google Maps liest den Freitext mitsamt Bezeichnung („Café Mokka, Bahnhofstr. 7,
-12345 Musterstadt“). Folgt er dem Schema nicht, ist die Route eben ungenau.
-
-Dient der Prüfung der gefahrenen Strecke, nicht der Abrechnung — der Link wird
-nicht gedruckt.
-
----
+Fehlt einem angefahrenen Stammziel die Anschrift, bleibt der Link **ganz**
+leer: Eine Route ohne diesen Halt sähe vollständig aus und wäre doch zu kurz.
+Der Link dient der Prüfung der Strecke und steht nur in der Prüfliste.
 
 ## Vermerk_Label — Vermerk-Kennung
 
@@ -348,15 +235,7 @@ n = [r.id for r in mit].index($id) + 1
 return "V%s-%02d" % ($Datum.strftime("%y"), n)
 ```
 
-**Statement:**
-- `if not $Vermerk` – ohne Text keine Kennung
-- Filter auf Reisen **mit** Vermerk im selben Kalenderjahr
-- `"V%s-%02d"` – `V`, zweistelliges Jahr, Bindestrich, zweistellige Nummer
-
-**Ergebnis:** `V26-01` — die Kennung, unter der der Vermerk auf dem
-Vermerke-Blatt und in Spalte 15 des Fahrtenbuchs auftaucht.
-**Sonderfall:** Reisen ohne Vermerk bleiben leer und werden nicht mitgezählt.
-**Muster:** Rang im Kalenderjahr (E).
-
-Eigene Zählung, unabhängig von `Lfd_Nr`: die dritte Reise des Jahres kann den
-ersten Vermerk tragen.
+Die Kennung `V26-01` für jede Reise mit Vermerk, laufend je Kalenderjahr und
+nur über Reisen mit Vermerk gezählt
+([Muster E](README.md#muster-e--rang-im-kalenderjahr)). Ohne Vermerk bleibt
+die Zelle leer. Steht auf dem Vermerke-Blatt und im Fahrtenbuch (Spalte 15).
