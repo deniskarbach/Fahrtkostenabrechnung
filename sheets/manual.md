@@ -7,12 +7,12 @@ Technische Details zu den einzelnen Formeln: siehe [Formeln.md](formeln/README.m
 
 1. [Der Prozess auf einen Blick](#der-prozess-auf-einen-blick)
 2. [Ablauf](#ablauf)
-3. [Die Blätter im Überblick](#die-blätter-im-überblick)
+3. [Die Blätter im Überblick](#die-blätter-im-Überblick)
 4. [Formular ausfüllen](#formular-ausfüllen)
 5. [Setup-Blatt](#setup-blatt)
-6. [Prüfen vor dem Drucken & Einreichung](#prüfen-vor-dem-drucken--einreichung)
+6. [Prüfen vor dem Drucken & Einreichung](#prüfen-vor-dem-drucken-amp-einreichung)
 7. [Drucken](#drucken)
-8. ["Einkleben" und Unterschreiben](#einkleben-und-unterschreiben)
+8. ["Einkleben" und Unterschreiben](#quoteinklebenquot-und-unterschreiben)
 9. [Wenn sich das Formular ändert](#wenn-sich-das-formular-ändert)
 
 ---

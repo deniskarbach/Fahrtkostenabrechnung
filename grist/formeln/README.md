@@ -2,7 +2,7 @@
 
 Nachweis der Berechnung: jede Rechenspalte mit ihrer Formel und dem, was sie
 ergibt. Die Formeln hier sind dieselben wie im Grist-Dokument; ihre Quelle ist
-[`setup.py`](../setup.py).
+`setup.py`.
 
 Grist rechnet in **Python**. Eine Formel gilt für die ganze Spalte und wird je
 Zeile ausgewertet: `$Feld` ist der Wert dieser Zeile, `Reisen.all` sind alle

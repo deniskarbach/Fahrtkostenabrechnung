@@ -5,7 +5,7 @@
 ## Tagegeld-Staffel
 
 Zwei Prüfungen mit **zwei verschiedenen** Zeiten
-([Reisen → Tagegeld_Stufe](reisen.md#tagegeld_stufe--tagegeld-stufe)):
+([Reisen → Tagegeld_Stufe](reisen.md#tagegeld_stufe-tagegeld-stufe)):
 
 1. **Anspruch dem Grunde nach:** Abwesenheit minus privater Zeitabzug
    mindestens 8:01 h (481 Minuten). Darunter gibt es kein Kreuz.

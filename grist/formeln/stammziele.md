@@ -36,4 +36,4 @@ Reiseweg und Routenlink. Bei einem Umzug ändern sich beide. Eine Formel, die
 bearbeitbar aus und blieben wirkungslos.
 
 Ziele, die nur einmal vorkommen, gehören nicht hierher, sondern in den
-Freitext des Formulars ([Reisen → Einzelziele](reisen.md#einzelziele--einzelziele-ortsverzeichnis)).
+Freitext des Formulars ([Reisen → Einzelziele](reisen.md#einzelziele-einzelziele-ortsverzeichnis)).

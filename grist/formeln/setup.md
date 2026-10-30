@@ -13,7 +13,7 @@ python3 grist/setup.py
 ```
 
 Nur Standardbibliothek. Zugangsdaten stehen nie im Quelltext, sondern in der
-Umgebung oder in `grist/.env` (nicht versioniert). [`setup.py`](../setup.py)
+Umgebung oder in `grist/.env` (nicht versioniert). `setup.py`
 ist die Quelle aller Formeln, nicht der Editor.
 
 Ein Lauf:
@@ -38,7 +38,7 @@ Ein Lauf:
 Danach von Hand in der Oberfläche:
 
 1. Seite `Formularverwaltung` mit einem Formular-Widget auf `Reisen` anlegen
-   und ans Ende ziehen; das Layout setzt [`formular.py`](../formular.py).
+   und ans Ende ziehen; das Layout setzt `formular.py`.
 2. Formular veröffentlichen, dann **Duplicate Document** — das ist die Vorlage.
 
 ### Was ein erneuter Lauf anfasst
@@ -163,15 +163,15 @@ sh grist/tests/alle.sh
 | Test | Prüft |
 |---|---|
 | `setup.py --selbsttest` | die Formeln ohne Grist: Ortsfelder und Kürzel (Muster, Jahreswechsel, Leerzeichen, mehrzeiliger Freitext), Tagegeld-Schwellen, Uhrzeit-Schreibweisen, Adresse mit leeren Feldern, Layout-Knoten |
-| [`test_druckseiten.mjs`](../tests/test_druckseiten.mjs) | jedes Blatt beginnt auf einer neuen Druckseite |
-| [`test_s1_null_km.mjs`](../tests/test_s1_null_km.mjs) | S1 zeigt 0 km statt einer leeren Zelle |
-| [`test_s1_zeitaufschluesselung.mjs`](../tests/test_s1_zeitaufschluesselung.mjs) | S1-Spalte „Reiseweg“ zeigt die Zeitaufschlüsselung |
-| [`test_fahrtenbuch_zeit.mjs`](../tests/test_fahrtenbuch_zeit.mjs) | Fahrtenbuch Spalte 11: `DSt \| DO` einzeilig |
-| [`test_fahrtenbuch_leer.mjs`](../tests/test_fahrtenbuch_leer.mjs) | ohne Reisen im Zeitraum ein leeres Blattpaar mit Spaltenköpfen |
-| [`test_ortsverzeichnis.mjs`](../tests/test_ortsverzeichnis.mjs) | Reihenfolge, Stammziele je einmal, Einzelziele mit Kürzel und Datum, S2-Felder |
-| [`test_pruefliste.mjs`](../tests/test_pruefliste.mjs) | Spalten, Werte, Legende gleich dem Ortsverzeichnis, Druckbreite und Druckweg |
-| [`test_escaping.py`](../tests/test_escaping.py) | kein Zeilen-Template ohne `` html`…` `` |
-| [`test_schwaerzung.py`](../tests/test_schwaerzung.py) | S2-Erzeugung schwärzt und bricht bei Abweichung ab (braucht die lokale Vorlage) |
+| `test_druckseiten.mjs` | jedes Blatt beginnt auf einer neuen Druckseite |
+| `test_s1_null_km.mjs` | S1 zeigt 0 km statt einer leeren Zelle |
+| `test_s1_zeitaufschluesselung.mjs` | S1-Spalte „Reiseweg“ zeigt die Zeitaufschlüsselung |
+| `test_fahrtenbuch_zeit.mjs` | Fahrtenbuch Spalte 11: `DSt \| DO` einzeilig |
+| `test_fahrtenbuch_leer.mjs` | ohne Reisen im Zeitraum ein leeres Blattpaar mit Spaltenköpfen |
+| `test_ortsverzeichnis.mjs` | Reihenfolge, Stammziele je einmal, Einzelziele mit Kürzel und Datum, S2-Felder |
+| `test_pruefliste.mjs` | Spalten, Werte, Legende gleich dem Ortsverzeichnis, Druckbreite und Druckweg |
+| `test_escaping.py` | kein Zeilen-Template ohne `` html`…` `` |
+| `test_schwaerzung.py` | S2-Erzeugung schwärzt und bricht bei Abweichung ab (braucht die lokale Vorlage) |
 
 **Abnahmetest** vor einer Freigabe, gegen Grist — rund 200 API-Aufrufe,
 deshalb nicht in `alle.sh`:

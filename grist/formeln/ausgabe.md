@@ -8,9 +8,9 @@ Rechenspalten.
 
 | Widget | Seite in Grist | Blätter |
 |---|---|---|
-| Reisekostenabrechnung ([`ausdruck.html`](../ausgabe/ausdruck.html ':ignore')) | Ausdruck | S1, S2, Vermerke, Ortsverzeichnis — A4 hoch |
-| Fahrtenbuch ([`fahrtenbuch.html`](../ausgabe/fahrtenbuch.html ':ignore')) | Ausdruck | Fahrtenbuch zum Einkleben — A4 quer |
-| Prüfliste ([`pruefliste.html`](../ausgabe/pruefliste.html ':ignore')) | Prüfliste | eine Zeile je Reise — A4 quer |
+| Reisekostenabrechnung ([`ausdruck.html`](grist/ausgabe/ausdruck.html ':ignore')) | Ausdruck | S1, S2, Vermerke, Ortsverzeichnis — A4 hoch |
+| Fahrtenbuch ([`fahrtenbuch.html`](grist/ausgabe/fahrtenbuch.html ':ignore')) | Ausdruck | Fahrtenbuch zum Einkleben — A4 quer |
+| Prüfliste ([`pruefliste.html`](grist/ausgabe/pruefliste.html ':ignore')) | Prüfliste | eine Zeile je Reise — A4 quer |
 
 | Blatt | Kopf aus | Zeilen aus |
 |---|---|---|
@@ -93,7 +93,7 @@ Die Legende zu den Kürzeln im Reiseweg, kein Fahrtenprotokoll:
    Freitext ungeprüft unter „Adresse“.
 
 Die Kürzel der Einzelziele kommen aus
-[`Reisen.Einzelziele`](reisen.md#einzelziele--einzelziele-ortsverzeichnis);
+[`Reisen.Einzelziele`](reisen.md#einzelziele-einzelziele-ortsverzeichnis);
 das Widget zählt nicht selbst, damit Fahrtenbuch und Ortsverzeichnis nicht
 auseinanderlaufen.
 

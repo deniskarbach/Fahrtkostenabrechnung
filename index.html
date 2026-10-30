@@ -12,6 +12,9 @@
     window.$docsify = {
       name: 'Fahrtkostenabrechnung',
       loadSidebar: true,
+      // Links in den Seiten gelten relativ zur eigenen Datei (wie auf GitHub);
+      // die Seitenleiste verlinkt deshalb mit führendem "/"
+      relativePath: true,
       // Unterordner sollen dieselbe Sidebar nutzen wie die Wurzel
       alias: {
         '/.*/_sidebar.md': '/_sidebar.md'
