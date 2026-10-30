@@ -47,7 +47,7 @@ Einstellungen  (genau 1 Zeile, PC, Card-Widget)   Stammziele  (PC, selten)
      ┌─────────────────────────────────────────────────────┐
      │  Reisen — eine Zeile je Dienstreise                 │ ◀── Handy-Formular
      │  Datum, Uhrzeiten, km-Stände, Kosten, Vermerk,      │
-     │  Fotos + 7 Ortsfelder (Beginn, 1–5, Ende)           │
+     │  Belege + 7 Ortsfelder (Beginn, 1–5, Ende)          │
      └─────────────────────────────────────────────────────┘
 ```
 
@@ -100,7 +100,8 @@ Wiederholbar. Einzelheiten: [Einrichtung](formeln/setup.md).
 grist/
   setup.py, formular.py   Einrichtung des Grist-Dokuments (Tabellen, Seiten, Formular)
   s2_aus_vorlage.py       erzeugt den S2-Block in ausdruck.html aus der lokalen XLSX-Vorlage
-  ausgabe/                NUR die Widgets, die Grist per URL lädt
+  ausgabe/                die Widgets, die Grist per URL lädt, und
+                          fahrtenbuch-preview.html (ganzes Fahrtenbuch quer, noch kein Widget)
   tests/                  Offline-Tests (sh grist/tests/alle.sh) und Abnahmetest
   formeln/, manual.md     Dokumentation
 ```
@@ -108,4 +109,5 @@ grist/
 > **Zu beachten:** Die Dateien in `ausgabe/` lädt Grist über ihre
 > GitHub-Pages-Adresse. Umbenennen oder Verschieben ändert die Adresse — der
 > nächste Setup-Lauf legt die Widgets dann neu an, und das eingestellte
-> Seitenlayout geht verloren. Alles andere gehört nicht in diesen Ordner.
+> Seitenlayout geht verloren. Skripte, Tests und Dokumentation gehören
+> deshalb nicht in diesen Ordner.

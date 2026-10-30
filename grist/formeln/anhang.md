@@ -41,7 +41,7 @@ zwingend.
 
 `ZWISCHENZIELE` in [`setup.py`](../setup.py) steuert, wie viele Ortsfelder es
 zwischen Beginn und Ende gibt (derzeit **5**). Daraus leiten sich Spalten,
-Beschriftungen, `Reiseweg`, `Maps_Link` und die Sync-Spalten automatisch ab.
+Beschriftungen, `Einzelziele`, `Reiseweg` und `Maps_Link` automatisch ab.
 
 Beim Ändern:
 
@@ -71,10 +71,11 @@ Was zu tun bleibt:
 
 ## Widgets ausliefern
 
-Die beiden Ausgabe-Widgets liegen als statische Dateien im Repo und werden über
+Die drei Ausgabe-Widgets (`ausdruck.html`, `fahrtenbuch.html`,
+`pruefliste.html`) liegen als statische Dateien im Repo und werden über
 GitHub Pages ausgeliefert. Die URL steht in `setup.py` als
-`AUSGABE_BASIS_URL`. Eine Änderung an `ausdruck.html` oder
-`fahrtenbuch.html` wirkt erst nach `git push`; im Grist-Tab danach hart
+`AUSGABE_BASIS_URL`. Eine Änderung an einer dieser Dateien wirkt
+erst nach `git push`; im Grist-Tab danach hart
 neu laden.
 
 ## Was bewusst nicht erfasst wird

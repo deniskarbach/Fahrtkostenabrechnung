@@ -2,8 +2,8 @@
 
 # Einstellungen
 
-Genau eine Zeile, im Editor als Karte dargestellt. Keine Formeln — reine
-Eingabetabelle. Sie speist die Kopfzeile jedes Ausdrucks und bestimmt über den
+Genau eine Zeile, im Editor als Karte dargestellt. Bis auf `Korrektur_Reisen`
+keine Formeln — reine Eingabetabelle. Sie speist die Kopfzeile jedes Ausdrucks und bestimmt über den
 Abrechnungszeitraum, welche Reisen ausgegeben werden.
 
 Dies ist die **einzige** Stelle, an der persönliche Daten erfasst werden.
@@ -25,6 +25,9 @@ Dies ist die **einzige** Stelle, an der persönliche Daten erfasst werden.
 | `Behoerde` | Behörde – Name (S2, unter „3. z. d. A.") | Text | S2, Zeile unter „3. z. d. A." — leer bleibt die Linie |
 | `Zeitraum_von` | Abrechnungszeitraum von | Date | Filter aller Ausgabeblätter |
 | `Zeitraum_bis` | Abrechnungszeitraum bis | Date | " |
+| `Korrektur_Jahr` | Jahr | Int | Seite `Reisekorrektur`: filtert die Liste der Reisen, leer = laufendes Jahr |
+| `Korrektur_Monat` | Monat | Choice | " — leer = ganzes Jahr |
+| `Korrektur_Reisen` | Reisen in Jahr/Monat | RefList:Reisen | **Formel**: die Reisen des gewählten Zeitraums, speist die Liste |
 
 ## Kopfzeile des Ausdrucks
 

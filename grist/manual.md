@@ -40,7 +40,7 @@ eigene Handgriffe nötig — alles dazwischen übernimmt die Tabelle automatisch
 | Route in Google Maps von Hand eintippen | fertiger Routenlink je Reise |
 | Vermerke/Besonderheiten separat dokumentieren | automatisch aus „Sonstige Informationen" gesammelt |
 | Reisenummerierung von Hand pflegen | automatisch fortlaufend je Kalenderjahr vergeben |
-| Unbekannte Ziele in einer Extraliste sammeln | Freitext-Ziel legt automatisch eine Adresszeile an |
+| Einmalige Ziele samt Anschrift in einer Extraliste sammeln | Freitext-Ziel steht mit Kürzel und Datum im Ortsverzeichnis |
 
 **Unterschiede zur Google-Sheets-Umsetzung:**
 

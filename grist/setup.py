@@ -10,8 +10,11 @@ Alternativ ohne Datei, direkt in der Shell:
     export GRIST_API_KEY="..."
     export GRIST_DOC_ID="..."
 
-Laeuft vollstaendig lokal, nur Standardbibliothek. Bestehende Spalten werden
-uebersprungen, das Skript kann also gefahrlos erneut laufen.
+Läuft vollständig lokal, nur Standardbibliothek. Das Skript ist wiederholbar:
+Fehlendes wird ergänzt, Eingabespalten und Daten bleiben unangetastet,
+Rechenformeln werden auf den Stand dieser Datei zurückgesetzt.
+
+    python3 grist/setup.py --selbsttest   # prüft die Formeln ohne Grist
 """
 import json, os, sys, urllib.request, urllib.error, urllib.parse, pathlib
 
@@ -605,11 +608,10 @@ def zeitraum_widget():
 
 # Reihenfolge = Reihenfolge auf der Ausdruck-Seite. S1/S2, Vermerke und
 # Ortsverzeichnis stecken zusammen in einer Datei (ausdruck.html) -- ein
-# Widget statt drei, ein Grist-Fetch statt drei. Das Fahrtenbuch steht in
-# fahrtenbuch-preview.html (Vorbereitung, noch kein Widget). Die Schnittversion
-# bleibt eigenständig, sie ist kein Bestandteil der Standardausgabe.
-# Routenlinks gibt es nur noch in der Prüfliste -- ein früheres Widget hier
-# entfernt ausgabe_widgets() beim nächsten Lauf.
+# Widget statt drei, ein Grist-Fetch statt drei. Daneben das Fahrtenbuch in
+# der Schnittversion zum Einkleben (fahrtenbuch.html). Das ganze Fahrtenbuch
+# als ein Querblatt (fahrtenbuch-preview.html) ist noch kein Widget.
+# Widgets mit einer URL, die hier fehlt, entfernt ausgabe_widgets().
 AUSGABE_WIDGETS = [
     ("Reisekostenabrechnung",        "ausdruck.html"),
     ("Fahrtenbuch",                  "fahrtenbuch.html"),

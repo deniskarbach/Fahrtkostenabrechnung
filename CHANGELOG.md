@@ -36,14 +36,15 @@ Alle nennenswerten Änderungen an diesem Projekt.
   ⚠️-Prüfung mehr. Der Freitext steht ungeprüft unter „Adresse" im
   Ortsverzeichnis, mit Kürzel und Datum; im Reiseweg (Fahrtenbuch,
   Prüfliste) steht nur das Kürzel `E26-07` — laufend je Jahr wie bei den
-  Vermerken, vergeben in der Rechenspalte `Reisen.Einzelziele`.
+  Vermerken, vergeben in der Rechenspalte `Reisen.Einzelziele`. Ältere
+  Dokumente verlieren beim nächsten Lauf Tabelle `Einzelziele`, die
+  `Ort_*_Sync`- und `Anschrift_*`-Spalten
 - Grist: keine Rangfolge mehr zwischen Auswahl und Freitext eines Ortsfelds —
   was eingetragen ist, wird gedruckt; beide gefüllt ergeben zwei Stopps.
   Vorher gewann die Auswahl, ein Freitext daneben verschwand ohne Spur
 - Grist: Tachofotos gestrichen (Formularfeld und Spalte `Tacho_Fotos`) —
   Handyfotos können GPS-Koordinaten in den EXIF-Daten tragen, Grist speichert
-  sie unverändert; der Kilometerstand steht ohnehin im Fahrtenbuch Ältere Dokumente verlieren beim nächsten
-  Lauf Tabelle `Einzelziele`, die `Ort_*_Sync`- und `Anschrift_*`-Spalten
+  sie unverändert; der Kilometerstand steht ohnehin im Fahrtenbuch
 - Sheets S1: Spalte „Tagegeld Anteilig" entfernt (im Originalformular nicht
   vorhanden) — anteiliges Tagegeld erscheint als `(X)` in „mehr als 8 Stunden",
   S1 reicht jetzt von A bis M
