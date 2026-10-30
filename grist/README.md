@@ -3,8 +3,9 @@
 Erfassung der Dienstreise über ein Formular, Aufbereitung in der Tabelle,
 standardisierte Ausgabe.
 
-- **[Handbuch](manual.md)** — Ablauf, Formular, Einstellungen, Drucken
-- **[Formeln](formeln/README.md)** — Datenfluss, Erklärschema, jede Spalte einzeln
+- **[Handbuch](manual.md)** — für die Fachkraft: Ablauf, Formular, Einstellungen, Drucken
+- **[Formeln](formeln/README.md)** — Nachweis der Berechnung: Datenfluss, Erklärschema, jede Spalte einzeln
+- **[Einrichtung](formeln/setup.md)** — das Grist-Dokument per Skript anlegen, Tests
 
 ## Warum Grist
 
@@ -22,15 +23,6 @@ Gegenüber der Google-Sheets-Umsetzung:
 | Neue Formularfrage | verschiebt alle folgenden Spalten, Bezüge prüfen | Formeln greifen über Spalten-IDs, kein Versatz |
 | Ausgabe | eigene Blätter mit Formeln | ein Widget, das die Tabellen liest |
 
-## Ablauf
-
-1. **Vorlagendokument kopieren** — es wird in einer eigenen Kopie gearbeitet.
-2. **Einmalig einrichten** — Stammdaten und die eigene Adresse in
-   `Einstellungen` eintragen, Adressen von `WO`/`KV` auf der Seite `Stammziele` nachtragen,
-   Formular veröffentlichen, Link auf dem Handy ablegen.
-3. **Erfassen am Handy** — Formularlink öffnen, ausfüllen, absenden.
-4. **Abrechnen am PC** — Abrechnungszeitraum wählen, aktualisieren, drucken.
-
 ## Bausteine
 
 | Baustein | Inhalt |
@@ -39,7 +31,7 @@ Gegenüber der Google-Sheets-Umsetzung:
 | `Stammziele` | Seite „Stammziele“: Stammziele mit vollständiger Adresse; speist Auswahlliste, Routenlink und Legende |
 | `Reisen` | eine Zeile je Dienstreise, gespeist aus dem veröffentlichten Formular |
 | Formelspalten | Tagegeld-Staffel, bereinigte Kilometer, laufende Nummer, Reiseweg, Routenlink, Einzelziele (E26-01, E26-02 …) |
-| Ausgabe-Widget | „Reisekostenabrechnung“: rendert S1/S2, Vermerke und Ortsverzeichnis zum Drucken |
+| Ausgabe-Widgets | „Reisekostenabrechnung“ (S1/S2, Vermerke, Ortsverzeichnis), „Fahrtenbuch“, „Prüfliste“ — siehe [Ausgabe](#ausgabe) |
 
 ## Aufbau der Tabellen
 
@@ -60,14 +52,11 @@ Einstellungen  (genau 1 Zeile, PC, Card-Widget)   Stammziele  (PC, selten)
      └─────────────────────────────────────────────────────┘
 ```
 
-Jedes der sieben Ortsfelder ist ein **Paar**: eine Auswahlliste aus `Stammziele` und
-daneben ein Freitextfeld für Ziele, die nicht in der Liste stehen. Was
-eingetragen ist, wird gedruckt — sind beide gefüllt, sind es zwei Stopps.
-Einzelziele sind der Normalfall, nicht die
-Ausnahme — eine reine Auswahlliste würde daran scheitern. Im Reiseweg steht
-für jedes Einzelziel ein Kürzel (`E26-07`: Jahr und laufende Nummer, wie bei
-den Vermerken), im Ortsverzeichnis Kürzel, Datum und der Freitext, wie er
-erfasst wurde.
+Jedes der sieben Ortsfelder ist ein **Paar** aus Auswahlliste (`Stammziele`)
+und Freitext für Ziele, die nicht in der Liste stehen — solche Einzelziele
+sind der Normalfall, nicht die Ausnahme. Im Reiseweg steht für jedes
+Einzelziel ein Kürzel (`E26-07`), im Ortsverzeichnis Kürzel, Datum und der
+Freitext. Die Regel dahinter: [Muster B](formeln/README.md#muster-b--was-eingetragen-ist-zählt).
 
 Einzelheiten zu jeder Tabelle und jeder Formel:
 [Formeln](formeln/README.md).
@@ -84,24 +73,7 @@ eigenen, getrennt freigebbaren Seite liegt
 [`ausgabe/pruefliste.html`](ausgabe/pruefliste.html ':ignore') — alles aus allen
 Blättern in einer Zeile je Reise, für die Zeiterfassungsstelle.
 
-| Ausdruck | Kopf aus | Zeilen aus |
-|---|---|---|
-| S1 / S2 | Einstellungen | Reisen im Zeitraum |
-| Vermerke | Einstellungen | Reisen mit Vermerk |
-| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Kürzel und Datum) |
-| Fahrtenbuch | — | Reisen im Zeitraum |
-| Prüfliste (eigene Seite) | Einstellungen | Reisen im Zeitraum + Orte-Legende |
-
-## Einrichten
-
-```
-cp grist/.env.beispiel grist/.env   # dort die drei Werte eintragen
-python3 grist/setup.py
-```
-
-Legt Tabellen, Spalten, Formeln, die Seiten `Ausdruck`, `Prüfliste` und `Reisekorrektur`
-sowie alle Ausgabe-Widgets an.
-Wiederholbar. Einzelheiten: [Einrichtung](formeln/setup.md).
+Was auf welchem Blatt landet und woher: [Ausgabe](formeln/ausgabe.md).
 
 ## Ordner
 

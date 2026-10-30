@@ -76,7 +76,7 @@ Die drei Ausgabe-Widgets (`ausdruck.html`, `fahrtenbuch.html`,
 GitHub Pages ausgeliefert. Die URL steht in `setup.py` als
 `AUSGABE_BASIS_URL`. Eine Änderung an einer dieser Dateien wirkt
 erst nach `git push`; im Grist-Tab danach hart
-neu laden.
+neu laden, sonst steckt die alte Fassung im Browser-Cache.
 
 ## Was bewusst nicht erfasst wird
 

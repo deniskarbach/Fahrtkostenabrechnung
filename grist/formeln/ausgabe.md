@@ -399,6 +399,4 @@ von `ausdruck.html`, je Dokument ein eigener Namensraum (`.dok-s1`,
 `.dok-s2`, `.dok-vermerke`, `.dok-ortsverzeichnis`), damit
 gleichnamige Klassen sich nicht in die Quere kommen.
 
-Die Widgets werden über GitHub Pages ausgeliefert. Eine Änderung wirkt erst
-nach `git push`; im Grist-Tab danach hart neu laden, sonst steckt die alte
-Fassung im Browser-Cache.
+Wie eine Änderung bei Grist ankommt: [Anhang → Widgets ausliefern](anhang.md#widgets-ausliefern).
