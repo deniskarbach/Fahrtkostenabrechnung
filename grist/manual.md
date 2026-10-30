@@ -8,15 +8,13 @@ Technische Details zu den einzelnen Formeln: siehe [Formeln](formeln/README.md).
 1. [Der Prozess auf einen Blick](#der-prozess-auf-einen-blick)
 2. [Ablauf](#ablauf)
 3. [Die Tabellen im Überblick](#die-tabellen-im-überblick)
-4. [Einrichten](#einrichten)
-5. [Formular ausfüllen](#formular-ausfüllen)
-6. [Einstellungen](#einstellungen)
-7. [Stammziele pflegen](#stammziele-pflegen)
-8. [Prüfen vor dem Drucken & Einreichung](#prüfen-vor-dem-drucken--einreichung)
-9. [Drucken](#drucken)
-10. [Prüfliste für die Zeiterfassungsstelle](#prüfliste-für-die-zeiterfassungsstelle)
-11. ["Einkleben" und Unterschreiben](#einkleben-und-unterschreiben)
-12. [Wenn sich das Formular ändert](#wenn-sich-das-formular-ändert)
+4. [Formular ausfüllen](#formular-ausfüllen)
+5. [Einstellungen](#einstellungen)
+6. [Stammziele pflegen](#stammziele-pflegen)
+7. [Prüfen vor dem Drucken & Einreichung](#prüfen-vor-dem-drucken--einreichung)
+8. [Drucken](#drucken)
+9. [Prüfliste für die Zeiterfassungsstelle](#prüfliste-für-die-zeiterfassungsstelle)
+10. ["Einkleben" und Unterschreiben](#einkleben-und-unterschreiben)
 
 ---
 
@@ -42,30 +40,30 @@ eigene Handgriffe nötig — alles dazwischen übernimmt die Tabelle automatisch
 | Reisenummerierung von Hand pflegen | automatisch fortlaufend je Kalenderjahr vergeben |
 | Einmalige Ziele samt Anschrift in einer Extraliste sammeln | Freitext-Ziel steht mit Kürzel und Datum im Ortsverzeichnis |
 
-**Unterschiede zur Google-Sheets-Umsetzung:**
-
-| | Google Sheets | Grist |
-|---|---|---|
-| Konto zum Erfassen | Google-Konto nötig | **keines** — der Formularlink genügt |
-| Korrektur einer Reise | nur in der Formularantworten-Datei | auf der Seite `Reisekorrektur` |
-| Neue Formularfrage | verschiebt alle folgenden Spalten, Bezüge prüfen | Formeln greifen über Spalten-IDs, kein Versatz |
-| Ausgabe | eigene Blätter mit Formeln | ein Widget, das die Tabellen liest |
 
 ---
 
 ## Ablauf
 
+Einmalig beim Einrichten:
+
 1. **Vorlagendokument kopieren** — es wird immer in einer eigenen Kopie
    gearbeitet, nie im Vorlagendokument selbst.
-2. **Tabelle `Einstellungen`** — einmalig Stammdaten und die eigene Adresse
-   eintragen.
+2. **Seite `Einstellungen`** — Stammdaten und die eigene Adresse eintragen,
+   siehe [Einstellungen](#einstellungen).
 3. **Seite `Stammziele`** — die Adressen von `WO` (Wohnung) und `KV`
-   (Dienststelle) nachtragen, weitere regelmäßige Ziele ergänzen.
-4. **Formular veröffentlichen** und den Link auf dem Handy ablegen.
+   (Dienststelle) nachtragen, weitere regelmäßige Ziele ergänzen, siehe
+   [Stammziele pflegen](#stammziele-pflegen).
+4. **Formular veröffentlichen** — auf der Seite `Formularverwaltung`, und den
+   Link auf dem Handy ablegen. Das geschieht in der **eigenen Kopie**: der
+   Formularlink der Vorlage schreibt nicht in die eigene Tabelle.
+
+Danach je Reise und je Abrechnung:
+
 5. **Erfassen am Handy** — Formularlink öffnen, ausfüllen, absenden. Eine
-   Reise pro Absendung.
+   Reise pro Absendung, siehe [Formular ausfüllen](#formular-ausfüllen).
 6. **Abrechnen am PC** — auf der Seite `Ausdruck` den Abrechnungszeitraum
-   setzen, **Aktualisieren**, **Drucken**.
+   setzen, **Aktualisieren**, **Drucken**, siehe [Drucken](#drucken).
 
 ---
 
@@ -85,38 +83,6 @@ Formular.
 | ⚙️ | Formularverwaltung (Seite, letzte) | Das Formular-Widget, über das jede Reise in die Tabelle `Reisen` geschrieben wird. Ohne diese Seite gibt es keinen Formularlink: die Veröffentlichung hängt an ihr | **Nur beim Einrichten:** Formular veröffentlichen, Link aufs Handy. Die Seite nicht löschen, sonst funktioniert der Link nicht mehr |
 
 ✍️ von Hand pflegen · ✅ läuft automatisch · 🖨️ ausdrucken/unterschreiben · ⚙️ nur beim Einrichten
-
-**Automatisch berechnet und ausgegeben werden:**
-
-- Tagegeld-Staffel (anteilig, >8h, ≥14h, 24h) je nach Abwesenheitsdauer
-- Dienstlich gefahrene Kilometer, bereinigt um private Umwege
-- Reiseweg als Text mit allen angefahrenen Orten (`WO > KV > WO`)
-- Fahrt- und Nebenkosten: ÖPNV, Übernachtung, Mitnahme von Personen, Nebenkosten
-- Google-Maps-Routenlink zur Reise
-- Laufende Nummer und Vermerk-Kennung je Kalenderjahr
-
----
-
-## Einrichten
-
-Das Datenmodell legt `setup.py` an — Tabellen, Spalten, Formeln, die Seiten
-`Ausdruck`, `Prüfliste` und `Reisekorrektur` samt Widgets. Einzelheiten: [Einrichtung](formeln/setup.md).
-
-```
-cp grist/.env.beispiel grist/.env   # dort die drei Werte eintragen
-python3 grist/setup.py
-```
-
-Das Skript ist wiederholbar: bestehende Spalten bleiben, fehlende kommen
-hinzu, Rechenformeln werden auf den Stand des Codes gebracht. Von Hand
-gesetzte Beschriftungen und Layouts bleiben unangetastet.
-
-Danach bleiben zwei Handgriffe in der Oberfläche:
-
-1. Seite `Formularverwaltung` mit einem Formular-Widget auf die Tabelle
-   `Reisen` anlegen und ans Ende der Seitenliste ziehen — das Layout setzt
-   `formular.py`
-2. Formular veröffentlichen, dann **Duplicate Document** — das ist die Vorlage
 
 ---
 
@@ -334,23 +300,3 @@ ist. A4 quer, mit **Drucken** und **Aktualisieren**.
 - Ausschneiden, ins Fahrtenbuch einkleben, **Unterschrift von Hand** in die
   entsprechende Spalte.
 - S1/S2 unterschreiben und wie üblich einreichen.
-
----
-
-## Wenn sich das Formular ändert
-
-Anders als bei Google Sheets verschiebt eine neue Formularfrage hier nichts:
-Grist-Formeln greifen über die Spalten-ID (`$KM_Ende`), nicht über die
-Spaltenposition. Ein Umbenennen der Beschriftung lässt die Formeln
-unberührt.
-
-Was trotzdem zu tun ist:
-
-- **Neues Feld:** in `setup.py` in die passende Spaltenliste eintragen und das
-  Skript erneut laufen lassen. Es ergänzt nur, was fehlt.
-- **Mehr Zwischenziele:** `ZWISCHENZIELE` in `setup.py` erhöhen und das Skript
-  erneut laufen lassen — Spalten, Formeln und das Ausgabe-Widget richten sich
-  danach. Im Widget ist `ORT_SLOTS` mitzuziehen, siehe
-  [Anhang](formeln/anhang.md).
-- **Geändertes Formularlayout:** `formular.py` baut die Layout-Spezifikation
-  des Formulars komplett neu — nur mit Ansage laufen lassen.

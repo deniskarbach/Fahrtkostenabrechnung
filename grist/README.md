@@ -13,6 +13,15 @@ Der Engpass war nie die Tabelle, sondern die Erfassung am Handy: sie muss
 Grist-Formularlink leistet genau das. Alles Weitere — Rechnen, Filtern,
 Drucken — steckt im selben Dokument, ohne zweite Datei und ohne Import.
 
+Gegenüber der Google-Sheets-Umsetzung:
+
+| | Google Sheets | Grist |
+|---|---|---|
+| Konto zum Erfassen | Google-Konto nötig | **keines** — der Formularlink genügt |
+| Korrektur einer Reise | nur in der Formularantworten-Datei | auf der Seite `Reisekorrektur` |
+| Neue Formularfrage | verschiebt alle folgenden Spalten, Bezüge prüfen | Formeln greifen über Spalten-IDs, kein Versatz |
+| Ausgabe | eigene Blätter mit Formeln | ein Widget, das die Tabellen liest |
+
 ## Ablauf
 
 1. **Vorlagendokument kopieren** — es wird in einer eigenen Kopie gearbeitet.
