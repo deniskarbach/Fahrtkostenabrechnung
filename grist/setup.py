@@ -19,7 +19,7 @@ Rechenformeln werden auf den Stand dieser Datei zurückgesetzt.
 import json, os, sys, urllib.request, urllib.error, urllib.parse, pathlib
 
 # Zugangsdaten kommen NIE in diese Datei. Entweder aus der Umgebung oder aus
-# grist/.env — beides liegt ausserhalb der Versionierung (siehe .gitignore).
+# grist/.env — beides liegt außerhalb der Versionierung (siehe .gitignore).
 _env = pathlib.Path(__file__).with_name(".env")
 if _env.exists():
     for zeile in _env.read_text(encoding="utf-8").splitlines():
@@ -81,7 +81,7 @@ def spalte(sid, label, typ="Any", formel=None, optionen=None):
 # ----------------------------------------------------------- Konfiguration
 
 # Zahl der Zwischenziele je Reise. Spalten und Formeln richten sich danach.
-# Aendern und setup.py erneut laufen lassen ergaenzt die fehlenden Spalten.
+# Ändern und setup.py erneut laufen lassen ergänzt die fehlenden Spalten.
 ZWISCHENZIELE = 5
 
 ORT_SLOTS = ["Ort_Beginn"] + [f"Ort_{i}" for i in range(1, ZWISCHENZIELE + 1)] + ["Ort_Ende"]
@@ -528,7 +528,7 @@ def layouts_aufraeumen():
     """Nimmt aus jedem Seitenlayout die Blätter heraus, die auf eine Section
     zeigen, die es nicht (mehr) gibt oder die inzwischen zu einer anderen
     Seite gehört. Solche Karteileichen entstanden, solange das Entfernen eines
-    Widgets sein Blatt stehen liess -- die Reisen-Seite verwies dadurch auf die
+    Widgets sein Blatt stehen ließ -- die Reisen-Seite verwies dadurch auf die
     Einstellungs-Karte. Idempotent: ohne Fund passiert nichts."""
     aktionen = []
     for v in sql("select id, name, layoutSpec from _grist_Views"):
@@ -551,11 +551,11 @@ def seiten_kinder(vid, ohne=()):
     """Kind-Knoten des Seitenlayouts, ohne die Knoten der genannten Sections.
     Verschachtelte Knoten (nebeneinander angeordnete Widgets) tragen keinen
     eigenen 'leaf' und bleiben unangetastet stehen -- ein neues Widget wird
-    davor gehaengt, nie an ihre Stelle gesetzt. Eine frisch angelegte Seite
+    davor gehängt, nie an ihre Stelle gesetzt. Eine frisch angelegte Seite
     hat noch gar keine layoutSpec, daher das `or`.
     ponytail: ein Container, der nur entfernte Sections enthielt, bleibt als
     leerer Knoten stehen -- Grist blendet ihn aus; erst aufraeumen, wenn das
-    im Editor jemals stoert."""
+    im Editor jemals stört."""
     roh = sql(f"select layoutSpec from _grist_Views where id = {vid}")[0]["layoutSpec"]
     return ohne_blaetter(json.loads(roh or "{}").get("children") or [], set(ohne))
 
@@ -711,9 +711,9 @@ def ausgabe_widgets():
 
     veraltet = [sec for url, sec in vorhanden.items() if url not in ziel_urls]
     if veraltet:
-        # Blätter mitnehmen: eine entfernte Section liess ihren Knoten sonst in
+        # Blätter mitnehmen: eine entfernte Section ließ ihren Knoten sonst in
         # der layoutSpec stehen, und die Seite verwies auf eine Section, die es
-        # nicht mehr gibt (oder inzwischen zu einer anderen Seite gehoert).
+        # nicht mehr gibt (oder inzwischen zu einer anderen Seite gehört).
         api("POST", "/apply",
             [["RemoveRecord", "_grist_Views_section", sec] for sec in veraltet]
             + [["UpdateRecord", "_grist_Views", vid,
@@ -734,13 +734,13 @@ def ausgabe_widgets():
 def ausdruck_layout():
     """Bringt die Ausdruck-Seite in die Anordnung des eingerichteten Dokuments:
     der Abrechnungszeitraum als schmale Zeile oben, darunter die Widgets aus
-    AUSGABE_WIDGETS nebeneinander. Die Groessen sind die dort abgelesenen
-    Verhaeltniswerte -- Grist rechnet sie relativ, die absolute Zahl ist egal.
+    AUSGABE_WIDGETS nebeneinander. Die Größen sind die dort abgelesenen
+    Verhältniswerte -- Grist rechnet sie relativ, die absolute Zahl ist egal.
 
     Fasst eine Seite nicht an, auf der bereits alle Widgets im Layout stehen:
-    wer sie von Hand umsortiert hat, behaelt seine Anordnung. Greift also
+    wer sie von Hand umsortiert hat, behält seine Anordnung. Greift also
     im Normalfall genau einmal, beim Einrichten eines frischen Dokuments --
-    ein neu ergaenztes AUSGABE_WIDGETS-Widget zieht aber automatisch nach,
+    ein neu ergänztes AUSGABE_WIDGETS-Widget zieht aber automatisch nach,
     weil dann noch nicht 'alle' im Layout stehen."""
     seite = seite_suchen("Ausdruck")
     if not seite:
@@ -799,20 +799,20 @@ def feste_orte_anlegen():
         print(f"  Stammziele: {len(fehlend)} Pflichtzeile(n) angelegt "
               f"({', '.join(k for k, _ in fehlend)}) -- Adresse dort nachtragen")
 
-    # Ein Ort ohne Anschrift laesst 'Maps_Link' jeder Reise leer, die ihn
-    # anfaehrt -- das war lange nur am fehlenden Routenlink zu merken.
+    # Ein Ort ohne Anschrift lässt 'Maps_Link' jeder Reise leer, die ihn
+    # anfährt -- das war lange nur am fehlenden Routenlink zu merken.
     ohne = sorted(r["fields"].get("Kuerzel") or f"Zeile {r['id']}" for r in zeilen
                   if not (r["fields"].get("Adresse") or "").strip())
     if ohne:
-        print(f"  Stammziele: OHNE ADRESSE ({', '.join(ohne)}) -- Reisen ueber diese "
+        print(f"  Stammziele: OHNE ADRESSE ({', '.join(ohne)}) -- Reisen über diese "
               f"Orte bekommen keinen Routenlink, Strasse/PLZ/Ort nachtragen")
 
 
 def formelfehler_melden():
     """Nennt jede Formelspalte, deren Zellen einen Fehler tragen.
 
-    Noetig, weil der Fehler sonst niemandem auffaellt: der REST-Endpunkt
-    /tables/X/records liefert fuer eine Fehlerzelle schlicht null, und die
+    Nötig, weil der Fehler sonst niemandem auffällt: der REST-Endpunkt
+    /tables/X/records liefert für eine Fehlerzelle schlicht null, und die
     Ausgabe-Widgets zeigen dann eine leere Spalte. So blieben die sieben
     Sync-Spalten lange kaputt. /tables/X/data reicht den Rohwert
     ["E", "SyntaxError"] durch -- daher dieser Endpunkt."""
@@ -1273,7 +1273,7 @@ def selbsttest():
     assert rechnen(neujahr).Einzelziele == "E27-01: Bauhof", neujahr.Einzelziele
     alle.clear()
 
-    # Stammziel ohne Adresse (WO/KV frisch angelegt): frueher fiel der Stopp
+    # Stammziel ohne Adresse (WO/KV frisch angelegt): früher fiel der Stopp
     # still aus dem Link und die Route war zu kurz -- jetzt gar kein Link.
     r = leer()
     r.Ort_Beginn = Ort("WO", "Beispielweg 7, Musterstadt")
@@ -1288,7 +1288,7 @@ def selbsttest():
     r.Ort_Beginn = Ort("WO", "Beispielweg 7, Musterstadt")
     assert lauf(MAPS, r) == ""
 
-    # Tagegeldstaffel: die vier Grenzen und der Fall, in dem Dienststaette und
+    # Tagegeldstaffel: die vier Grenzen und der Fall, in dem Dienststätte und
     # Dienstort die Abwesenheit ganz aufbrauchen -- Rest <= 0 ergab vorher die
     # kleinste Stufe statt gar keiner.
     REST = next(x["fields"]["formula"] for x in REISEN if x["id"] == "Rest_min")
@@ -1329,14 +1329,14 @@ def selbsttest():
     assert adresse("Amtsstr. 1", "00000", "Musterstadt") == "Amtsstr. 1, 00000 Musterstadt"
 
     # Layout-Knoten: verschachtelte Seiten (zwei Widgets nebeneinander) tragen
-    # kein eigenes 'leaf'. Beide Funktionen muessen da hineinsteigen, sonst
-    # bleibt beim Aufraeumen ein Blatt einer geloeschten Section stehen.
+    # kein eigenes 'leaf'. Beide Funktionen müssen da hineinsteigen, sonst
+    # bleibt beim Aufräumen ein Blatt einer gelöschten Section stehen.
     baum = [{"size": 16, "leaf": 15},
             {"size": 118, "children": [{"leaf": 23}, {"leaf": 22}]}]
     assert sorted(blaetter(baum)) == [15, 22, 23], list(blaetter(baum))
     assert ohne_blaetter(baum, {22}) == [{"size": 16, "leaf": 15},
                                          {"size": 118, "children": [{"leaf": 23}]}]
-    assert ohne_blaetter(baum, {22, 23}) == [{"size": 16, "leaf": 15}]   # leerer Ast faellt weg
+    assert ohne_blaetter(baum, {22, 23}) == [{"size": 16, "leaf": 15}]   # leerer Ast fällt weg
     assert ohne_blaetter(baum, set()) == baum
 
     # Reisekorrektur-Filter: Jahr leer = laufendes Jahr, Monat leer = ganzes Jahr.

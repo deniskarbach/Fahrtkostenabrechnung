@@ -66,7 +66,7 @@ return [r.id for r in alle].index($id) + 1
 **Sonderfall:** Zeilen ohne Datum bekommen keine Nummer (`None`).
 **Muster:** Rang im Kalenderjahr (E).
 
-Erscheint auf S1 in der Spalte „Reiseweg" (siehe [Ausgabe → S1](ausgabe.md#s1--reisekostenabrechnung))
+Erscheint auf S1 in der Spalte „Reiseweg“ (siehe [Ausgabe → S1](ausgabe.md#s1--reisekostenabrechnung))
 und in Spalte 1 des Fahrtenbuchs. Wird eine ältere Reise nachgetragen,
 vergeben sich alle Nummern des Jahres neu — die Nummer ist also keine
 Belegnummer, sondern eine Position.
@@ -91,7 +91,7 @@ Anteil nach Abzug des privaten Umwegs.
 Gesamtstrecke ergeben 0, nicht eine negative Zahl.
 **Muster:** Ersatzwert 0 (C), Untergrenze (D).
 
-`KM_dienstlich` geht nach S1 (Spalte „km") und ins Fahrtenbuch (Spalte 9).
+`KM_dienstlich` geht nach S1 (Spalte „km“) und ins Fahrtenbuch (Spalte 9).
 `KM_gesamt` ist nur ein Zwischenwert und in der Tabellenansicht ausgeblendet.
 
 ---
@@ -330,7 +330,7 @@ Ort ohne Anschrift beim Kürzel.
 **Muster:** Was eingetragen ist, zählt (B).
 
 Google Maps liest den Freitext mitsamt Bezeichnung („Café Mokka, Bahnhofstr. 7,
-12345 Musterstadt"). Folgt er dem Schema nicht, ist die Route eben ungenau.
+12345 Musterstadt“). Folgt er dem Schema nicht, ist die Route eben ungenau.
 
 Dient der Prüfung der gefahrenen Strecke, nicht der Abrechnung — der Link wird
 nicht gedruckt.

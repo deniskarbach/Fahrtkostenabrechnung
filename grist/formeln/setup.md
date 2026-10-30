@@ -119,7 +119,7 @@ sh grist/tests/alle.sh
 |---|---|
 | [`test_druckseiten.mjs`](../tests/test_druckseiten.mjs) | jedes Blatt hat seine Druckseite und beginnt auf einer neuen |
 | [`test_s1_null_km.mjs`](../tests/test_s1_null_km.mjs) | S1 zeigt 0 dienstliche km statt einer leeren Zelle |
-| [`test_s1_zeitaufschluesselung.mjs`](../tests/test_s1_zeitaufschluesselung.mjs) | S1-Spalte „Reiseweg" zeigt die Zeitaufschlüsselung |
+| [`test_s1_zeitaufschluesselung.mjs`](../tests/test_s1_zeitaufschluesselung.mjs) | S1-Spalte „Reiseweg“ zeigt die Zeitaufschlüsselung |
 | [`test_fahrtenbuch_zeit.mjs`](../tests/test_fahrtenbuch_zeit.mjs) | Fahrtenbuch Spalte 11: `DSt \| DO` einzeilig |
 | [`test_ortsverzeichnis.mjs`](../tests/test_ortsverzeichnis.mjs) | Ortsverzeichnis: Stammziele höchstens einmal, Reihenfolge, Einzelziele mit Kürzel, Datum und ungeprüftem Freitext; S2-Felder aus Einstellungen |
 | [`test_pruefliste.mjs`](../tests/test_pruefliste.mjs) | Prüfliste: Spaltenzahl, Werte, Legende deckungsgleich mit dem Ortsverzeichnis, Druckbreite |

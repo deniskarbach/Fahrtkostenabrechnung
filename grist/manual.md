@@ -36,7 +36,7 @@ eigene Handgriffe nötig — alles dazwischen übernimmt die Tabelle automatisch
 | Standardisierte Ausgabe S1/S2 von Hand ausfüllen | automatisch aus dem Abrechnungszeitraum befüllt |
 | Fahrtenbuch manuell führen | automatisch als Druck-Fahrtenbuch erstellt |
 | Route in Google Maps von Hand eintippen | fertiger Routenlink je Reise |
-| Vermerke/Besonderheiten separat dokumentieren | automatisch aus „Sonstige Informationen" gesammelt |
+| Vermerke/Besonderheiten separat dokumentieren | automatisch aus „Sonstige Informationen“ gesammelt |
 | Reisenummerierung von Hand pflegen | automatisch fortlaufend je Kalenderjahr vergeben |
 | Einmalige Ziele samt Anschrift in einer Extraliste sammeln | Freitext-Ziel steht mit Kürzel und Datum im Ortsverzeichnis |
 
@@ -145,8 +145,8 @@ eindeutiger als eine Zeile in einer Tabelle.
 | Feld | Wofür |
 |---|---|
 | Vorname, Name, Organisationseinheit | Kopfzeile jedes Ausdrucks |
-| Wohnort – Straße, PLZ, Ort | Kopfzeile („Wohnort") |
-| Dienstort – Straße, PLZ, Ort | Kopfzeile („Dienstort") |
+| Wohnort – Straße, PLZ, Ort | Kopfzeile („Wohnort“) |
+| Dienstort – Straße, PLZ, Ort | Kopfzeile („Dienstort“) |
 | Abteilung, Buchungsstelle, Behörde (Ort, Name) | S2, Verfügungsteil. Leer bleibt dort die Linie zum Ausfüllen von Hand |
 
 Der Abrechnungszeitraum steht **nicht** hier, sondern nur als Karte oben auf
@@ -204,7 +204,7 @@ Freitextfeld im Formular da. Es landet mit Kürzel und Datum im Ortsverzeichnis.
   Kilometer, keine negative Zahl — er fällt also nicht durch einen Fehlerwert
   auf, sondern durch eine auffällig niedrige Zahl. Eine `0` auf S1 ist nicht
   zwangsläufig ein Fehler: bei einer Fahrt, die vollständig als „Privater
-  Umweg" erfasst wurde (z. B. eine reine Verwaltungsfahrt ohne
+  Umweg“ erfasst wurde (z. B. eine reine Verwaltungsfahrt ohne
   erstattungsfähige Strecke), ist sie das erwartete, gedruckte Ergebnis.
 - Eine Korrektur geht auf der Seite `Reisekorrektur`: oben Jahr eintragen
   (mit **Enter** bestätigen) und Monat wählen — die Liste links zeigt dann
@@ -233,7 +233,7 @@ Auf der Seite `Ausdruck` liegen zwei Widgets:
 
 Beide Widgets haben oben eine Leiste mit zwei Knöpfen:
 
-- **Drucken** — öffnet den Druckdialog. Grist versteckt „Widget drucken" sonst
+- **Drucken** — öffnet den Druckdialog. Grist versteckt „Widget drucken“ sonst
   im Drei-Punkte-Menü.
 - **Aktualisieren** — baut den Ausdruck aus dem aktuellen Tabellenstand neu
   auf.
@@ -248,12 +248,12 @@ Was auf welchem Blatt landet:
 | Blatt | Kopf aus | Zeilen aus |
 |---|---|---|
 | S1 / S2 | Einstellungen | Reisen im Zeitraum |
-| Vermerke | Einstellungen | Reisen mit ausgefülltem Feld „Sonstige Informationen" |
+| Vermerke | Einstellungen | Reisen mit ausgefülltem Feld „Sonstige Informationen“ |
 | Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Kürzel und Datum) |
 | Fahrtenbuch | — | Reisen im Zeitraum |
 
-**Spalte „Reiseweg" auf S1:** Der Vordruck verlangt dort nur die laufende
-Nummer, „bei Führung eines Fahrtenbuches" — genau das steht im Spaltenkopf,
+**Spalte „Reiseweg“ auf S1:** Der Vordruck verlangt dort nur die laufende
+Nummer, „bei Führung eines Fahrtenbuches“ — genau das steht im Spaltenkopf,
 und ein Fahrtenbuch liegt bei dieser Ausgabe ohnehin immer bei. Statt den
 Reiseweg dort ein zweites Mal zu zeigen, steht in der Zelle die
 Zeitaufschlüsselung zur Tagegeld-Prüfung, z. B.:
@@ -294,7 +294,7 @@ ist. A4 quer, mit **Drucken** und **Aktualisieren**.
 ## "Einkleben" und Unterschreiben
 
 - **Fahrtenbuch** bei **100 %** ausdrucken — nicht „an
-  Seitengröße anpassen", sonst stimmen die Spaltenbreiten nicht.
+  Seitengröße anpassen“, sonst stimmen die Spaltenbreiten nicht.
 - Je Zeilenblock entstehen zwei Seiten: links die Spalten 1–6, rechts 7–15.
   Die Hinweiszeile über jeder Seite sagt, welche Kante auszuschneiden ist.
 - Ausschneiden, ins Fahrtenbuch einkleben, **Unterschrift von Hand** in die

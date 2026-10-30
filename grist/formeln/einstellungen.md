@@ -13,16 +13,16 @@ Dies ist die **einzige** Stelle, an der persönliche Daten erfasst werden.
 | `Vorname` | Vorname | Text | Kopfzeile, zusammen mit `Name` und `Organisationseinheit` |
 | `Name` | Name | Text | " |
 | `Organisationseinheit` | Organisationseinheit | Text | " |
-| `Wohnort_Strasse` | Wohnort – Straße und Nr. | Text | Kopffeld „Wohnort" |
+| `Wohnort_Strasse` | Wohnort – Straße und Nr. | Text | Kopffeld „Wohnort“ |
 | `Wohnort_PLZ` | Wohnort – PLZ | Text | " |
 | `Wohnort_Ort` | Wohnort – Ort | Text | " |
-| `Dienstort_Strasse` | Dienstort – Straße und Nr. | Text | Kopffeld „Dienstort" |
+| `Dienstort_Strasse` | Dienstort – Straße und Nr. | Text | Kopffeld „Dienstort“ |
 | `Dienstort_PLZ` | Dienstort – PLZ | Text | " |
 | `Dienstort_Ort` | Dienstort – Ort | Text | " |
-| `Abteilung` | Abteilung (S2) | Text | S2, Verfügungsteil „Abteilung:" — leer bleibt die Linie |
-| `Buchungsstelle` | Buchungsstelle (S2, nach „€ bei:") | Text | S2, Zeile „1. KK anweisen, … € bei:" — leer bleibt die Linie |
-| `Behoerde_Ort` | Behörde – Ort (S2, vor dem Datum) | Text | S2, „Ort, Datum" im Verfügungsteil — leer bleibt die Linie |
-| `Behoerde` | Behörde – Name (S2, unter „3. z. d. A.") | Text | S2, Zeile unter „3. z. d. A." — leer bleibt die Linie |
+| `Abteilung` | Abteilung (S2) | Text | S2, Verfügungsteil „Abteilung:“ — leer bleibt die Linie |
+| `Buchungsstelle` | Buchungsstelle (S2, nach „€ bei:“) | Text | S2, Zeile „1. KK anweisen, … € bei:“ — leer bleibt die Linie |
+| `Behoerde_Ort` | Behörde – Ort (S2, vor dem Datum) | Text | S2, „Ort, Datum“ im Verfügungsteil — leer bleibt die Linie |
+| `Behoerde` | Behörde – Name (S2, unter „3. z. d. A.“) | Text | S2, Zeile unter „3. z. d. A.“ — leer bleibt die Linie |
 | `Zeitraum_von` | Abrechnungszeitraum von | Date | Filter aller Ausgabeblätter |
 | `Zeitraum_bis` | Abrechnungszeitraum bis | Date | " |
 | `Korrektur_Jahr` | Jahr | Int | Seite `Reisekorrektur`: filtert die Liste der Reisen, leer = laufendes Jahr |

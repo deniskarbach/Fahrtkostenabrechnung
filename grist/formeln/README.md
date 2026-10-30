@@ -63,10 +63,11 @@ $Datum_Ende or $Datum
 - kein Bereich, kein Mitwachsen, kein `ARRAYFORMULA`
 
 Eine Formel gilt für die ganze Spalte und wird je Zeile ausgewertet. Neue
-Zeilen rechnen sofort mit; es gibt keine „erste Zelle", die die Spalte füllt,
+Zeilen rechnen sofort mit; es gibt keine „erste Zelle“, die die Spalte füllt,
 und damit auch keine Zeilengrenzen zu pflegen. Das ist der wesentliche
-Unterschied zur Google-Sheets-Umsetzung, in der Muster A und D genau dieses
-Problem lösen mussten.
+Unterschied zur Google-Sheets-Umsetzung, in der die dortigen Muster
+[A – Auto-Spalte und D – Zeilengrenzen](../../sheets/formeln/README.md#muster-a--auto-spalte)
+genau dieses Problem lösen mussten.
 
 ### Muster B – Was eingetragen ist, zählt
 

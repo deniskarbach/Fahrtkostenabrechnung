@@ -18,11 +18,11 @@
    gewohnte Ansicht wiedererkennen, nicht eine neue lernen.
 
    A4 quer: 22 Spalten passen nicht auf Hochformat. Die Spaltenbreiten
-   summieren sich auf 266mm -- bewusst NICHT auf die theoretisch moeglichen
+   summieren sich auf 266mm -- bewusst NICHT auf die theoretisch möglichen
    277mm (A4 quer minus 2x10mm @page-Rand). Greift die @page-Regel naemlich
-   nicht, gelten die Standardraender des Druckdialogs (~12,7mm je Seite),
-   und es bleiben nur 271,6mm. Mit 252mm passt es in beiden Faellen.
-   Gedruckt wird ueber ein eigenes Fenster, siehe drucken() weiter unten.
+   nicht, gelten die Standardränder des Druckdialogs (~12,7mm je Seite),
+   und es bleiben nur 271,6mm. Mit 252mm passt es in beiden Fällen.
+   Gedruckt wird über ein eigenes Fenster, siehe drucken() weiter unten.
    --------------------------------------------------------------- */
 @page { size: A4 landscape; margin: 10mm; }
 
@@ -373,7 +373,7 @@ document.getElementById("drucken").onclick = drucken;
 /* ---------------------------------------------------------- Grist-Anbindung */
 
 /* Meldungen gehen in die Leiste, nicht in den <body>: ein ersetzter Body
-   nimmt die Tabellen mit, und der naechste onRecords-Lauf findet seine Zellen
+   nimmt die Tabellen mit, und der nächste onRecords-Lauf findet seine Zellen
    dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
 const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
 const hinweis = t => { document.getElementById("hinweis").textContent = t; };
@@ -402,17 +402,17 @@ async function ausGrist() {
   const orteNachId = Object.fromEntries(
     zeilen(await grist.docApi.fetchTable("Stammziele")).map(o => [o.id, o]));
 
-  /* Gefiltert wird ueber den Reisebeginn -- siehe ausdruck.html: eine Reise,
-     die vor `von` beginnt, gehoert in die vorige Abrechnung. */
+  /* Gefiltert wird über den Reisebeginn -- siehe ausdruck.html: eine Reise,
+     die vor `von` beginnt, gehört in die vorige Abrechnung. */
   const reisen = zeilen(await grist.docApi.fetchTable("Reisen"))
     .filter(r => imZeitraum(r.Datum))
     .sort((a, b) => a.Datum - b.Datum);
 
   /* Orte-Legende: identische Reihenfolge wie im Ortsverzeichnis von
-     ausdruck.html -- Wohnung und Dienststaette fest vorn, dann die uebrigen
+     ausdruck.html -- Wohnung und Dienststätte fest vorn, dann die übrigen
      Stammziele nach erstem Vorkommen, dann die Einzelziele nach Datum.
-     Gegen ein Auseinanderlaufen der beiden Kopien prueft
-     test_pruefliste.mjs beide Blaetter auf dieselbe Liste. */
+     Gegen ein Auseinanderlaufen der beiden Kopien prüft
+     test_pruefliste.mjs beide Blätter auf dieselbe Liste. */
   const orteListe = Object.values(orteNachId);
   const stammIds = ["WO", "KV"]
     .map(k => orteListe.find(o => o.Kuerzel === k))
@@ -471,10 +471,10 @@ if (window.self === window.top) {
 } else {
   /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
      Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
-     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy loescht
-     document.referrer, und ein fest verdrahtetes docs.getgrist.com waere dann
+     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy löscht
+     document.referrer, und ein fest verdrahtetes docs.getgrist.com wäre dann
      doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
-     Host bekaeme einen Request aus dem Dokument. Lieber nichts laden und es
+     Host bekäme einen Request aus dem Dokument. Lieber nichts laden und es
      sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
                 : window.location.ancestorOrigins?.[0] || "";
@@ -487,7 +487,7 @@ if (window.self === window.top) {
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
     grist.ready({ requiredAccess: "full" });   // liest vier Tabellen
-    /* onRecords feuert nur bei Aenderungen an 'Einstellungen' -- eine neu
+    /* onRecords feuert nur bei Änderungen an 'Einstellungen' -- eine neu
        erfasste oder korrigierte Reise erreicht das Widget NICHT von selbst. */
     grist.onRecords(ausGrist);
     const knopf = document.getElementById("neu-laden");

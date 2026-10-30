@@ -63,17 +63,17 @@ Je Reise eine Zeile, darunter eine Übertragszeile mit den Summen.
 | Reisedatum | `Datum`, bei `Datum_bis` ≠ `Datum` als Spanne |
 | Beginn / Ende | `Beginn`, `Ende` |
 | Reiseweg | `s1Zeile(r)`, siehe unten |
-| drei Tagegeld-Spalten | Kreuz aus `Tagegeld_Stufe`; `anteilig` als `(X)` in „mehr als 8 Stunden" |
+| drei Tagegeld-Spalten | Kreuz aus `Tagegeld_Stufe`; `anteilig` als `(X)` in „mehr als 8 Stunden“ |
 | Verpflegung | `Verpflegung`, leer → `Nein` |
 | ÖPNV, km, Mitnahme, Übernachtung, Nebenkosten | `OePNV`, `KM_dienstlich`, `Mitnahme_Personen`, `Uebernachtung`, `Nebenkosten` |
 
 **Statement:**
 - `kreuz(stufe, s)` – setzt `X` in genau die Spalte, deren Name der Stufe entspricht
-- `kreuz8h(stufe)` – wie `kreuz` für `>8h`, zusätzlich `(X)` bei `anteilig`: der amtliche Vordruck hat keine eigene Spalte „Tagegeld anteilig"
-- `eur(n)` / `zahl(n)` – geben bei `0` einen **Leerstring** aus, nicht „0,00"; negative Werte erscheinen mit Minus — blieben sie leer, gingen sie trotzdem in die Summe ein, und der Übertrag passte nicht zu den sichtbaren Zeilen
+- `kreuz8h(stufe)` – wie `kreuz` für `>8h`, zusätzlich `(X)` bei `anteilig`: der amtliche Vordruck hat keine eigene Spalte „Tagegeld anteilig“
+- `eur(n)` / `zahl(n)` – geben bei `0` einen **Leerstring** aus, nicht „0,00“; negative Werte erscheinen mit Minus — blieben sie leer, gingen sie trotzdem in die Summe ein, und der Übertrag passte nicht zu den sichtbaren Zeilen
 - die Übertragszeile summiert dieselben fünf Felder über alle gedruckten Zeilen
 
-### Spalte „Reiseweg"
+### Spalte „Reiseweg“
 
 Der amtliche Vordruck verlangt hier nur die laufende Nummer, **wenn ein
 Fahrtenbuch geführt wird** — genau das steht im Spaltenkopf. Da diese
@@ -115,7 +115,7 @@ Fahrtenbuch druckt sie ebenso (`f.kmDienstlich ?? ""`).
 
 Läuft S1 über mehrere Seiten, wiederholt sich auf jeder Folgeseite der
 **Spaltenkopf** (Reisedatum bis Nebenkosten, mit der Zeile „Beginn / Ende /
-bitte ankreuzen / EUR …"): er steht im `<thead>` der Datentabelle. Titel und
+bitte ankreuzen / EUR …“): er steht im `<thead>` der Datentabelle. Titel und
 Antragsteller-Block stehen nur auf der ersten Seite, in einer eigenen Tabelle
 davor. Getrennt, weil Chrome einen so hohen `<thead>` nicht wiederholt: Titel,
 Antragsteller und Spaltenkopf zusammen messen rund 81 mm, Folgeseiten hätten
@@ -124,7 +124,7 @@ dann gar keinen Kopf.
 ## S2
 
 Vordruck; aus der Tabelle kommen nur die vier Felder aus `Einstellungen`
-(siehe unten). Der HTML-Block wird nicht von Hand gepflegt, sondern aus dem XLSX-Blatt „S2" erzeugt:
+(siehe unten). Der HTML-Block wird nicht von Hand gepflegt, sondern aus dem XLSX-Blatt „S2“ erzeugt:
 
 ```
 python3 grist/s2_aus_vorlage.py > /tmp/s2.html
@@ -142,12 +142,12 @@ nachgebaut. Das Skript bricht ab, wenn
 
 Übernommen wird auch die Formatierung **innerhalb** einer Zelle: In der
 Vorlage sind oft nur Teile unterstrichen oder fett (die Leerstelle nach
-„1. KK anweisen,", das Buchungsjahr, „z. d. A.", die fetten Ziffern „1.",
-„2.", „3."). Das Skript liest die Vorlage deshalb als Rich Text; sonst
+„1. KK anweisen,“, das Buchungsjahr, „z. d. A.“, die fetten Ziffern „1.“,
+„2.“, „3.“). Das Skript liest die Vorlage deshalb als Rich Text; sonst
 fehlten diese Linien im Ausdruck.
 
-Die Unterschriftslinien über „(Datum)" und „(Unterschrift,
-Dienstbezeichnung)" sind in der Vorlage **gezeichnete Linien**, keine
+Die Unterschriftslinien über „(Datum)“ und „(Unterschrift,
+Dienstbezeichnung)“ sind in der Vorlage **gezeichnete Linien**, keine
 Zellrahmen. openpyxl liest Zeichnungen nicht ein; das Skript holt sie deshalb
 direkt aus dem Zeichnungsteil der XLSX und setzt sie als absolut positionierte
 Linie in die Zelle, in der sie beginnen. Andere Formen als waagrechte Linien
@@ -252,7 +252,7 @@ const fbZeit = r => !r.Lfd_Nr ? "" :
 
 **Ergebnis:** `DSt 1:00 | DO 0:30` — Aufenthalt in Dienststätte und am
 Dienstort, beide immer, auch mit 0:00. Die volle Aufschlüsselung (Ges., Rest,
-privater Abzug) steht in der [S1-Spalte „Reiseweg"](#spalte-reiseweg) und in
+privater Abzug) steht in der [S1-Spalte „Reiseweg“](#spalte-reiseweg) und in
 der Prüfliste.
 **Sonderfall:** Einzeilig in der normalen Schrift (8 pt), ohne Umbruch: eine
 zweite Zeile würde die Zeile höher machen als ihr Gegenstück auf der linken
@@ -261,7 +261,7 @@ passten nur zweizeilig in 5,6 pt hinein — zu klein zum Lesen.
 
 ## Prüfliste (Zeiterfassungsstelle)
 
-Eigenes Widget, [`ausgabe/pruefliste.html`](../ausgabe/pruefliste.html ':ignore') --
+Eigenes Widget, [`ausgabe/pruefliste.html`](../ausgabe/pruefliste.html ':ignore') —
 **ohne Vorbild in der Sheets-Umsetzung.** Dort muss die Stelle, die den Antrag
 final bearbeitet, zwischen S1, Vermerken, Ortsverzeichnis, Fahrtenbuch und
 GoogleMapsExport hin- und herblättern, um eine Reise vollständig zu beurteilen.
@@ -304,18 +304,18 @@ gegen 271,6mm, und dass der Knopf über ein eigenes Fenster druckt statt über
 `window.print()`.
 
 **Statement:**
-- Spaltenbegriffe absichtlich aus S1 übernommen („Tagegeld für",
-  „Unentgeltliche Verpflegung", „Wegstrecke", „Mitnahme von Personen") --
+- Spaltenbegriffe absichtlich aus S1 übernommen („Tagegeld für“,
+  „Unentgeltliche Verpflegung“, „Wegstrecke“, „Mitnahme von Personen“) —
   die Stelle soll die gewohnte Ansicht wiedererkennen, nicht eine neue lernen
 - die Tagegeldzeiten stehen als **eigene Spalten**, nicht als Textzeile wie in
-  der [S1-Spalte „Reiseweg"](#spalte-reiseweg) -- einzeln prüfbar statt nur lesbar
+  der [S1-Spalte „Reiseweg“](#spalte-reiseweg) — einzeln prüfbar statt nur lesbar
 - Route-Zelle: kein `html\`…\`` (ein eingebettetes `<a>` würde escaped);
   der Link steht erst als `data-link` (läuft durch `esc()`) und wird danach
   per DOM-API (`a.href = …`) zum `<a>`. Leerer `Maps_Link` (unter zwei Orten
   oder Ort ohne Anschrift) → Zelle ohne Link, kein Fehler
 
 **Sonderfall:** Die Sortierlogik der Orte-Legende steht in **zwei** Dateien
-(`pruefliste.html` und `ausdruck.html`) -- die Widgets sind bewusst
+(`pruefliste.html` und `ausdruck.html`) — die Widgets sind bewusst
 eigenständige Einzeldateien ohne gemeinsames Modul. Gegen ein Auseinanderlaufen
 prüft [`test_pruefliste.mjs`](../tests/test_pruefliste.mjs) beide Blätter auf
 dieselbe Liste; der Wächter wurde mit einer absichtlich gebrochenen Sortierung

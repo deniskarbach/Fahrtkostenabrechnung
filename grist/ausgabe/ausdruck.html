@@ -765,7 +765,7 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g,
 const html = (t, ...v) => t.reduce((a, s, i) => a + esc(v[i - 1]) + s);
 
 /* Meldungen gehen in die Druckleiste, nicht in den <body>: ein ersetzter Body
-   nimmt die Tabellen mit, und der naechste onRecords-Lauf findet seine Zellen
+   nimmt die Tabellen mit, und der nächste onRecords-Lauf findet seine Zellen
    dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
 const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
 const hinweis = t => { document.getElementById("hinweis").textContent = t; };
@@ -778,7 +778,7 @@ const hinweis = t => { document.getElementById("hinweis").textContent = t; };
    Top-Level-Dokument sind und @page in jedem Fall gilt. pruefliste.html
    druckt auf demselben Weg.
 
-   Mitgenommen werden alle .dok-*-Huellen, nicht nur die .blatt darin --
+   Mitgenommen werden alle .dok-*-Hüllen, nicht nur die .blatt darin --
    das CSS ist je Dokument unter .dok-XXX gekapselt und griffe sonst nicht. */
 function drucken() {
   const w = window.open("", "_blank");
@@ -937,9 +937,9 @@ async function ausGrist() {
   }
   hinweis(HINWEIS_STANDARD);
   const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
-  /* Massgeblich ist der BEGINN der Reise, nicht ihr Ende: eine mehrtaegige
+  /* Maßgeblich ist der BEGINN der Reise, nicht ihr Ende: eine mehrtägige
      Reise, die vor `von` beginnt und in den Zeitraum hineinreicht, wurde mit
-     der frueheren Abrechnung bereits erledigt. Sie hier noch einmal zu zeigen
+     der früheren Abrechnung bereits erledigt. Sie hier noch einmal zu zeigen
      hiesse, sie ein zweites Mal abzurechnen -- das ist Absicht, kein Fehler. */
   const imZeitraum = d => d != null && (von == null || d >= von) && (bis == null || d <= bis);
 
@@ -1036,10 +1036,10 @@ if (window.self === window.top) {
 } else {
   /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
      Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
-     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy loescht
-     document.referrer, und ein fest verdrahtetes docs.getgrist.com waere dann
+     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy löscht
+     document.referrer, und ein fest verdrahtetes docs.getgrist.com wäre dann
      doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
-     Host bekaeme einen Request aus dem Dokument. Lieber nichts laden und es
+     Host bekäme einen Request aus dem Dokument. Lieber nichts laden und es
      sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
                 : window.location.ancestorOrigins?.[0] || "";
@@ -1052,8 +1052,8 @@ if (window.self === window.top) {
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
     grist.ready({ requiredAccess: "full" });   // liest Einstellungen, Stammziele, Reisen
-    /* onRecords feuert beim Aufbau und danach nur bei Aenderungen an der
-       Tabelle, an der das Widget haengt -- das ist 'Einstellungen', also
+    /* onRecords feuert beim Aufbau und danach nur bei Änderungen an der
+       Tabelle, an der das Widget hängt -- das ist 'Einstellungen', also
        praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder
        korrigierte Reise erreicht das Widget NICHT.
        ponytail: sichtbarer Knopf statt Polling -- die Plugin-API kennt

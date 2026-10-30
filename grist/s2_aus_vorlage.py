@@ -336,8 +336,8 @@ for r in range(1, WS.max_row + 1):
             if a.wrapText:
                 stil.append("white-space:normal")
             else:
-                # Excel laesst Text in leere Nachbarzellen ueberlaufen und kappt
-                # ihn erst an der naechsten belegten Zelle -- genau das hier.
+                # Excel lässt Text in leere Nachbarzellen überlaufen und kappt
+                # ihn erst an der nächsten belegten Zelle -- genau das hier.
                 # Nachbar laut Vorlage, nicht nach dem Verbinden oben: sonst
                 # griffe hidden auch senkrecht und schnitte z.B. die 14pt-
                 # Unterstriche bei "Abteilung" unten ab.

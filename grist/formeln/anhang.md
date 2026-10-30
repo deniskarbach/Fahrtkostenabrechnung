@@ -28,7 +28,7 @@ vollständig auf, gibt es **keine** Stufe, nicht die kleinste.
 
 | Größe | Bedeutung |
 |---|---|
-| 481 Minuten | 8:01 h — die Schwelle „mehr als 8 Stunden" |
+| 481 Minuten | 8:01 h — die Schwelle „mehr als 8 Stunden“ |
 | 840 Minuten | 14 h |
 | 1440 Minuten | 24 h, zugleich ein voller Kalendertag |
 
@@ -56,9 +56,10 @@ Beim Ändern:
 
 Anders als in der Google-Sheets-Umsetzung verschiebt eine neue Formularfrage
 **nichts**: Grist-Formeln greifen über die Spalten-ID (`$KM_Ende`), nicht über
-die Spaltenposition. Es gibt deshalb kein Gegenstück zu „Muster D —
-Zeilengrenzen" und keine Bezüge, die nach einer Formularänderung zu prüfen
-wären.
+die Spaltenposition. Es gibt deshalb kein Gegenstück zum Sheets-Muster
+„D – Zeilengrenzen“ und keine Bezüge, die nach einer Formularänderung zu
+prüfen wären. (Muster D dieser Dokumentation ist die Untergrenze, siehe
+[Formeln](README.md#muster-d--untergrenze-statt-negativwert).)
 
 Was zu tun bleibt:
 

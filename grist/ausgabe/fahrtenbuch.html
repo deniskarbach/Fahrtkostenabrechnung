@@ -281,7 +281,7 @@ const zeilen = t => t.id.map((_, i) =>
   Object.fromEntries(Object.keys(t).map(k => [k, t[k][i]])));
 
 /* Meldungen gehen in die Druckleiste, nicht in den <body>: ein ersetzter Body
-   nimmt die Tabellen mit, und der naechste onRecords-Lauf findet seine Zellen
+   nimmt die Tabellen mit, und der nächste onRecords-Lauf findet seine Zellen
    dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
 const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
 const hinweis = t => { document.getElementById("hinweis").textContent = t; };
@@ -295,8 +295,8 @@ async function ausGrist() {
   }
   const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
 
-  /* Gefiltert wird ueber den Reisebeginn -- siehe ausdruck.html: eine Reise,
-     die vor `von` beginnt, gehoert in die vorige Abrechnung. */
+  /* Gefiltert wird über den Reisebeginn -- siehe ausdruck.html: eine Reise,
+     die vor `von` beginnt, gehört in die vorige Abrechnung. */
   const fahrten = zeilen(await grist.docApi.fetchTable("Reisen"))
     .filter(r => r.Datum != null
                  && (von == null || r.Datum >= von)
@@ -326,10 +326,10 @@ if (window.self === window.top) {
 } else {
   /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
      Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
-     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy loescht
-     document.referrer, und ein fest verdrahtetes docs.getgrist.com waere dann
+     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy löscht
+     document.referrer, und ein fest verdrahtetes docs.getgrist.com wäre dann
      doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
-     Host bekaeme einen Request aus dem Dokument. Lieber nichts laden und es
+     Host bekäme einen Request aus dem Dokument. Lieber nichts laden und es
      sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
                 : window.location.ancestorOrigins?.[0] || "";
@@ -342,8 +342,8 @@ if (window.self === window.top) {
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
     grist.ready({ requiredAccess: "full" });
-    /* onRecords feuert beim Aufbau und danach nur bei Aenderungen an der
-       Tabelle, an der das Widget haengt -- das ist 'Einstellungen', also
+    /* onRecords feuert beim Aufbau und danach nur bei Änderungen an der
+       Tabelle, an der das Widget hängt -- das ist 'Einstellungen', also
        praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder
        korrigierte Reise erreicht das Widget NICHT.
        ponytail: sichtbarer Knopf statt Polling -- die Plugin-API kennt
