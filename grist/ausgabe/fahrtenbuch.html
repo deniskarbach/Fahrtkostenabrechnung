@@ -26,7 +26,7 @@
   --rahmen: 0.4pt solid #000;
   --rahmen-breit: 1.4pt solid #000;   /* "medium" der Vorlage */
   --schrift: 8pt;
-  --schrift-kopf: 7pt;
+  --schrift-kopf: 7.5pt;
   --h-daten: 6.35mm;
   --polster-x: 0.8mm;
 }
@@ -62,12 +62,18 @@ th, td { border: var(--rahmen); padding: .4mm var(--polster-x); overflow: hidden
 /* Kopf normal, nicht fett; umbrochen wird nur, wo das Original umbricht
    (&#10; im Text) -- pre statt pre-line, sonst bricht der Browser selbst. */
 thead th { font-weight: normal; font-size: var(--schrift-kopf); text-align: center;
-           vertical-align: top; white-space: pre; line-height: 1.1;
+           vertical-align: top; white-space: pre; line-height: 1.05;
            padding-top: 0; padding-bottom: 0; }
 /* Kopfhöhen wie die Vorlage (18 / 17,25 / 11,25pt), auf beiden Seiten gleich,
-   damit auch der Kopf beim Kleben deckt. Kein senkrechtes Polster: zweizeilige
-   Köpfe ("Beginn / der Reise", "Stand des Kilometerzählers bei") brauchten
-   sonst 6,48mm und drückten die Kopfzeilen auf Seite 2 höher. */
+   damit auch der Kopf beim Kleben deckt. Rand oben (Zeile 1) bzw. unten
+   (Zeile 2) wie im Original. Knappster Fall sind zweizeilige Köpfe in Zeile 2
+   ("Beginn / der Reise"): 2 x 7,5pt x 1,05 + 0,4mm = 5,96mm von 6,09mm. Mehr
+   Schrift, Zeilenabstand oder Rand macht die Zeile höher, und die Seiten
+   decken sich beim Kleben nicht mehr. */
+thead .h1 { padding-top: .4mm; }
+thead .h2 { padding-bottom: .4mm; }
+/* Reisezweck ohne Rand: vier Zeilen (mit zwei Leerzeilen) füllen den Kopf. */
+thead .zweck { padding-top: 0; }
 thead .h1 { height: 6.35mm; }
 thead .h2 { height: 6.09mm; }
 thead .h3 { height: 3.97mm; vertical-align: middle; border-bottom: var(--rahmen-breit); }
@@ -79,7 +85,7 @@ thead .gruppe { border-bottom-style: hidden; }
    Wie im Original ragt der Text nach oben in die Gruppenzeile, die dort keine
    Trennlinie hat -- ohne die Zeile höher zu machen als auf Seite 1. */
 thead .hoch { position: relative; overflow: visible; }
-thead .hoch span { position: absolute; left: 0; right: 0; bottom: 0; }
+thead .hoch span { position: absolute; left: 0; right: 0; bottom: .4mm; }
 
 tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
 /* Reiseweg zweizeilig in fester Zeilenhöhe: 2 x 7pt = 4,9mm passen in 6,35mm,
@@ -165,7 +171,7 @@ function kopfSeite1() {
         <th class="h1" rowspan="2">Monat</th>
         <th class="h1" rowspan="2">Tag</th>
         <th class="h1 gruppe" colspan="2">Dauer der Reise</th>
-        <th class="h1" rowspan="2">Reiseweg (Umwege sind zu begründen)&#10;&#10;&#10;Kurze Angabe des Reisezweckes</th>
+        <th class="h1 zweck" rowspan="2">Reiseweg (Umwege sind zu begründen)&#10;&#10;&#10;Kurze Angabe des Reisezweckes</th>
       </tr>
       <tr>
         <th class="h2">von</th>
