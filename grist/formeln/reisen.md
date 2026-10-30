@@ -51,7 +51,7 @@ return [r.id for r in alle].index($id) + 1
 ```
 
 Fortlaufende Nummer je Kalenderjahr, nach Datum sortiert, bei gleichem Datum
-in der Reihenfolge der Erfassung ([Muster E](README.md#muster-e--rang-im-kalenderjahr)).
+in der Reihenfolge der Erfassung ([Rang im Kalenderjahr](README.md#muster-rang-im-kalenderjahr)).
 Ohne Datum gibt es keine Nummer. Wird eine ältere Reise nachgetragen,
 verschieben sich die Nummern danach — die Nummer ist eine Position, keine
 Belegnummer. Steht auf S1 (Spalte „Reiseweg“) und im Fahrtenbuch (Spalte 1).
@@ -162,9 +162,9 @@ E26-07: Café Mokka, Bahnhofstr. 7, 12345 Musterstadt
 ```
 
 Das Kürzel zählt laufend über alle Einzelziele des Kalenderjahres
-([Muster E](README.md#muster-e--rang-im-kalenderjahr)). Ein Freitext zählt
+([Rang im Kalenderjahr](README.md#muster-rang-im-kalenderjahr)). Ein Freitext zählt
 auch dann, wenn im selben Ortsfeld eine Auswahl steht
-([Muster B](README.md#muster-b--was-eingetragen-ist-zählt)). Zeilenumbrüche
+([was eingetragen ist, zählt](README.md#muster-was-eingetragen-ist-zählt)). Zeilenumbrüche
 werden zu Kommas, ein Feld nur mit Leerzeichen zählt nicht. Der Text wird
 nicht geprüft: Ob die Anschrift vollständig ist, sieht die Person im
 Ortsverzeichnis.
@@ -189,7 +189,7 @@ return " > ".join(x for x in teile if x)
 Die angefahrenen Orte als Kette, z. B. `WO > KV > E26-07 > WO`: für eine
 Auswahl das Kürzel des Stammziels, für einen Freitext das Kürzel aus
 `Einzelziele`. Sind beide Felder eines Orts gefüllt, sind es zwei Stopps
-([Muster B](README.md#muster-b--was-eingetragen-ist-zählt)); leere Felder
+([was eingetragen ist, zählt](README.md#muster-was-eingetragen-ist-zählt)); leere Felder
 fallen heraus. Steht im Fahrtenbuch (Spalte 6) und in der Prüfliste,
 aufgelöst werden die Kürzel im Ortsverzeichnis.
 
@@ -237,5 +237,5 @@ return "V%s-%02d" % ($Datum.strftime("%y"), n)
 
 Die Kennung `V26-01` für jede Reise mit Vermerk, laufend je Kalenderjahr und
 nur über Reisen mit Vermerk gezählt
-([Muster E](README.md#muster-e--rang-im-kalenderjahr)). Ohne Vermerk bleibt
+([Rang im Kalenderjahr](README.md#muster-rang-im-kalenderjahr)). Ohne Vermerk bleibt
 die Zelle leer. Steht auf dem Vermerke-Blatt und im Fahrtenbuch (Spalte 15).

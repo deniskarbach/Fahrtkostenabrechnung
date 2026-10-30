@@ -8,7 +8,7 @@
     - [Stammziele](grist/formeln/stammziele.md)
     - [Reisen](grist/formeln/reisen.md)
     - [Ausgabe](grist/formeln/ausgabe.md)
-    - [Einrichtung (setup.py)](grist/formeln/setup.md)
+    - [Einrichtung und Technik](grist/formeln/setup.md)
     - [Anhang](grist/formeln/anhang.md)
 
 - **Google Sheets** (frühere Umsetzung)

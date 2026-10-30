@@ -2,93 +2,40 @@
 
 # Einstellungen
 
-Genau eine Zeile, im Editor als Karte dargestellt. Bis auf `Korrektur_Reisen`
-keine Formeln — reine Eingabetabelle. Sie speist die Kopfzeile jedes Ausdrucks und bestimmt über den
-Abrechnungszeitraum, welche Reisen ausgegeben werden.
-
-Dies ist die **einzige** Stelle, an der persönliche Daten erfasst werden.
+Genau eine Zeile, als Karte dargestellt — die **einzige** Stelle mit
+persönlichen Daten. Sie liefert den Kopf jedes Ausdrucks und den
+Abrechnungszeitraum.
 
 | Spalte | Beschriftung | Typ | Wofür |
 |---|---|---|---|
-| `Vorname` | Vorname | Text | Kopfzeile, zusammen mit `Name` und `Organisationseinheit` |
-| `Name` | Name | Text | " |
-| `Organisationseinheit` | Organisationseinheit | Text | " |
-| `Wohnort_Strasse` | Wohnort – Straße und Nr. | Text | Kopffeld „Wohnort“ |
-| `Wohnort_PLZ` | Wohnort – PLZ | Text | " |
-| `Wohnort_Ort` | Wohnort – Ort | Text | " |
-| `Dienstort_Strasse` | Dienstort – Straße und Nr. | Text | Kopffeld „Dienstort“ |
-| `Dienstort_PLZ` | Dienstort – PLZ | Text | " |
-| `Dienstort_Ort` | Dienstort – Ort | Text | " |
-| `Abteilung` | Abteilung (S2) | Text | S2, Verfügungsteil „Abteilung:“ — leer bleibt die Linie |
-| `Buchungsstelle` | Buchungsstelle (S2, nach „€ bei:“) | Text | S2, Zeile „1. KK anweisen, … € bei:“ — leer bleibt die Linie |
-| `Behoerde_Ort` | Behörde – Ort (S2, vor dem Datum) | Text | S2, „Ort, Datum“ im Verfügungsteil — leer bleibt die Linie |
-| `Behoerde` | Behörde – Name (S2, unter „3. z. d. A.“) | Text | S2, Zeile unter „3. z. d. A.“ — leer bleibt die Linie |
-| `Zeitraum_von` | Abrechnungszeitraum von | Date | Filter aller Ausgabeblätter |
-| `Zeitraum_bis` | Abrechnungszeitraum bis | Date | " |
-| `Korrektur_Jahr` | Jahr | Int | Seite `Reisekorrektur`: filtert die Liste der Reisen, leer = laufendes Jahr |
-| `Korrektur_Monat` | Monat | Choice | " — leer = ganzes Jahr |
-| `Korrektur_Reisen` | Reisen in Jahr/Monat | RefList:Reisen | **Formel**: die Reisen des gewählten Zeitraums, speist die Liste |
+| `Vorname`, `Name`, `Organisationseinheit` | Vorname, Name, Organisationseinheit | Text | Kopf: Antragsteller/in |
+| `Wohnort_Strasse`, `_PLZ`, `_Ort` | Wohnort – Straße und Hausnummer, PLZ, Ort | Text | Kopf: Wohnort |
+| `Dienstort_Strasse`, `_PLZ`, `_Ort` | Dienstort – Straße und Hausnummer, PLZ, Ort | Text | Kopf: Dienstort |
+| `Abteilung` | Abteilung (S2) | Text | S2, Verfügungsteil |
+| `Buchungsstelle` | Buchungsstelle (S2, nach „€ bei:“) | Text | S2, Zeile „1. KK anweisen, … € bei:“ |
+| `Behoerde_Ort` | Behörde – Ort (S2, vor dem Datum) | Text | S2, „Ort, Datum“ |
+| `Behoerde` | Behörde – Name (S2, unter „3. z. d. A.“) | Text | S2, unter „3. z. d. A.“ |
+| `Zeitraum_von`, `Zeitraum_bis` | Abrechnungszeitraum von / bis | Date | welche Reisen ausgegeben werden |
+| `Korrektur_Jahr`, `Korrektur_Monat` | Jahr, Monat | Int, Choice | Seite `Reisekorrektur`: filtert die Liste der Reisen |
+| `Korrektur_Reisen` | Reisen in Jahr/Monat | RefList:Reisen | **Formel**, speist diese Liste |
 
-## Kopfzeile des Ausdrucks
+Im Kopf steht die Person als `Name Vorname, Organisationseinheit`
+(`Musterfrau Erika, Referat 42`), jede Anschrift als `Straße, PLZ Ort`. Leere
+Felder fallen samt Trennzeichen weg. Bleibt ein S2-Feld leer, steht dort die
+Linie zum Ausfüllen von Hand.
 
-Die Zusammensetzung passiert nicht in einer Formelspalte, sondern im
-Ausgabe-Widget:
+Der Abrechnungszeitraum wird nur auf der Seite `Ausdruck` gesetzt, dort, wo
+gedruckt wird. Wie er filtert: [Ausgabe → Zeitraum](ausgabe.md#zeitraum).
 
-```js
-antragsteller: [[e.Name, e.Vorname].filter(Boolean).join(" "),
-                e.Organisationseinheit].filter(Boolean).join(", ")
+## Korrektur_Reisen
+
+```python
+jahr = $Korrektur_Jahr or TODAY().year
+monat = ["Januar", …, "Dezember"].index($Korrektur_Monat) + 1 if $Korrektur_Monat else None
+return [r for r in Reisen.all if r.Datum and r.Datum.year == jahr
+        and (monat is None or r.Datum.month == monat)]
 ```
 
-**Statement:**
-- `[e.Name, e.Vorname]` – Nachname zuerst, dann Vorname
-- `.filter(Boolean)` – leere Felder fallen heraus, statt doppelte Trenner zu erzeugen
-- `.join(" ")` / `.join(", ")` – Name mit Leerzeichen, Organisationseinheit mit Komma
-
-**Ergebnis:** `Musterfrau Erika, Referat 42`
-**Sonderfall:** Fehlt die Organisationseinheit, endet die Zeile nach dem Namen —
-ohne hängendes Komma.
-
-Wohn- und Dienstanschrift werden nach demselben Schema gesetzt:
-
-```js
-const anschrift = (strasse, plz, ort) =>
-  [strasse, [plz, ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
-```
-
-**Ergebnis:** `Beispielweg 7, 00000 Musterstadt`
-**Sonderfall:** Fehlt die PLZ, steht nur der Ort; fehlt die Straße, entfällt
-auch das Komma.
-
-## Abrechnungszeitraum
-
-`Zeitraum_von` und `Zeitraum_bis` sind die einzigen Felder, die **pro
-Abrechnung** angefasst werden. Sie stehen deshalb nur als Karte oben auf der
-Seite `Ausdruck` — dort, wo gedruckt wird — und nicht in der Karte auf
-`Einstellungen`.
-
-Die Filterung selbst steht im Widget:
-
-```js
-const imZeitraum = d => d != null
-  && (von == null || d >= von) && (bis == null || d <= bis);
-```
-
-**Statement:**
-- `d != null` – Zeilen ohne Datum fallen immer heraus
-- `von == null || …` – ein nicht gesetztes Zeitraumende begrenzt nicht
-
-**Ergebnis:** Wahr, wenn das Datum im Zeitraum liegt.
-**Sonderfall:** Eine offene Grenze begrenzt nicht. Ist der Zeitraum gar nicht
-gesetzt, erscheinen **alle** Reisen — vor dem Drucken also prüfen, dass beide
-Felder gefüllt sind.
-
-> **Mehrtägige Reisen:** Maßgeblich ist der **Reisebeginn** (`Datum`), nicht das
-> Ende. Eine Reise, die vor `Zeitraum_von` beginnt und hineinreicht, wurde mit
-> der früheren Abrechnung bereits erledigt; sie erneut auszugeben hieße, sie ein
-> zweites Mal abzurechnen.
-
-## Keine Kontoverbindung
-
-IBAN und BIC werden bewusst **nicht** erfasst. Die Kontoverbindung liegt
-bereits in der Bezügeabrechnung. Im S2-Vordruck bleiben beide Kästen als
-Vordruck stehen und werden bei Bedarf von Hand ausgefüllt.
+Die Reisen des gewählten Jahres und Monats für die Liste auf der Seite
+`Reisekorrektur`. Ohne Jahr gilt das laufende, ohne Monat das ganze Jahr. Wirkt
+nur auf diese Liste, nicht auf den Ausdruck.

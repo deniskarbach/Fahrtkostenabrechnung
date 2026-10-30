@@ -1,145 +1,187 @@
 [← Formeln-Übersicht](README.md)
 
-# Einrichtung (setup.py)
+# Einrichtung und Technik
 
-[`setup.py`](../setup.py) legt das Datenmodell in einem Grist-Dokument an:
-Tabellen, Spalten, Formeln, Seiten, Widgets. Das Skript ist die Quelle der
-Formeln — nicht der Editor.
+Für die Betreuung: wie das Grist-Dokument entsteht, wie die Widgets arbeiten,
+wie getestet wird. Wer abrechnet oder prüft, braucht diese Seite nicht.
+
+## Einrichten
 
 ```
-cp grist/.env.beispiel grist/.env   # dort die drei Werte eintragen
+cp grist/.env.beispiel grist/.env   # GRIST_URL, GRIST_API_KEY, GRIST_DOC_ID eintragen
 python3 grist/setup.py
 ```
 
-Läuft vollständig lokal, nur Standardbibliothek. Zugangsdaten stehen **nie** im
-Quelltext: entweder in der Umgebung oder in `grist/.env`, beides außerhalb der
-Versionierung.
+Nur Standardbibliothek. Zugangsdaten stehen nie im Quelltext, sondern in der
+Umgebung oder in `grist/.env` (nicht versioniert). [`setup.py`](../setup.py)
+ist die Quelle aller Formeln, nicht der Editor.
 
-```
-python3 grist/setup.py --selbsttest   # prüft die Formeln ohne Grist
-```
+Ein Lauf:
 
-## Was ein Lauf tut, in dieser Reihenfolge
+- **Datenmodell:** legt fehlende Tabellen und Spalten an, zieht Beschriftungen
+  nach und setzt alle Rechenformeln auf den Stand des Codes.
+- **Ältere Dokumente:** benennt `Orte` in `Stammziele` um und entfernt
+  Altlasten (Tabelle `Einzelziele`, `Ort_*_Sync`, `Anschrift_*`,
+  `Tacho_Fotos` — **vorhandene Tachofotos gehen dabei verloren**).
+- **Spalten:** setzt jede `_Text`-Spalte hinter ihre Auswahl, lässt die
+  Ortsauswahl das Kürzel zeigen, blendet Zwischenwerte aus.
+- **Pflichtdaten:** legt eine leere `Einstellungen`-Zeile und die Stammziele
+  `WO`/`KV` (ohne Adresse) an, falls sie fehlen.
+- **Seiten:** Einstellungen als Karte, `Ausdruck` (Zeitraum oben, zwei
+  Druck-Widgets darunter), `Prüfliste`, `Reisekorrektur` und `Stammziele`
+  (links Liste, rechts Karte); entfernt die Seite `Reisen` und eine leere
+  `Table1`; ordnet die Seitenliste nach `SEITEN_REIHENFOLGE`.
+- **Texte:** setzt Titel und Info-Text jedes Widgets aus `WIDGET_TEXTE` —
+  Änderungen im Editor werden dabei überschrieben.
+- **Meldungen:** nennt Stammziele ohne Adresse und Formelspalten mit Fehlern.
 
-| Schritt | Wirkung |
-|---|---|
-| `tabellen_umbenennen` | ältere Dokumente: `Orte` per `RenameTable` in `Stammziele` umbenennen |
-| `anlegen` je Tabelle | fehlende Tabellen und Spalten ergänzen, Beschriftungen nachziehen |
-| `formeln_angleichen` | Rechenspalten auf den Stand des Codes bringen |
-| `altlasten_entfernen` | ältere Dokumente: Tabelle `Einzelziele` (früher `Adressen`), die sieben `Ort_*_Sync` und `Anschrift_Warnung`/`Anschrift_Hinweis` entfernen — alles reine Formeln, es geht nichts verloren. Außerdem `Tacho_Fotos` (Datenminimierung, GPS in EXIF) — **die vorhandenen Fotos gehen dabei mit** |
-| `reihenfolge_ordnen` | jede `_Text`-Spalte direkt hinter ihre Auswahlspalte setzen |
-| `ort_anzeige_setzen` | die Ort-Auswahlspalten zeigen das **Kürzel** statt der Zeilennummer |
-| `hilfsspalten_ausblenden` | Zwischenwerte aus den Tabellenansichten nehmen |
-| leere `Einstellungen`-Zeile | anlegen, falls die Tabelle leer ist |
-| `feste_orte_anlegen` | `WO` und `KV` als Pflichtzeilen in `Stammziele` (ohne Adresse) |
-| `einstellungen_karte` | Tabellenansicht der Einstellungen durch ein Card-Widget ersetzen |
-| `zeitraum_widget` | Seite `Ausdruck` anlegen (falls nötig) und die Zeitraum-Karte darauf |
-| `ausgabe_widgets` | die beiden Custom-Widgets mit ihren URLs abgleichen |
-| `ausdruck_layout` | Zeitraum oben, die beiden Druck-Widgets nebeneinander darunter |
-| `reisekorrektur_seite` | Seite `Reisekorrektur` anlegen (falls ohne Liste): oben Karte mit `Einstellungen.Korrektur_Jahr`/`Korrektur_Monat`, darunter links (⅕) die Reisen dieses Zeitraums über `Korrektur_Reisen`, neueste oben, rechts (⅘) die Karte der gewählten Reise mit den Formularfeldern |
-| `seiten_entfernen` | Seite `Reisen` entfernen; die Tabelle bleibt unter Raw Data, bearbeitet wird auf `Reisekorrektur` |
-| `layouts_aufraeumen` | Layout-Knoten entfernen, die auf fremde Sections zeigen |
-| `auswahl_seiten` | Stammziele: links Liste nur mit Kürzel (⅕), rechts verknüpfte Karte (⅘). Nur wenn noch keine verknüpfte Karte da ist |
-| `table1_entfernen` | die leere Standardtabelle `Table1` eines neuen Dokuments entfernen |
-| `seiten_ordnen` | Seitenliste nach `SEITEN_REIHENFOLGE` (Häufigkeit): Ausdruck, Reisekorrektur, Stammziele, Prüfliste, Einstellungen, Formularverwaltung |
-| `widget_texte_setzen` | Titel und Info-Text an jedem Widget aus `WIDGET_TEXTE` setzen (überschreibt Änderungen im Editor) |
+Danach von Hand in der Oberfläche:
 
-Danach bleiben zwei Handgriffe in der Oberfläche:
+1. Seite `Formularverwaltung` mit einem Formular-Widget auf `Reisen` anlegen
+   und ans Ende ziehen; das Layout setzt [`formular.py`](../formular.py).
+2. Formular veröffentlichen, dann **Duplicate Document** — das ist die Vorlage.
 
-1. Formular-Widget auf `Reisen` anlegen — das Layout setzt `formular.py`
-2. Formular veröffentlichen, dann **Duplicate Document** — das ist die Vorlage
+### Was ein erneuter Lauf anfasst
 
-## Was ein erneuter Lauf anfasst — und was nicht
-
-Das Skript ist wiederholbar. Es unterscheidet dabei bewusst:
-
-| | Verhalten bei einem erneuten Lauf |
+| | Verhalten |
 |---|---|
 | Fehlende Tabellen, Spalten, Widgets | werden ergänzt |
-| **Rechenformeln** (`isFormula`) | werden auf den Stand des Codes **zurückgesetzt** |
-| Beschriftungen | werden nachgezogen, `colId` bleibt unverändert |
-| Spaltentyp, Daten | bleiben unangetastet |
-| Von Hand sortierte Seitenlayouts | bleiben, solange alle Widgets darin vorkommen |
-| Eingetragene Adressen in `Stammziele` | werden nie überschrieben |
+| Rechenformeln (`isFormula`) | werden auf den Stand des Codes **zurückgesetzt** — auch nach einem Snapshot-Restore |
+| Beschriftungen | werden nachgezogen, `colId` bleibt |
+| Spaltentyp, Daten, Adressen in `Stammziele` | bleiben |
+| Von Hand angeordnete Seitenlayouts | bleiben, solange alle Widgets darin vorkommen |
 
-Rechenspalten werden zurückgesetzt, weil sie nicht im Editor getunt werden —
-das fängt unter anderem ab, dass ein Snapshot-Restore `Reiseweg` oder
-`Maps_Link` auf eine ältere Fassung zieht.
+**Ausnahme:** `formular.py` baut die Layout-Spezifikation des Formulars
+**komplett neu**. Nur mit Ansage laufen lassen.
 
-> **Ausnahme:** [`formular.py`](../formular.py) überschreibt die
-> Layout-Spezifikation des Formulars **vollständig**. Nur mit Ansage laufen
-> lassen.
+## Formular ändern
+
+Grist-Formeln greifen über die Spalten-ID (`$KM_Ende`), nicht über die
+Position. Eine neue Frage verschiebt deshalb nichts.
+
+| Änderung | Schritt |
+|---|---|
+| Neues Eingabefeld | in die passende Spaltenliste in `setup.py`, Skript laufen lassen |
+| Feld umbenannt | nur `label` ändern — `colId` und Formeln bleiben |
+| Feld entfällt | Spalte im Editor löschen; sonst legt `setup.py` sie wieder an |
+| Formularlayout | `formular.py` |
+| Mehr Zwischenziele | `ZWISCHENZIELE` in `setup.py` erhöhen (heute 5), Skript laufen lassen; `ORT_SLOTS` in `ausdruck.html` und `pruefliste.html` von Hand mitziehen, sie stehen dort fest im Quelltext; dann `formular.py` |
+
+## Ausgabe-Widgets
+
+**Auslieferung:** Die Dateien in `ausgabe/` lädt Grist über GitHub Pages
+(`AUSGABE_BASIS_URL` in `setup.py`). Eine Änderung wirkt nach `git push`; im
+Grist-Tab danach hart neu laden. Umbenennen oder Verschieben ändert die
+Adresse: Der nächste Lauf legt das Widget neu an, das Seitenlayout geht
+verloren. Skripte, Tests und Doku gehören deshalb nicht in `ausgabe/`.
+
+**Ohne Grist:** Jede Datei lässt sich direkt im Browser öffnen und zeigt dann
+erfundene Beispieldaten — so wird das Layout geändert. Schriftgrößen,
+Abstände und Rahmen stehen als CSS-Variablen am Kopf, in `ausdruck.html` je
+Blatt unter einem eigenen Namensraum (`.dok-s1`, `.dok-s2` …).
+`fahrtenbuch-preview.html` zeigt das Fahrtenbuch als ganzes Querblatt und ist
+noch kein Widget.
+
+**Daten:** Die Widgets hängen an `Einstellungen` und lesen mit
+`requiredAccess: "full"` alle Tabellen. `grist.onRecords` feuert nur bei
+Änderungen an `Einstellungen` — praktisch beim Zeitraum. Eine neue oder
+korrigierte Reise kommt erst mit dem Knopf **Aktualisieren** an; die
+Plugin-API kennt keinen Haken auf fremde Tabellen. Datumswerte liefert Grist
+als Sekunden seit 1970, UTC-Mitternacht; angezeigt wird mit
+`timeZone: "UTC"`, sonst läge ein Datum westlich von Greenwich einen Tag
+daneben.
+
+**Plugin-API:** wird von der einbettenden Grist-Instanz geladen
+(`document.referrer`, ersatzweise `location.ancestorOrigins`), nicht von einer
+festen Adresse. So steht der Hostname nicht im öffentlichen Repo, und kein
+fremder Host bekommt Anfragen. Fehlen beide Quellen, lädt das Widget nichts und
+sagt es.
+
+**Escaping:** Zellen werden als HTML zusammengesetzt. Jeder Wert läuft durch
+`esc()`, über das Präfix `` html`…` `` vor dem Template-Literal; ohne Präfix
+kein Schutz. Vermerk, Freitext und Adressen kommen aus einem öffentlichen
+Formular. Links in der Prüfliste entstehen per DOM-API (`a.href = …`), nicht
+als HTML.
+
+**Drucken:** nie per `window.print()` im Widget. Im Grist-Iframe greifen die
+`@page`-Regeln nicht zuverlässig (Windows/Edge druckt dann hoch, die Ursache
+ist nicht abschließend geklärt). `drucken()` öffnet die fertigen Blätter in
+einem eigenen Fenster, wo `@page` immer gilt. Die Prüfliste ist 252 mm breit:
+Sie passt so auch bei den Standardrändern des Dialogs (271,6 mm nutzbar),
+falls jemand über Grists „Widget drucken“ geht. Der S1-Kopf ist zweigeteilt,
+weil Chrome einen `<thead>` von rund 81 mm Höhe nicht auf Folgeseiten
+wiederholt.
+
+**Doppelter Code:** Die Sortierung der Orte-Legende steht in `ausdruck.html`
+und `pruefliste.html` — die Widgets sind bewusst eigenständige Dateien.
+`test_pruefliste.mjs` prüft, dass beide dieselbe Liste liefern.
+
+## S2 erzeugen
+
+S2 wird nicht von Hand gepflegt, sondern aus dem Blatt „S2“ der lokalen
+Vorlage `ReisekostenabrechnungFINAL.xlsx` erzeugt (nicht versioniert):
+
+```
+python3 grist/s2_aus_vorlage.py > /tmp/s2.html
+```
+
+Die Ausgabe ersetzt in `ausdruck.html` den Block zwischen `<table class="s2">`
+und `</table>`. Übernommen werden Ränder, Füllungen, Schriften, Zeilenhöhen,
+Zellverbünde, Rich Text innerhalb von Zellen (Unterstreichungen, Fettdruck)
+und die gezeichneten Unterschriftslinien aus dem Zeichnungsteil der XLSX.
+
+Das Skript bricht ab, wenn eine behördenspezifische Zelle nicht mehr den
+erwarteten Inhalt hat (Fingerabdruck, damit nichts davon ins öffentliche Repo
+gerät), wenn S2 höher als ein A4-Blatt würde oder wenn die Vorlage andere
+Formen als waagrechte Linien enthält. Nach einem Vorlagenwechsel:
+`--fingerabdruecke`.
+
+Geschwärzt werden vier Zellen (`SCHWAERZEN`); das Widget füllt sie aus
+`Einstellungen`. Läuft das Repo später intern, entfallen die Schwärzung, die
+vier Spalten und der Füllblock: `SCHWAERZEN` leeren, S2 neu erzeugen.
 
 ## Ort-Anzeige
 
-Damit eine Ref-Spalte das Kürzel statt der Zeilennummer zeigt, reicht es nicht,
-`visibleCol` zu setzen. Grist hängt zusätzlich eine Hilfsspalte an die Spalte:
+Damit eine Ref-Spalte das Kürzel statt der Zeilennummer zeigt, braucht Grist
+neben `visibleCol` eine Hilfsspalte:
 
 ```python
 ["SetDisplayFormula", "Reisen", None, colRef, "$Ort_Beginn.Kuerzel"]
 ["UpdateRecord", "_grist_Tables_column", colRef, {"visibleCol": ziel}]
 ```
 
-**Statement:**
-- `SetDisplayFormula` – legt die Hilfsspalte `gristHelper_DisplayN` mit der Formel an
-- `visibleCol` – merkt sich, welche Spalte der Zieltabelle gemeint ist
+Ohne `SetDisplayFormula` zeigt die Zelle weiter die Zeilennummer.
 
-**Sonderfall:** Ohne `SetDisplayFormula` bliebe die Hilfsspalte aus und die
-Zelle zeigte weiter die Zeilennummer.
+## Tests
 
-## Selbsttest
-
-`--selbsttest` führt die Formeln ohne Grist aus und prüft:
-
-- **Einzelziele / Reiseweg / Routenlink** — was eingetragen ist, zählt
-  (Muster B): Auswahl und Freitext im selben Ortsfeld ergeben zwei Stopps, in
-  Reihenfolge; ein Feld nur mit Leerzeichen zählt nicht; mehrzeiliger
-  Freitext wird einzeilig;
-  die Kürzel zählen laufend je Kalenderjahr über Reisen hinweg, nach Datum
-  sortiert (eine früher datierte, später erfasste Reise zählt davor; das neue
-  Jahr beginnt bei `E27-01`)
-- **Tagegeld-Staffel** — alle vier Schwellen, der Fall mit aufgebrauchter
-  Rest-Zeit und negative Minuten (zählen als 0)
-- **Uhrzeiten** — Schreibweisen wie `7.15`, `07:15 Uhr`, `7:15 UHR`; eine
-  einzelne Zahl bleibt ungelesen
-- **Adresse** — Stammziel mit nie befüllten Feldern
-- **Layout-Knoten** — `blaetter()` und `ohne_blaetter()` steigen in
-  verschachtelte Knoten hinein
-
-## Alle Tests
-
-Alle Offline-Tests — Selbsttest und `grist/tests/` — mit einem Aufruf, ohne
-Grist und ohne API-Kontingent:
+Alle Offline-Tests, ohne Grist und ohne API-Kontingent:
 
 ```
 sh grist/tests/alle.sh
 ```
 
-| Datei | Prüft |
+| Test | Prüft |
 |---|---|
-| [`test_druckseiten.mjs`](../tests/test_druckseiten.mjs) | jedes Blatt hat seine Druckseite und beginnt auf einer neuen |
-| [`test_s1_null_km.mjs`](../tests/test_s1_null_km.mjs) | S1 zeigt 0 dienstliche km statt einer leeren Zelle |
+| `setup.py --selbsttest` | die Formeln ohne Grist: Ortsfelder und Kürzel (Muster, Jahreswechsel, Leerzeichen, mehrzeiliger Freitext), Tagegeld-Schwellen, Uhrzeit-Schreibweisen, Adresse mit leeren Feldern, Layout-Knoten |
+| [`test_druckseiten.mjs`](../tests/test_druckseiten.mjs) | jedes Blatt beginnt auf einer neuen Druckseite |
+| [`test_s1_null_km.mjs`](../tests/test_s1_null_km.mjs) | S1 zeigt 0 km statt einer leeren Zelle |
 | [`test_s1_zeitaufschluesselung.mjs`](../tests/test_s1_zeitaufschluesselung.mjs) | S1-Spalte „Reiseweg“ zeigt die Zeitaufschlüsselung |
 | [`test_fahrtenbuch_zeit.mjs`](../tests/test_fahrtenbuch_zeit.mjs) | Fahrtenbuch Spalte 11: `DSt \| DO` einzeilig |
-| [`test_ortsverzeichnis.mjs`](../tests/test_ortsverzeichnis.mjs) | Ortsverzeichnis: Stammziele höchstens einmal, Reihenfolge, Einzelziele mit Kürzel, Datum und ungeprüftem Freitext; S2-Felder aus Einstellungen |
-| [`test_pruefliste.mjs`](../tests/test_pruefliste.mjs) | Prüfliste: Spaltenzahl, Werte, Legende deckungsgleich mit dem Ortsverzeichnis, Druckbreite |
-| [`test_escaping.py`](../tests/test_escaping.py) | kein Zeilen-Template ohne `html\`\``-Präfix |
-| [`test_schwaerzung.py`](../tests/test_schwaerzung.py) | S2-Erzeugung schwärzt, bricht bei Abweichung ab, hat vier Füllfelder und drei Unterschriftslinien (braucht die lokale Vorlage, sonst übersprungen) |
+| [`test_fahrtenbuch_leer.mjs`](../tests/test_fahrtenbuch_leer.mjs) | ohne Reisen im Zeitraum ein leeres Blattpaar mit Spaltenköpfen |
+| [`test_ortsverzeichnis.mjs`](../tests/test_ortsverzeichnis.mjs) | Reihenfolge, Stammziele je einmal, Einzelziele mit Kürzel und Datum, S2-Felder |
+| [`test_pruefliste.mjs`](../tests/test_pruefliste.mjs) | Spalten, Werte, Legende gleich dem Ortsverzeichnis, Druckbreite und Druckweg |
+| [`test_escaping.py`](../tests/test_escaping.py) | kein Zeilen-Template ohne `` html`…` `` |
+| [`test_schwaerzung.py`](../tests/test_schwaerzung.py) | S2-Erzeugung schwärzt und bricht bei Abweichung ab (braucht die lokale Vorlage) |
 
-## Abnahmetest
-
-Vor einer Freigabe, gegen Grist — **verbraucht API-Kontingent** (rund 200
-Aufrufe), deshalb nicht in `alle.sh`:
+**Abnahmetest** vor einer Freigabe, gegen Grist — rund 200 API-Aufrufe,
+deshalb nicht in `alle.sh`:
 
 ```
 python3 grist/tests/abnahme/abnahme.py
 ```
 
-Legt eine Kopie des Dokuments **ohne Daten** an, richtet sie ein, schreibt 35
-erfundene Testreisen (Grenzwerte, Fehleingaben, Markup, Jahreswechsel) und
-vergleicht jede Rechenspalte mit einem unabhängig geschriebenen Soll-Modell.
-Danach rendert es Ausdruck, Fahrtenbuch und Prüfliste mit diesen Daten in
-Chrome als Druck-PDF und prüft Inhalt und Seitenzahl. Bricht ab, wenn die
-Testkopie das echte Dokument ist. Die Kopie bleibt danach stehen und wird bei
-Bedarf in Grist gelöscht.
-
+Legt eine Kopie des Dokuments ohne Daten an, schreibt 35 erfundene Testreisen
+(Grenzwerte, Fehleingaben, Markup, Jahreswechsel), vergleicht jede Rechenspalte
+mit einem unabhängigen Soll-Modell und prüft Ausdruck, Fahrtenbuch und
+Prüfliste als Druck-PDF aus Chrome. Bricht ab, wenn die Kopie das echte
+Dokument wäre. Die Kopie bleibt stehen und wird bei Bedarf in Grist gelöscht.

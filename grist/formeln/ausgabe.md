@@ -2,224 +2,100 @@
 
 # Ausgabe
 
-Was in der Google-Sheets-Umsetzung eigene Blätter mit Formeln sind, ist hier
-**ein Widget**, das die drei Tabellen liest und daraus die Druckseiten baut:
-[`ausgabe/ausdruck.html`](../ausgabe/ausdruck.html ':ignore') — S1, S2, Vermerke und
-Ortsverzeichnis, A4 hoch, eine Datei ohne Abhängigkeiten. Ein Widget
-statt vier, ein Grist-Zugriff statt vier. In Grist heißt es „Reisekostenabrechnung“.
+Drei Widgets lesen die Tabellen und setzen daraus die Druckseiten. Sie rechnen
+nichts Eigenes außer Summen und Formatierung — alle Werte kommen aus den
+Rechenspalten.
 
-Das Fahrtenbuch ist ein zweites Widget auf derselben Seite:
-[`ausgabe/fahrtenbuch.html`](../ausgabe/fahrtenbuch.html ':ignore') — zum
-Ausschneiden und Einkleben in das Original-Fahrtenbuch aufgeteilt. Daneben
-liegt [`ausgabe/fahrtenbuch-preview.html`](../ausgabe/fahrtenbuch-preview.html ':ignore'),
-das Fahrtenbuch als ganzes Querformat-Blatt — eine Vorbereitung, noch kein
-Widget. Der Abschnitt [Fahrtenbuch](#fahrtenbuch) beschreibt beide.
-
-Dazu [`ausgabe/pruefliste.html`](../ausgabe/pruefliste.html ':ignore') auf einer
-eigenen Seite: alles aus allen Blättern in einer Zeile je Reise, für die
-Zeiterfassungsstelle — siehe [unten](#prüfliste-zeiterfassungsstelle).
-
-Alle vier Dateien lassen sich direkt im Browser öffnen — dann rendern sie
-erfundene Beispieldaten. Das ist die Arbeitsweise für Layoutänderungen ohne
-Grist.
-
-## Was auf welchem Blatt landet
+| Widget | Seite in Grist | Blätter |
+|---|---|---|
+| Reisekostenabrechnung ([`ausdruck.html`](../ausgabe/ausdruck.html ':ignore')) | Ausdruck | S1, S2, Vermerke, Ortsverzeichnis — A4 hoch |
+| Fahrtenbuch ([`fahrtenbuch.html`](../ausgabe/fahrtenbuch.html ':ignore')) | Ausdruck | Fahrtenbuch zum Einkleben — A4 quer |
+| Prüfliste ([`pruefliste.html`](../ausgabe/pruefliste.html ':ignore')) | Prüfliste | eine Zeile je Reise — A4 quer |
 
 | Blatt | Kopf aus | Zeilen aus |
 |---|---|---|
 | S1 / S2 | Einstellungen | Reisen im Zeitraum |
-| Vermerke | Einstellungen | Reisen im Zeitraum **mit** `Vermerk` |
-| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele (je Eintrag, mit Kürzel und Datum) |
+| Vermerke | Einstellungen | Reisen im Zeitraum mit `Vermerk` |
+| Ortsverzeichnis | Einstellungen | Stammziele (je höchstens einmal) + Einzelziele |
 | Fahrtenbuch | — | Reisen im Zeitraum |
-| Prüfliste | Einstellungen | Reisen im Zeitraum + Stammziele/Einzelziele als Legende |
+| Prüfliste | Einstellungen | Reisen im Zeitraum + Orte-Legende |
 
-## Zeitraumfilter
+## Zeitraum
 
-```js
-const imZeitraum = d => d != null
-  && (von == null || d >= von) && (bis == null || d <= bis);
-```
+Eine Reise erscheint, wenn ihr **Reisedatum** (`Datum`) zwischen
+`Zeitraum_von` und `Zeitraum_bis` liegt, beide Tage eingeschlossen. Eine leere
+Grenze begrenzt nicht; ist gar kein Zeitraum gesetzt, erscheinen alle Reisen.
+Reisen ohne Datum erscheinen nie.
 
-Angewandt auf `Reisen.Datum`; die Einzelziele kommen aus denselben Reisen. Maßgeblich ist der
-**Reisebeginn** — Begründung siehe [Einstellungen](einstellungen.md#abrechnungszeitraum).
-
-Grist liefert Datumswerte als Sekunden seit 1970, UTC-Mitternacht. Die Anzeige
-rechnet deshalb ausdrücklich in UTC:
-
-```js
-const tag = s => s == null ? "" : new Date(s * 1000).toLocaleDateString("de-DE",
-  { day:"2-digit", month:"2-digit", year:"numeric", timeZone:"UTC" });
-```
-
-**Sonderfall:** Ohne `timeZone:"UTC"` läge ein Datum westlich von Greenwich
-einen Tag daneben.
+Maßgeblich ist der Reisebeginn: Eine mehrtägige Reise, die vor `Zeitraum_von`
+beginnt, gehört zur früheren Abrechnung und erscheint hier nicht — sonst würde
+sie zweimal abgerechnet.
 
 ## S1 — Reisekostenabrechnung
 
-Je Reise eine Zeile, darunter eine Übertragszeile mit den Summen.
+Je Reise eine Zeile, darunter der Übertrag mit den Summen.
 
 | S1-Spalte | Quelle |
 |---|---|
-| Reisedatum | `Datum`, bei `Datum_bis` ≠ `Datum` als Spanne |
+| Reisedatum | `Datum`, mehrtägig als Spanne bis `Datum_bis` |
 | Beginn / Ende | `Beginn`, `Ende` |
-| Reiseweg | `s1Zeile(r)`, siehe unten |
-| drei Tagegeld-Spalten | Kreuz aus `Tagegeld_Stufe`; `anteilig` als `(X)` in „mehr als 8 Stunden“ |
-| Verpflegung | `Verpflegung`, leer → `Nein` |
+| Reiseweg | `Lfd_Nr` und Zeitaufschlüsselung, siehe unten |
+| Tagegeld (drei Spalten) | Kreuz nach `Tagegeld_Stufe`; `anteilig` als `(X)` unter „mehr als 8 Stunden“ |
+| Unentgeltliche Verpflegung | `Verpflegung`, leer = `Nein` |
 | ÖPNV, km, Mitnahme, Übernachtung, Nebenkosten | `OePNV`, `KM_dienstlich`, `Mitnahme_Personen`, `Uebernachtung`, `Nebenkosten` |
 
-**Statement:**
-- `kreuz(stufe, s)` – setzt `X` in genau die Spalte, deren Name der Stufe entspricht
-- `kreuz8h(stufe)` – wie `kreuz` für `>8h`, zusätzlich `(X)` bei `anteilig`: der amtliche Vordruck hat keine eigene Spalte „Tagegeld anteilig“
-- `eur(n)` / `zahl(n)` – geben bei `0` einen **Leerstring** aus, nicht „0,00“; negative Werte erscheinen mit Minus — blieben sie leer, gingen sie trotzdem in die Summe ein, und der Übertrag passte nicht zu den sichtbaren Zeilen
-- die Übertragszeile summiert dieselben fünf Felder über alle gedruckten Zeilen
+**Spalte „Reiseweg“:** Der Vordruck verlangt hier die laufende Nummer, wenn
+ein Fahrtenbuch geführt wird — das liegt immer bei. Dazu stehen die Zeiten,
+aus denen sich die Tagegeld-Stufe ergibt:
 
-### Spalte „Reiseweg“
-
-Der amtliche Vordruck verlangt hier nur die laufende Nummer, **wenn ein
-Fahrtenbuch geführt wird** — genau das steht im Spaltenkopf. Da diese
-Ausgabe immer ein Fahrtenbuch mitliefert, wäre der eigentliche Reiseweg an
-dieser Stelle eine Dopplung dessen, was dort ohnehin steht. Statt der bloßen
-Nummer zeigt die Spalte deshalb die Zeiten, aus denen sich die
-Tagegeld-Stufe ergibt — zur Prüfung beim Unterschreiben, wie in der
-Sheets-Version:
-
-```js
-const s1Zeile = r => {
-  if (!r.Lfd_Nr) return "";
-  const priv = r.Min_privat_Abzug > 0 ? ` | Priv: ${stunden(r.Min_privat_Abzug)}` : "";
-  return `Nr. ${r.Lfd_Nr}  –  (Ges.: ${stunden(r.Abwesenheit_min)}`
-       + ` | DSt: ${stunden(r.Min_Dienststaette)} | DO: ${stunden(r.Min_Dienstort)}`
-       + `${priv} | Rest: ${stunden(r.Rest_min)})`;
-};
+```
+Nr. 67  –  (Ges.: 8:55 | DSt: 0:00 | DO: 0:00 | Rest: 8:55)
 ```
 
-**Statement:**
-- `stunden(min)` – wandelt Minuten in `H:MM`, auch über 24 h hinaus (mehrtägige Reisen)
-- `priv` – der Priv-Teil erscheint nur, wenn ein privater Zeitabzug eingetragen ist
+Ges. = `Abwesenheit_min`, DSt = `Min_Dienststaette`, DO = `Min_Dienstort`,
+Priv = `Min_privat_Abzug` (nur wenn eingetragen), Rest = `Rest_min`. Der
+Reiseweg selbst steht im Fahrtenbuch.
 
-**Ergebnis:** `Nr. 67  –  (Ges.: 8:55 | DSt: 0:00 | DO: 0:00 | Rest: 8:55)`
-**Rechenweg:** Ges. = `Abwesenheit_min`, DSt = `Min_Dienststaette`,
-DO = `Min_Dienstort`, Rest = `Rest_min` — dieselben vier Werte, aus denen
-`Tagegeld_Stufe` die Stufe ableitet (siehe [Reisen](reisen.md#tagegeld_stufe--tagegeld-stufe)).
-**Sonderfall:** Bei ÖPNV, Mitnahme, Übernachtung und Nebenkosten erscheint eine
-Null als leere Zelle — ein amtlicher Vordruck mit lauter Nullen ist schwerer zu
-lesen als einer mit leeren Feldern für tatsächlich nicht angefallene Kosten.
+**Nullen und Minus:** Kosten von 0 bleiben leer, damit der Vordruck lesbar
+bleibt. Kilometer stehen immer da, auch `0` — eine leere Zelle sähe nach
+vergessener Eingabe aus. Negative Beträge erscheinen mit Minus, weil sie auch
+in die Summe eingehen.
 
-**Ausnahme km:** Dienstliche Kilometer werden **immer** gedruckt, auch `0` —
-anders als die vier Kostenfelder ist die Spalte nicht optional, sondern zu
-jeder Reise berechnet. Eine Fahrt, die vollständig als privater Umweg erfasst
-wurde (z. B. eine reine Verwaltungsfahrt ohne erstattungsfähige Strecke), muss
-als `0` erkennbar bleiben — eine leere Zelle sähe nach vergessener Eingabe aus.
-S1 nimmt hier deshalb nicht `zahl()`, das die `0` ausblenden würde; das
-Fahrtenbuch druckt sie ebenso (`f.kmDienstlich ?? ""`).
-
-Läuft S1 über mehrere Seiten, wiederholt sich auf jeder Folgeseite der
-**Spaltenkopf** (Reisedatum bis Nebenkosten, mit der Zeile „Beginn / Ende /
-bitte ankreuzen / EUR …“): er steht im `<thead>` der Datentabelle. Titel und
-Antragsteller-Block stehen nur auf der ersten Seite, in einer eigenen Tabelle
-davor. Getrennt, weil Chrome einen so hohen `<thead>` nicht wiederholt: Titel,
-Antragsteller und Spaltenkopf zusammen messen rund 81 mm, Folgeseiten hätten
-dann gar keinen Kopf.
+Läuft S1 über mehrere Seiten, wiederholt jede Folgeseite den Spaltenkopf;
+Titel und Antragsteller stehen nur auf Seite 1.
 
 ## S2
 
-Vordruck; aus der Tabelle kommen nur die vier Felder aus `Einstellungen`
-(siehe unten). Der HTML-Block wird nicht von Hand gepflegt, sondern aus dem XLSX-Blatt „S2“ erzeugt:
-
-```
-python3 grist/s2_aus_vorlage.py > /tmp/s2.html
-```
-
-S2 ist ein amtliches Formular — Ränder, Füllungen, Schriftgrößen, Zeilenhöhen
-und Zellverbünde werden Zelle für Zelle aus der Vorlage übernommen statt
-nachgebaut. Das Skript bricht ab, wenn
-
-- eine als behördenspezifisch markierte Zelle nicht mehr den erwarteten Inhalt
-  hat (Fingerabdruck-Prüfung, damit nichts Behördenspezifisches in das
-  öffentliche Repo gerät), oder
-- der erzeugte Block höher als ein A4-Blatt wäre (sonst liefe S2 still auf
-  Seite 2 über).
-
-Übernommen wird auch die Formatierung **innerhalb** einer Zelle: In der
-Vorlage sind oft nur Teile unterstrichen oder fett (die Leerstelle nach
-„1. KK anweisen,“, das Buchungsjahr, „z. d. A.“, die fetten Ziffern „1.“,
-„2.“, „3.“). Das Skript liest die Vorlage deshalb als Rich Text; sonst
-fehlten diese Linien im Ausdruck.
-
-Die Unterschriftslinien über „(Datum)“ und „(Unterschrift,
-Dienstbezeichnung)“ sind in der Vorlage **gezeichnete Linien**, keine
-Zellrahmen. openpyxl liest Zeichnungen nicht ein; das Skript holt sie deshalb
-direkt aus dem Zeichnungsteil der XLSX und setzt sie als absolut positionierte
-Linie in die Zelle, in der sie beginnen. Andere Formen als waagrechte Linien
-lässt es nicht still weg, sondern bricht ab.
-
-Die vier geschwärzten Zellen füllt das Widget aus
-[Einstellungen](einstellungen.md): `Abteilung`, `Buchungsstelle`,
-`Behoerde_Ort` und `Behoerde`. Ist ein Feld leer, bleibt die Linie der Vorlage
-stehen.
-
-**Nach der Migration ins interne Netz** (Repo nicht mehr öffentlich) entfällt
-die Schwärzung: die Regeln in `SCHWAERZEN` löschen, S2 neu erzeugen — dann
-kommen alle vier Werte unverändert aus der Vorlage. Die vier Spalten in
-`Einstellungen` und der Füllblock im Widget werden danach überflüssig.
-
-IBAN- und BIC-Kasten bleiben leer und werden bei Bedarf von Hand ausgefüllt.
+Der amtliche Vordruck, Zelle für Zelle aus der Excel-Vorlage übernommen. Aus
+der Tabelle kommen nur `Abteilung`, `Buchungsstelle`, `Behoerde_Ort` und
+`Behoerde` aus [Einstellungen](einstellungen.md); leer bleibt dort die Linie.
+IBAN und BIC bleiben leer und werden bei Bedarf von Hand eingetragen.
 
 ## Vermerke
 
-Nur Reisen mit ausgefülltem Feld `Vermerk`.
+Nur Reisen mit ausgefülltem `Vermerk`.
 
 | Spalte | Quelle |
 |---|---|
-| Nr. | zweiter Teil von `Vermerk_Label` (`V26-01` → `01`) |
+| Nr. | Nummer aus `Vermerk_Label` (`V26-01` → `01`) |
 | Kennung | `Vermerk_Label` |
 | Text | `Vermerk` |
 | Datum | `Datum` |
 
 ## Ortsverzeichnis
 
-Die Legende zum Reiseweg, **kein Fahrtenprotokoll**. Deshalb steht jedes
-Stammziel höchstens einmal darin.
+Die Legende zu den Kürzeln im Reiseweg, kein Fahrtenprotokoll:
 
-```js
-const stammIds = ["WO", "KV"]
-  .map(k => orteListe.find(o => o.Kuerzel === k))
-  .filter(Boolean).map(o => o.id);
-for (const r of reisen)
-  for (const slot of ORT_SLOTS)
-    if (r[slot] && orteNachId[r[slot]] && !stammIds.includes(r[slot]))
-      stammIds.push(r[slot]);
-```
+1. `WO` und `KV` zuerst,
+2. dann die übrigen Stammziele in der Reihenfolge, in der sie im Zeitraum
+   zum ersten Mal vorkommen — jedes nur einmal,
+3. dann jedes Einzelziel einzeln, nach Datum: Kürzel und Datum, daneben der
+   Freitext ungeprüft unter „Adresse“.
 
-**Statement:**
-- `["WO", "KV"]` – Wohnung und Dienststätte führen die Liste fest an
-- die Doppelschleife hängt die übrigen Stammziele in der Reihenfolge ihres **ersten Vorkommens** im Zeitraum an
-- `!stammIds.includes(…)` – jeder Ort nur einmal
-
-**Ergebnis:** Nummerierte Liste — 1 Wohnung, 2 Dienststätte, danach die
-übrigen Stammziele, danach die Einzelziele nach Datum.
-**Sonderfall:** Ohne diese Entdopplung erschiene die Wohnung bei zwei Reisen
-viermal, je einmal als Start und als Ziel. Das war ein stiller Fehler; dagegen
-läuft [`test_ortsverzeichnis.mjs`](../tests/test_ortsverzeichnis.mjs).
-
-Die Einzelziele folgen danach, jede Eintragung als eigene Zeile, nach Datum
-sortiert. Sie kommen aus der Rechenspalte
-[`Reisen.Einzelziele`](reisen.md#einzelziele--einzelziele-ortsverzeichnis),
-die auch das Kürzel vergibt — das Widget zählt nicht selbst, sonst könnten
-Fahrtenbuch und Ortsverzeichnis auseinanderlaufen.
-
-```js
-const ausEinzelziele = reisen.flatMap(r => (r.Einzelziele || "").split("\n")
-  .filter(Boolean).map(z => {
-    const i = z.indexOf(": ");
-    return { kuerzel: `${z.slice(0, i)}\n${tag(r.Datum)}`, name: "", adresse: z.slice(i + 2) };
-  }));
-```
-
-In der Spalte *Kürzel / Datum* steht oben das Kürzel aus dem Reiseweg
-(`E26-07`), darunter das Datum der Fahrt. Der Freitext steht vollständig und **ungeprüft** unter
-*Adresse*, die Namensspalte bleibt leer. Ob die Anschrift vollständig ist,
-kontrolliert die Person beim Unterschreiben.
+Die Kürzel der Einzelziele kommen aus
+[`Reisen.Einzelziele`](reisen.md#einzelziele--einzelziele-ortsverzeichnis);
+das Widget zählt nicht selbst, damit Fahrtenbuch und Ortsverzeichnis nicht
+auseinanderlaufen.
 
 ## Fahrtenbuch
 
@@ -234,42 +110,25 @@ Je Reise eine Zeile, Spalten 1–15 des amtlichen Fahrtenbuchs.
 | 7/8 Kilometerstand | `KM_Beginn`, `KM_Ende` |
 | 9 dienstlich | `KM_dienstlich` |
 | 10 außerdienstlich | `Umweg_privat` |
-| 11 Name, Amtsbezeichnung | im Ausdruck leer; in der Schnittversion die Zeitwerte, siehe unten |
-| 12–14 Kilometer, Vergütungsbetrag, Unterschrift | bleiben leer, von Hand |
+| 11 Name, Amtsbezeichnung | `DSt 1:00 \| DO 0:30` aus `Min_Dienststaette`, `Min_Dienstort` |
+| 12–14 Kilometer, Vergütung, Unterschrift | leer, von Hand |
 | 15 Vermerke | `Vermerk_Label` |
 
-Die **Schnittversion** bricht dieselben Daten auf zwei Seiten je Zeilenblock um:
-links die Spalten 1–6, rechts 7–15. Ein Block hat **17 Zeilen** — so viele hat
-das Original-Fahrtenbuch, in das geklebt wird (`ROWS_PRO_SEITE`). Bei **100 %** drucken, an der bezeichneten
-Kante schneiden, einkleben, unterschreiben.
+Gedruckt wird zum Einkleben in das Original-Fahrtenbuch: je Block 17 Zeilen
+wie im Original, auf einer Seite die Spalten 1–6, auf der nächsten 7–15.
+Spalte 11 zeigt nur DSt und DO, damit die Zeile einzeilig bleibt und beide
+Hälften gleich hoch sind; die volle Aufschlüsselung steht auf S1 und in der
+Prüfliste.
 
-### Spalte 11 der Schnittversion
+## Prüfliste
 
-```js
-const fbZeit = r => !r.Lfd_Nr ? "" :
-  `DSt ${stunden(r.Min_Dienststaette)} | DO ${stunden(r.Min_Dienstort)}`;
-```
-
-**Ergebnis:** `DSt 1:00 | DO 0:30` — Aufenthalt in Dienststätte und am
-Dienstort, beide immer, auch mit 0:00. Die volle Aufschlüsselung (Ges., Rest,
-privater Abzug) steht in der [S1-Spalte „Reiseweg“](#spalte-reiseweg) und in
-der Prüfliste.
-**Sonderfall:** Einzeilig in der normalen Schrift (8 pt), ohne Umbruch: eine
-zweite Zeile würde die Zeile höher machen als ihr Gegenstück auf der linken
-Seite, und die beiden Hälften passten nicht mehr aneinander. Alle fünf Werte
-passten nur zweizeilig in 5,6 pt hinein — zu klein zum Lesen.
-
-## Prüfliste (Zeiterfassungsstelle)
-
-Eigenes Widget, [`ausgabe/pruefliste.html`](../ausgabe/pruefliste.html ':ignore') —
-**ohne Vorbild in der Sheets-Umsetzung.** Dort muss die Stelle, die den Antrag
-final bearbeitet, zwischen S1, Vermerken, Ortsverzeichnis, Fahrtenbuch und
-GoogleMapsExport hin- und herblättern, um eine Reise vollständig zu beurteilen.
-Hier steht alles davon in **einer Zeile je Reise**, A4 quer, 22 Spalten:
+Für die Zeiterfassungsstelle: alles, was sonst auf S1, Vermerken,
+Ortsverzeichnis und Fahrtenbuch verteilt ist, in **einer Zeile je Reise**.
+Die Spaltenbegriffe sind die aus S1.
 
 | Gruppe | Spalten | Quelle |
 |---|---|---|
-| — | Nr., Reisedatum | `Lfd_Nr`, `Datum` (mehrtägig als Spanne, wie S1) |
+| — | Nr., Reisedatum | `Lfd_Nr`, `Datum` (mehrtägig als Spanne) |
 | Uhrzeit | Beginn, Ende | `Beginn`, `Ende` |
 | — | Reiseweg | `Reiseweg` |
 | Tagegeld für | Ges., DSt, DO, Priv, Rest, Stufe | `Abwesenheit_min`, `Min_Dienststaette`, `Min_Dienstort`, `Min_privat_Abzug`, `Rest_min`, `Tagegeld_Stufe` |
@@ -279,114 +138,10 @@ Hier steht alles davon in **einer Zeile je Reise**, A4 quer, 22 Spalten:
 | Fahrt- und Nebenkosten | ÖPNV, Mitn., Übernachtung, Nebenkosten | `OePNV`, `Mitnahme_Personen`, `Uebernachtung`, `Nebenkosten` |
 | — | Vermerk, Route | `Vermerk_Label`, `Maps_Link` |
 
-Darunter die **Orte-Legende** — dieselben Zeilen wie das
-[Ortsverzeichnis](#ortsverzeichnis), damit die Kürzel im Reiseweg ohne Blattwechsel
-auflösbar sind.
+Darunter die Orte-Legende, zeilengleich mit dem Ortsverzeichnis.
 
-### Drucken: eigenes Fenster, und warum nicht 277mm
+Die Prüfliste liegt auf einer **eigenen Seite**, weil Grist Seiten einzeln
+freigibt: So sieht die Zeiterfassungsstelle nur diese Liste, nicht S1/S2 und
+Fahrtenbuch.
 
-Zwei Fallen:
-
-- **`window.print()` aus dem Widget öffnet den Dialog in Hochformat.** Die
-  `@page`-Regel aus dem iframe greift nicht zuverlässig: unter Windows/Edge
-  nicht, unter macOS/Chrome schon. Die Ursache ist **nicht abschließend
-  geklärt**. `drucken()` schreibt das fertige Blatt deshalb in ein **eigenes
-  Fenster**, wo es Top-Level-Dokument ist und `@page` in jedem Fall greift —
-  das umgeht die offene Frage, statt sie zu beantworten. `ausdruck.html`
-  druckt auf demselben Weg.
-- **Auch im Querformat kann rechts etwas abgeschnitten werden.** A4 quer misst
-  297mm; greift `@page` mit 10mm Rand, bleiben 277mm — greift sie nicht,
-  gelten die Standardränder des Dialogs (~12,7mm je Seite) und es bleiben nur
-  **271,6mm**. Die Tabelle ist deshalb 252mm breit und passt in beiden Fällen.
-
-`test_pruefliste.mjs` prüft beides: die Breitensumme jeder der drei Tabellen
-gegen 271,6mm, und dass der Knopf über ein eigenes Fenster druckt statt über
-`window.print()`.
-
-**Statement:**
-- Spaltenbegriffe absichtlich aus S1 übernommen („Tagegeld für“,
-  „Unentgeltliche Verpflegung“, „Wegstrecke“, „Mitnahme von Personen“) —
-  die Stelle soll die gewohnte Ansicht wiedererkennen, nicht eine neue lernen
-- die Tagegeldzeiten stehen als **eigene Spalten**, nicht als Textzeile wie in
-  der [S1-Spalte „Reiseweg“](#spalte-reiseweg) — einzeln prüfbar statt nur lesbar
-- Route-Zelle: kein `html\`…\`` (ein eingebettetes `<a>` würde escaped);
-  der Link steht erst als `data-link` (läuft durch `esc()`) und wird danach
-  per DOM-API (`a.href = …`) zum `<a>`. Leerer `Maps_Link` (unter zwei Orten
-  oder Ort ohne Anschrift) → Zelle ohne Link, kein Fehler
-
-**Sonderfall:** Die Sortierlogik der Orte-Legende steht in **zwei** Dateien
-(`pruefliste.html` und `ausdruck.html`) — die Widgets sind bewusst
-eigenständige Einzeldateien ohne gemeinsames Modul. Gegen ein Auseinanderlaufen
-prüft [`test_pruefliste.mjs`](../tests/test_pruefliste.mjs) beide Blätter auf
-dieselbe Liste; der Wächter wurde mit einer absichtlich gebrochenen Sortierung
-gegengetestet.
-
-### Eigene Seite, nicht die Ausdruck-Seite
-
-`setup.py` legt die Prüfliste über `pruefliste_widget()` auf eine **eigene**
-Grist-Seite (`PRUEFLISTE`), nicht neben die Druck-Widgets. Grund: eine
-Grist-Freigabe geht über Seiten. Läge das Widget auf der Ausdruck-Seite,
-bekäme die Zeiterfassungsstelle bei einer Freigabe zwangsläufig auch S1/S2,
-Vermerke und Fahrtenbuch mit zu sehen.
-
-## Escaping
-
-Die Tabellenzellen werden als HTML zusammengesetzt und per
-`insertAdjacentHTML` eingefügt. Jeder eingesetzte Wert läuft deshalb durch
-`esc()`:
-
-```js
-const esc = s => String(s ?? "").replace(/[&<>"]/g,
-  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
-const html = (t, ...v) => t.reduce((a, s, i) => a + esc(v[i - 1]) + s);
-```
-
-**Statement:**
-- `html\`…\`` – Präfix vor dem Template-Literal; schiebt jeden `${…}`-Wert durch `esc()`
-- ohne Präfix kein Schutz
-
-Vermerk, Freitext-Orte und Adressen kommen aus einem **öffentlich
-erreichbaren Formular**. Das Widget liest mit `requiredAccess: "full"` Name,
-Wohnanschrift und Belege — eingeschleustes Markup wäre also teuer. Gegen den
-wahrscheinlichen Rückfall (jemand ergänzt eine Zeile und vergisst das Präfix)
-läuft [`test_escaping.py`](../tests/test_escaping.py); dort stehen auch die
-drei nachgemessenen Grenzen dieses Tests.
-
-## Aktualisieren
-
-```js
-grist.onRecords(ausGrist);
-```
-
-`onRecords` feuert beim Aufbau und danach **nur** bei Änderungen an der
-Tabelle, an der das Widget hängt — das ist `Einstellungen`, praktisch also nur
-der Abrechnungszeitraum. Eine neu erfasste oder korrigierte **Reise** erreicht
-das Widget nicht.
-
-Dafür der Knopf **Aktualisieren** in der Leiste über dem Ausdruck. Ein
-sichtbarer Knopf statt Polling: die Plugin-API kennt keinen Haken auf fremde
-Tabellen, und still veraltet zu drucken ist der teurere Fehler.
-
-## Herkunft der Plugin-API
-
-```js
-const quelle = document.referrer ? new URL(document.referrer).origin
-              : window.location.ancestorOrigins?.[0] || "";
-```
-
-Die Plugin-API wird von der **einbettenden** Grist-Instanz geladen, nicht von
-einer festen Adresse — so steht der Hostname der Instanz nicht in diesem
-offenen Repo. Löscht eine strenge Referrer-Policy `document.referrer`, dient
-`ancestorOrigins` als zweite Quelle; ist auch die leer, lädt das Widget nichts
-und sagt es. Ein fest verdrahtetes `docs.getgrist.com` wäre doppelt falsch: die
-eigene Instanz bliebe unerreichbar, und ein fremder Host bekäme einen Request
-aus dem Dokument.
-
-## Layout ändern
-
-Schriftgrößen, Innenabstände und Rahmenstärke stehen als CSS-Variablen am Kopf
-von `ausdruck.html`, je Dokument ein eigener Namensraum (`.dok-s1`,
-`.dok-s2`, `.dok-vermerke`, `.dok-ortsverzeichnis`), damit
-gleichnamige Klassen sich nicht in die Quere kommen.
-
-Wie eine Änderung bei Grist ankommt: [Anhang → Widgets ausliefern](anhang.md#widgets-ausliefern).
+Wie die Widgets technisch arbeiten: [Einrichtung und Technik](setup.md#ausgabe-widgets).

@@ -2,18 +2,16 @@
 
 # Stammziele
 
-Stammdaten der wiederkehrenden Reiseziele. Eine Formel, sonst Eingabetabelle.
-Diese Liste ist zugleich die Auswahlliste im Formular, die Quelle für den
-Routenlink und die Legende im Ortsverzeichnis.
+Die wiederkehrenden Reiseziele mit Kürzel und Adresse. Die Liste ist zugleich
+die Auswahl im Formular, die Quelle für den Routenlink und die Legende im
+Ortsverzeichnis.
 
 | Spalte | Beschriftung | Typ | Inhalt |
 |---|---|---|---|
-| `Kuerzel` | Kürzel | Text | erscheint im `Reiseweg` (`WO > KV > KITA > WO`) |
-| `Name` | Name der Einrichtung | Text | erscheint im Ortsverzeichnis |
-| `Strasse` | Straße und Hausnummer | Text | speist `Adresse` |
-| `PLZ` | PLZ | Text | " |
-| `Ort` | Ort | Text | " |
-| `Adresse` | Vollständige Adresse | Text | **Formel**, siehe unten |
+| `Kuerzel` | Kürzel | Text | steht im Reiseweg (`WO > KV > KITA > WO`) |
+| `Name` | Name der Einrichtung | Text | steht im Ortsverzeichnis |
+| `Strasse`, `PLZ`, `Ort` | Straße und Hausnummer, PLZ, Ort | Text | ergeben `Adresse` |
+| `Adresse` | Vollständige Adresse | Text | **Formel** |
 
 ## Adresse
 
@@ -21,43 +19,21 @@ Routenlink und die Legende im Ortsverzeichnis.
 ", ".join(x for x in [$Strasse, (($PLZ or "") + " " + ($Ort or "")).strip()] if x)
 ```
 
-**Statement:**
-- `(($PLZ or "") + " " + ($Ort or ""))` – PLZ und Ort zu einem Block verbinden; ein nie befülltes Feld ist leer (`None`), nicht `""` — ohne `or ""` stünde im Ortsverzeichnis „E,TypeError“, etwa bei den frisch angelegten `WO`/`KV`
-- `.strip()` – fehlt eines von beiden, bleibt kein einzelnes Leerzeichen übrig
-- `if x` – leere Teile fallen heraus, statt einen doppelten Trenner zu erzeugen
-- `", ".join(…)` – die verbliebenen Teile mit Komma verbinden
+`Straße, PLZ Ort`, z. B. `Lindenweg 3, 00000 Musterstadt`. Leere Teile fallen
+samt Komma weg. Ist die Adresse leer, bekommt keine Reise über dieses Ziel
+einen Routenlink.
 
-**Ergebnis:** `Lindenweg 3, 00000 Musterstadt` — die Adresse, wie sie in
-`Maps_Link` und im Ortsverzeichnis erscheint.
-**Sonderfall:** Ist nur die Straße gefüllt, steht auch nur sie da; sind alle
-drei leer, bleibt die Zelle leer — und jede Reise über diesen Ort bekommt
-**keinen** `Maps_Link`. `setup.py` nennt solche Orte bei jedem Lauf.
+## WO und KV
 
-## Die Pflichtzeilen WO und KV
+Zwei Zeilen sind immer da: `WO` (Wohnung) und `KV` (Dienststelle). Sie werden
+ohne Adresse angelegt; die Adresse wird von Hand nachgetragen und danach nie
+überschrieben.
 
-`setup.py` legt zwei Zeilen zwingend an:
+Die eigene Anschrift steht damit an zwei Stellen: in
+[Einstellungen](einstellungen.md) für den Kopf des Ausdrucks, hier in `WO` für
+Reiseweg und Routenlink. Bei einem Umzug ändern sich beide. Eine Formel, die
+`WO` aus den Einstellungen füllt, wurde verworfen: Die Felder sahen
+bearbeitbar aus und blieben wirkungslos.
 
-| Kürzel | Name | Adresse |
-|---|---|---|
-| `WO` | Wohnung | **wird nicht gesetzt** — von Hand nachtragen |
-| `KV` | Dienststelle | **wird nicht gesetzt** — von Hand nachtragen |
-
-`Reiseweg` und `Maps_Link` brauchen sie für fast jede Fahrt. Angelegt werden
-nur Kürzel und Name; eine vorhandene Zeile bleibt unangetastet, eine
-eingetragene Adresse wird nie überschrieben.
-
-> **Doppelte Pflegestelle:** Die eigene Anschrift steht in
-> [Einstellungen](einstellungen.md) (für die Kopfzeile) **und** hier in der
-> Zeile `WO` (für Reiseweg und Routenlink). Ein früherer Versuch, `WO`/`KV`
-> per Formel aus `Einstellungen` zu füllen, wurde zurückgebaut: er erzeugte
-> Spalten, die bearbeitbar aussahen, aber wirkungslos blieben. Die Dopplung
-> ist die verständlichere Lösung — bei einem Umzug ist die Adresse an zwei
-> Stellen zu ändern.
-
-## Was nicht hierher gehört
-
-Ein Ziel, das nur einmal vorkommt. Dafür ist das Freitextfeld im Formular da;
-sein Text steht mit Kürzel (`E26-07`) und Datum im Ortsverzeichnis
-([Reisen → Einzelziele](reisen.md#einzelziele--einzelziele-ortsverzeichnis)). Einmalorte sind
-der Normalfall, nicht die Ausnahme — eine reine Auswahlliste würde daran
-scheitern.
+Ziele, die nur einmal vorkommen, gehören nicht hierher, sondern in den
+Freitext des Formulars ([Reisen → Einzelziele](reisen.md#einzelziele--einzelziele-ortsverzeichnis)).
