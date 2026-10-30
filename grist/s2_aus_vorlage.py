@@ -203,6 +203,22 @@ def zeichnung():
 
 
 LINIEN = {}   # (Zeile, Spalte) der Startzelle -> [<div>, …]
+# Die Vorlage zeichnet beide Unterschriftslinien über den Rahmen hinaus (links
+# 4mm über die Mittellinie, rechts 2,5mm über die Außenkante). Gekappt wird an
+# der nächsten senkrechten Rahmenlinie, mit diesem Abstand davor.
+LINIE_ABSTAND = 1.0   # mm
+
+
+def rand_rechts(r, c0, mm):
+    """mm ab Tabellenbeginn bis zur nächsten senkrechten Rahmenlinie rechts von
+    Spalte c0 (0-basiert) in Zeile r -- Grenzen innerhalb eines Zellverbunds
+    zählen nicht. Ohne Rahmen die Tabellenkante."""
+    for k in range(c0, len(SPALTEN) - 1):
+        innen = any(m.min_row <= r <= m.max_row and m.min_col <= k + 1 < m.max_col
+                    for m in WS.merged_cells.ranges)
+        if not innen and (WS.cell(r, k + 1).border.right.style or WS.cell(r, k + 2).border.left.style):
+            return sum(mm[:k + 1])
+    return SATZ
 
 
 def linien_lesen():
@@ -221,10 +237,26 @@ def linien_lesen():
             sys.exit(f"Linie beginnt in einer verbundenen Zelle (Zeile {r1 + 1}) -- "
                      f"nicht unterstützt. Abbruch.")
         staerke = int(anker.find(".//a:ln", NS).get("w", 9525)) / 12700
-        breite_mm = sum(mm[:c2]) + o2 / EMU_MM - sum(mm[:c1]) - o1 / EMU_MM
+        ende = min(sum(mm[:c2]) + o2 / EMU_MM, rand_rechts(r1 + 1, c1, mm) - LINIE_ABSTAND)
+        breite_mm = ende - sum(mm[:c1]) - o1 / EMU_MM
         LINIEN.setdefault((r1 + 1, c1 + 1), []).append(
             f'<div style="position:absolute;left:{o1 / EMU_MM:.2f}mm;top:{ro1 / EMU_MM:.2f}mm;'
             f'width:{breite_mm:.2f}mm;border-top:{staerke:g}pt solid #000"></div>')
+
+
+# ---------------------------------------------------------------- Schrift
+# Excel kappt bzw. lässt überlaufen, wo der Browser mit Arial breiter setzt:
+# diese Beschriftungen passen in 11pt nicht in ihren Kasten. Kleinste Größe,
+# die passt; die vier Gruppenköpfe einheitlich.
+SCHRIFT = {
+    "Im Einzelnen": 10, "Insgesamt": 10,
+    "I. Tagegeld": 9.5, "II. Übernachtungskosten": 9.5,
+    "III. Fahrtkosten": 9.5, "IV. Nebenkosten": 9.5,
+}
+
+
+def leer(r, c):
+    return WS.cell(r, c).value in (None, "") and (r, c) not in ANKER and (r, c) not in LINIEN
 
 
 # ---------------------------------------------------------------- Ausgabe
@@ -244,6 +276,21 @@ for r in range(1, WS.max_row + 1):
             continue
         rs, cs = ANKER.get((r, ci), (1, 1))
         zelle = WS.cell(r, ci)
+        # Excel lässt linksbündigen Text in leere Nachbarzellen überlaufen. Hier
+        # werden diese Nachbarn stattdessen mit verbunden -- bis zur nächsten
+        # Rahmenlinie, belegten Zelle oder anderen Ober-/Unterkante. Sieht
+        # gleich aus, aber der Text steht in SEINER Zelle statt darüber hinaus.
+        a, cs_vorlage = zelle.alignment, cs
+        if (zelle.value not in (None, "") and rs == 1 and not a.wrapText
+                and a.horizontal in (None, "general", "left")):
+            b = zelle.border
+            while (ci + cs <= len(SPALTEN) and leer(r, ci + cs)
+                   and not WS.cell(r, ci + cs - 1).border.right.style
+                   and not WS.cell(r, ci + cs).border.left.style
+                   and WS.cell(r, ci + cs).border.top.style == b.top.style
+                   and WS.cell(r, ci + cs).border.bottom.style == b.bottom.style):
+                BELEGT.add((r, ci + cs))
+                cs += 1
         stil, attr = [], []
         if rs > 1:
             attr.append(f'rowspan="{rs}"')
@@ -276,7 +323,7 @@ for r in range(1, WS.max_row + 1):
 
         if teile:
             f, a = zelle.font, zelle.alignment
-            stil.append(f"font-size:{f.size:g}pt")
+            stil.append(f"font-size:{SCHRIFT.get(wert, f.size):g}pt")
             if ganz_fett:
                 stil.append("font-weight:bold")
             if ganz_unter:
@@ -291,7 +338,10 @@ for r in range(1, WS.max_row + 1):
             else:
                 # Excel laesst Text in leere Nachbarzellen ueberlaufen und kappt
                 # ihn erst an der naechsten belegten Zelle -- genau das hier.
-                nachbar = ci + cs
+                # Nachbar laut Vorlage, nicht nach dem Verbinden oben: sonst
+                # griffe hidden auch senkrecht und schnitte z.B. die 14pt-
+                # Unterstriche bei "Abteilung" unten ab.
+                nachbar = ci + cs_vorlage
                 if nachbar <= len(SPALTEN) and WS.cell(r, nachbar).value not in (None, ""):
                     stil.append("overflow:hidden")
 

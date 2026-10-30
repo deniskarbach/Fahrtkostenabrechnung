@@ -102,9 +102,13 @@ body {
 .dok-s1 .raster .weg    { vertical-align: top; text-align: left; font-size: var(--schrift-weg); line-height: 1.15; white-space: pre-line; padding-top: .8mm; }
 
 .dok-s1 .raster tbody td { height: var(--h-datenzeile); vertical-align: middle; }
-.dok-s1 .raster tbody td:nth-child(4) { font-size: var(--schrift-weg-daten); line-height: 1.15;
+/* Nur Datenzeilen: im Übertrag ist das 4. <td> wegen der Verbünde die km-Summe. */
+.dok-s1 .raster tbody tr:not(.uebertrag) td:nth-child(4) { font-size: var(--schrift-weg-daten); line-height: 1.15;
                                 padding-top: .4mm; padding-bottom: .4mm; }
 .dok-s1 .z-mitte { text-align: center; }
+/* Tagegeld-Spalten sind nur 5mm breit: mit Polster bleiben 2,8mm, "(X)" braucht
+   3,6mm -- es lief über und stand dann linksbündig statt mittig. */
+.dok-s1 .raster td.kreuz { padding: 0; }
 .dok-s1 .z-rechts { text-align: right; font-variant-numeric: tabular-nums; }
 .dok-s1 .uebertrag td { font-weight: bold; height: var(--h-datenzeile); }
 .dok-s1 .uebertrag .beschriftung { text-align: right; }
@@ -353,8 +357,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <td style="border-right:var(--rahmen)"></td>
     </tr>
     <tr style="height:4.50mm">
-      <td style="border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">IBAN:</td>
-      <td></td>
+      <td colspan="2" style="border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">IBAN:</td>
       <td colspan="3" style="border-bottom:var(--rahmen)"></td>
       <td></td>
       <td style="border-right:var(--rahmen)"></td>
@@ -369,8 +372,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <td style="border-right:var(--rahmen)"></td>
     </tr>
     <tr style="height:4.50mm">
-      <td style="border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">BIC:</td>
-      <td></td>
+      <td colspan="2" style="border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">BIC:</td>
       <td colspan="3" style="border-bottom:var(--rahmen)"></td>
       <td></td>
       <td style="border-right:var(--rahmen)"></td>
@@ -389,9 +391,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <td style="border-top:var(--rahmen)"></td>
       <td style="border-top:var(--rahmen)"></td>
       <td style="border-top:var(--rahmen);border-right:var(--rahmen)"></td>
-      <td style="border-top:var(--rahmen);font-size:11pt;vertical-align:bottom">Sachlich richtig:</td>
-      <td style="border-top:var(--rahmen)"></td>
-      <td style="border-top:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="3" style="border-top:var(--rahmen);border-right:var(--rahmen);font-size:11pt;vertical-align:bottom">Sachlich richtig:</td>
     </tr>
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen)"></td>
@@ -404,17 +404,15 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     </tr>
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen);position:relative"><div style="position:absolute;left:0.79mm;top:3.43mm;width:18.35mm;border-top:0.75pt solid #000"></div></td>
-      <td style="position:relative"><div style="position:absolute;left:2.91mm;top:3.43mm;width:66.94mm;border-top:0.75pt solid #000"></div></td>
+      <td style="position:relative"><div style="position:absolute;left:2.91mm;top:3.43mm;width:61.82mm;border-top:0.75pt solid #000"></div></td>
       <td colspan="2" style="border-right:var(--rahmen)"></td>
-      <td style="position:relative"><div style="position:absolute;left:2.11mm;top:3.43mm;width:62.52mm;border-top:0.75pt solid #000"></div></td>
+      <td style="position:relative"><div style="position:absolute;left:2.11mm;top:3.43mm;width:59.02mm;border-top:0.75pt solid #000"></div></td>
       <td></td>
       <td style="border-right:var(--rahmen)"></td>
     </tr>
     <tr style="height:4.50mm">
       <td style="border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom;overflow:hidden">(Datum)</td>
-      <td style="border-bottom:var(--rahmen);font-size:11pt;vertical-align:bottom">&nbsp;&nbsp; (Unterschrift, Dienstbezeichnung)</td>
-      <td style="border-bottom:var(--rahmen)"></td>
-      <td style="border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="3" style="border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:11pt;vertical-align:bottom">&nbsp;&nbsp; (Unterschrift, Dienstbezeichnung)</td>
       <td colspan="3" style="border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">&nbsp;&nbsp;(Unterschrift, Dienstbezeichnung)</td>
     </tr>
     <tr style="height:4.50mm">
@@ -431,8 +429,8 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen)"></td>
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
-      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:center;vertical-align:bottom;overflow:hidden">Im Einzelnen</td>
-      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:center;vertical-align:bottom">Insgesamt</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:10pt;font-weight:bold;text-align:center;vertical-align:bottom;overflow:hidden">Im Einzelnen</td>
+      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:10pt;font-weight:bold;text-align:center;vertical-align:bottom">Insgesamt</td>
     </tr>
     <tr style="height:4.50mm">
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen)"></td>
@@ -444,7 +442,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:center;vertical-align:bottom">EUR</td>
     </tr>
     <tr style="height:4.50mm">
-      <td colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">I. Tagegeld</td>
+      <td colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:9.5pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">I. Tagegeld</td>
       <td colspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">Tage mit mehr als 8 Stunden</td>
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
@@ -471,18 +469,14 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
     </tr>
     <tr style="height:4.50mm">
-      <td colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">II. Übernachtungskosten</td>
-      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">lt. beigefügtem Beleg</td>
-      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen)"></td>
-      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:9.5pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">II. Übernachtungskosten</td>
+      <td colspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">lt. beigefügtem Beleg</td>
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
     </tr>
     <tr style="height:4.50mm">
-      <td colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">III. Fahrtkosten</td>
-      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">ÖPNV lt. Beleg</td>
-      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen)"></td>
-      <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:9.5pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">III. Fahrtkosten</td>
+      <td colspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;text-align:left;vertical-align:bottom">ÖPNV lt. Beleg</td>
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
       <td style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
     </tr>
@@ -496,27 +490,21 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     </tr>
     <tr style="height:4.50mm">
       <td rowspan="3" colspan="2" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
-      <td style="border-top:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">Mitnahme von</td>
-      <td style="border-top:var(--rahmen)"></td>
-      <td style="border-top:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="3" style="border-top:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;vertical-align:bottom">Mitnahme von</td>
       <td rowspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
       <td rowspan="3" style="border-top:var(--rahmen);border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
     </tr>
     <tr style="height:4.50mm">
-      <td style="border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">Personen</td>
-      <td style="border-bottom:var(--rahmen)"></td>
+      <td colspan="2" style="border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">Personen</td>
       <td style="border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:11pt;vertical-align:bottom">km</td>
     </tr>
     <tr style="height:4.50mm">
-      <td style="border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">Gepäck</td>
-      <td style="border-bottom:var(--rahmen)"></td>
+      <td colspan="2" style="border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">Gepäck</td>
       <td style="border-bottom:var(--rahmen);border-right:var(--rahmen);font-size:11pt;vertical-align:bottom">km</td>
     </tr>
     <tr style="height:4.50mm">
-      <td colspan="2" style="border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">IV. Nebenkosten</td>
-      <td style="border-bottom:var(--rahmen);border-left:var(--rahmen);font-size:11pt;vertical-align:bottom">lt. Beleg</td>
-      <td style="border-bottom:var(--rahmen)"></td>
-      <td style="border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
+      <td colspan="2" style="border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:9.5pt;font-weight:bold;text-align:left;vertical-align:bottom;overflow:hidden">IV. Nebenkosten</td>
+      <td colspan="3" style="border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen);font-size:11pt;vertical-align:bottom">lt. Beleg</td>
       <td style="border-bottom:var(--rahmen);border-left:var(--rahmen);border-right:var(--rahmen)"></td>
       <td style="border-bottom:var(--rahmen);border-right:var(--rahmen)"></td>
     </tr>
@@ -547,8 +535,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <td style="border-top:var(--rahmen-breit);border-right:var(--rahmen-breit)"></td>
     </tr>
     <tr style="height:4.50mm">
-      <td colspan="2" style="border-left:var(--rahmen-breit);font-size:14pt;font-weight:bold;text-decoration:underline;text-align:left;vertical-align:bottom">Abteilung:&nbsp;<span id="s2-abteilung">__________</span></td>
-      <td></td>
+      <td colspan="3" style="border-left:var(--rahmen-breit);font-size:14pt;font-weight:bold;text-decoration:underline;text-align:left;vertical-align:bottom">Abteilung:&nbsp;<span id="s2-abteilung">__________</span></td>
       <td colspan="4" style="border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom"><span id="s2-behoerde-ort">_______________</span>, <u>_______________</u></td>
     </tr>
     <tr style="height:4.50mm">
@@ -561,12 +548,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <td style="border-right:var(--rahmen-breit)"></td>
     </tr>
     <tr style="height:4.50mm">
-      <td colspan="2" style="border-left:var(--rahmen-breit);font-size:14pt;font-weight:bold;text-decoration:underline;text-align:left;vertical-align:bottom">Verfügung:</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td style="border-right:var(--rahmen-breit)"></td>
+      <td colspan="7" style="border-left:var(--rahmen-breit);border-right:var(--rahmen-breit);font-size:14pt;font-weight:bold;text-decoration:underline;text-align:left;vertical-align:bottom">Verfügung:</td>
     </tr>
     <tr style="height:4.50mm">
       <td colspan="7" style="border-left:var(--rahmen-breit);border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom"><b>1.</b> KK anweisen,<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>€ bei: <span id="s2-buchungsstelle">_____________________</span></td>
@@ -574,20 +556,15 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen-breit)"></td>
       <td></td>
-      <td colspan="4" style="font-size:12pt;text-align:left;vertical-align:bottom">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Anordnungs-Nr.:</td>
-      <td style="border-right:var(--rahmen-breit)"></td>
+      <td colspan="5" style="border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Anordnungs-Nr.:</td>
     </tr>
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen-breit)"></td>
       <td></td>
-      <td colspan="4" style="font-size:12pt;text-align:left;vertical-align:bottom">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Beleg-Nr.:</td>
-      <td style="border-right:var(--rahmen-breit)"></td>
+      <td colspan="5" style="border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Beleg-Nr.:</td>
     </tr>
     <tr style="height:4.50mm">
-      <td colspan="4" style="border-left:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom">Buchungsjahr <u>20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>&nbsp;&nbsp;zu zahlen.</td>
-      <td></td>
-      <td></td>
-      <td style="border-right:var(--rahmen-breit)"></td>
+      <td colspan="7" style="border-left:var(--rahmen-breit);border-right:var(--rahmen-breit);font-size:12pt;text-align:left;vertical-align:bottom">Buchungsjahr <u>20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>&nbsp;&nbsp;zu zahlen.</td>
     </tr>
     <tr style="height:4.50mm">
       <td colspan="3" style="border-left:var(--rahmen-breit)"></td>
@@ -609,8 +586,7 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
       <td style="border-right:var(--rahmen-breit)"></td>
     </tr>
     <tr style="height:4.50mm">
-      <td style="border-left:var(--rahmen-breit);font-size:12pt;vertical-align:bottom"><b>3.</b> <u>z.&nbsp;d.&nbsp;A.</u></td>
-      <td></td>
+      <td colspan="2" style="border-left:var(--rahmen-breit);font-size:12pt;vertical-align:bottom"><b>3.</b> <u>z.&nbsp;d.&nbsp;A.</u></td>
       <td colspan="5" style="border-right:var(--rahmen-breit)"></td>
     </tr>
     <tr style="height:4.50mm">
@@ -621,20 +597,13 @@ Art der Ausführung der Reise, Beginn, Beendigung und Erläuterung des Dienstges
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen-breit)"></td>
       <td></td>
-      <td style="font-size:12pt;vertical-align:bottom">Im Auftrag:</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td style="border-right:var(--rahmen-breit)"></td>
+      <td colspan="5" style="border-right:var(--rahmen-breit);font-size:12pt;vertical-align:bottom">Im Auftrag:</td>
     </tr>
     <tr style="height:4.50mm">
       <td style="border-left:var(--rahmen-breit)"></td>
       <td></td>
       <td></td>
-      <td style="font-size:11pt;text-decoration:underline;vertical-align:bottom">_____________________________</td>
-      <td></td>
-      <td></td>
-      <td style="border-right:var(--rahmen-breit)"></td>
+      <td colspan="4" style="border-right:var(--rahmen-breit);font-size:11pt;text-decoration:underline;vertical-align:bottom">_____________________________</td>
     </tr>
     <tr style="height:4.50mm">
       <td style="border-bottom:var(--rahmen-breit);border-left:var(--rahmen-breit)"></td>
@@ -900,12 +869,12 @@ for (const r of reisen) {
     <td class="z-mitte">${r.von}</td>
     <td class="z-mitte">${r.bis}</td>
     <td>${r.weg}</td>
-    <td class="z-mitte">${kreuz8h(r.stufe)}</td>
-    <td class="z-mitte">${kreuz(r.stufe,">=14h")}</td>
-    <td class="z-mitte">${kreuz(r.stufe,"24h")  }</td>
+    <td class="z-mitte kreuz">${kreuz8h(r.stufe)}</td>
+    <td class="z-mitte kreuz">${kreuz(r.stufe,">=14h")}</td>
+    <td class="z-mitte kreuz">${kreuz(r.stufe,"24h")  }</td>
     <td class="z-mitte">${r.verpflegung}</td>
     <td class="z-rechts">${eur(r.oepnv)}</td>
-    <td class="z-rechts">${r.km}</td>
+    <td class="z-mitte">${r.km}</td>
     <td class="z-rechts">${zahl(r.mitnahme)}</td>
     <td class="z-rechts">${eur(r.uebernachtung)}</td>
     <td class="z-rechts">${eur(r.neben)}</td></tr>`);
@@ -915,7 +884,7 @@ tb.insertAdjacentHTML("beforeend", html`<tr class="uebertrag">
   <td class="beschriftung" colspan="4">Übertrag:</td>
   <td colspan="4"></td>
   <td class="z-rechts">${eur(summe.oepnv)}</td>
-  <td class="z-rechts">${summe.km}</td>
+  <td class="z-mitte">${summe.km}</td>
   <td class="z-rechts">${zahl(summe.mitnahme)}</td>
   <td class="z-rechts">${eur(summe.uebernachtung)}</td>
   <td class="z-rechts">${eur(summe.neben)}</td></tr>`);
