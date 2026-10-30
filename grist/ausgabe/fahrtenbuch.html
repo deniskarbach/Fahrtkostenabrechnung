@@ -24,6 +24,7 @@
 
 :root {
   --rahmen: 0.4pt solid #000;
+  --rahmen-breit: 1.4pt solid #000;   /* "medium" der Vorlage */
   --schrift: 8pt;
   --schrift-kopf: 7pt;
   --h-daten: 6.35mm;
@@ -51,17 +52,34 @@ body {
 
 .hinweis { position: absolute; top: 2mm; left: 10mm; font-size: 7pt; color: #777; }
 
-table { border-collapse: collapse; table-layout: fixed; }
+/* Rahmen wie im Original: dick außen, unter der Nummernzeile und zwischen den
+   Spaltengruppen (col.rb), sonst dünn. Unten dünn wie die Datenzeilen. */
+table { border-collapse: collapse; table-layout: fixed;
+        border: var(--rahmen-breit); border-bottom: var(--rahmen); }
+col.rb { border-right: var(--rahmen-breit); }
 th, td { border: var(--rahmen); padding: .4mm var(--polster-x); overflow: hidden; }
 
-thead th { font-weight: bold; font-size: var(--schrift-kopf); text-align: center;
-           vertical-align: middle; white-space: pre-line; line-height: 1.1;
-           overflow-wrap: anywhere; }
+/* Kopf normal, nicht fett; umbrochen wird nur, wo das Original umbricht
+   (&#10; im Text) -- pre statt pre-line, sonst bricht der Browser selbst. */
+thead th { font-weight: normal; font-size: var(--schrift-kopf); text-align: center;
+           vertical-align: top; white-space: pre; line-height: 1.1;
+           padding-top: 0; padding-bottom: 0; }
+/* Kopfhöhen wie die Vorlage (18 / 17,25 / 11,25pt), auf beiden Seiten gleich,
+   damit auch der Kopf beim Kleben deckt. Kein senkrechtes Polster: zweizeilige
+   Köpfe ("Beginn / der Reise", "Stand des Kilometerzählers bei") brauchten
+   sonst 6,48mm und drückten die Kopfzeilen auf Seite 2 höher. */
 thead .h1 { height: 6.35mm; }
 thead .h2 { height: 6.09mm; }
-thead .h3 { height: 3.97mm; }
-thead .weg { text-align: left; }
-thead .klein { font-size: 5.6pt; }
+thead .h3 { height: 3.97mm; vertical-align: middle; border-bottom: var(--rahmen-breit); }
+thead .h2 { vertical-align: bottom; }
+/* Unter den Gruppentiteln ("Dauer der Reise" …) keine Linie, die Trennlinien
+   der Unterspalten beginnen erst in Kopfzeile 2. */
+thead .gruppe { border-bottom-style: hidden; }
+/* "Vergü-/tungs-/betrag" braucht drei Zeilen, Kopfzeile 2 hat Platz für zwei.
+   Wie im Original ragt der Text nach oben in die Gruppenzeile, die dort keine
+   Trennlinie hat -- ohne die Zeile höher zu machen als auf Seite 1. */
+thead .hoch { position: relative; overflow: visible; }
+thead .hoch span { position: absolute; left: 0; right: 0; bottom: 0; }
 
 tbody td { height: var(--h-daten); vertical-align: middle; text-align: center; }
 /* Reiseweg zweizeilig in fester Zeilenhöhe: 2 x 7pt = 4,9mm passen in 6,35mm,
@@ -138,16 +156,16 @@ const ROWS_PRO_SEITE = 17;
 
 function kopfSeite1() {
   return `<colgroup>
-      <col style="width:7.88mm"><col style="width:20.41mm"><col style="width:20.41mm">
-      <col style="width:15.56mm"><col style="width:20.41mm"><col style="width:83.41mm">
+      <col class="rb" style="width:7.88mm"><col style="width:20.41mm"><col class="rb" style="width:20.41mm">
+      <col style="width:15.56mm"><col class="rb" style="width:20.41mm"><col style="width:83.41mm">
     </colgroup>
     <thead>
       <tr>
-        <th class="h1" rowspan="2">Lfd Nr.</th>
+        <th class="h1" rowspan="2">Lfd.&#10;Nr.</th>
         <th class="h1" rowspan="2">Monat</th>
         <th class="h1" rowspan="2">Tag</th>
-        <th class="h1" colspan="2">Dauer der Reise</th>
-        <th class="h1 weg" rowspan="2">Reiseweg (Umwege sind zu begründen)&#10;&#10;&#10;Kurze Angabe des Reisezweckes</th>
+        <th class="h1 gruppe" colspan="2">Dauer der Reise</th>
+        <th class="h1" rowspan="2">Reiseweg (Umwege sind zu begründen)&#10;&#10;&#10;Kurze Angabe des Reisezweckes</th>
       </tr>
       <tr>
         <th class="h2">von</th>
@@ -162,16 +180,16 @@ function kopfSeite1() {
 
 function kopfSeite2() {
   return `<colgroup>
-      <col style="width:20.19mm"><col style="width:17.68mm"><col style="width:12.39mm">
-      <col style="width:23.19mm"><col style="width:28.91mm"><col style="width:8.96mm">
-      <col style="width:11.01mm"><col style="width:23.19mm"><col style="width:23.19mm">
+      <col style="width:20.19mm"><col class="rb" style="width:17.68mm"><col style="width:12.39mm">
+      <col class="rb" style="width:23.19mm"><col style="width:28.91mm"><col style="width:8.96mm">
+      <col class="rb" style="width:11.01mm"><col class="rb" style="width:23.19mm"><col style="width:23.19mm">
     </colgroup>
     <thead>
       <tr>
-        <th class="h1" colspan="2">Stand des Kilometerzählers bei</th>
-        <th class="h1" colspan="2">Zurückgelegte Kilometer</th>
-        <th class="h1" colspan="3">Mitgenommende Bedienstete</th>
-        <th class="h1" rowspan="2">Unterschrift d. Fahrerin/Fahrers</th>
+        <th class="h1 gruppe" colspan="2">Stand des Kilometerzählers bei</th>
+        <th class="h1 gruppe" colspan="2">Zurückgelegte&#10;Kilometer</th>
+        <th class="h1 gruppe" colspan="3">Mitgenommene Bedienstete</th>
+        <th class="h1" rowspan="2">Unterschrift&#10;d. Fahrerin/&#10;Fahrers</th>
         <th class="h1" rowspan="2">Vermerke</th>
       </tr>
       <tr>
@@ -181,7 +199,7 @@ function kopfSeite2() {
         <th class="h2">außer-&#10;dienstlich</th>
         <th class="h2">Name, Amtsbezeichnung</th>
         <th class="h2">Kilo-&#10;meter</th>
-        <th class="h2 klein">Vergütungsbetrag</th>
+        <th class="h2 hoch"><span>Vergü-&#10;tungs-&#10;betrag</span></th>
       </tr>
       <tr>
         <th class="h3">7</th><th class="h3">8</th><th class="h3">9</th><th class="h3">10</th>

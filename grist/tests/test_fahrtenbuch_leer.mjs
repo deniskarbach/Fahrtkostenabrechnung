@@ -43,7 +43,7 @@ await sandbox.ausGrist();
 const blaetter = knoten("seiten").kinder.map(k => k.innerHTML);
 assert.equal(blaetter.length, 2, "ein Blattpaar");
 assert.match(blaetter[0], /Seite 1 von 2/);
-assert.match(blaetter[0], /<thead>[\s\S]*Lfd Nr\./);
+assert.match(blaetter[0], /<thead>[\s\S]*Lfd\.&#10;Nr\./);
 assert.match(blaetter[1], /<thead>[\s\S]*Vermerke/);
 assert.doesNotMatch(blaetter.join(""), /<tbody>\s*<tr>/, "keine Datenzeilen");
 assert.match(knoten("hinweis").textContent, /Keine Reisen/);
