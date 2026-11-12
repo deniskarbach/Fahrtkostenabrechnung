@@ -3,6 +3,13 @@
 Alle nennenswerten Änderungen an diesem Projekt.
 
 ## [Unreleased]
+- Doku neu gegliedert: Grist und Sheets haben dieselbe Struktur. Jede Ansicht
+  bzw. jedes Blatt hat eine eigene Formelseite (Zweck, Funktionsweise,
+  Formeln), das Handbuch heißt „Anleitung“. Begründungen und der Vergleich
+  mit der Handarbeit sind entfernt; die Muster-Kapitel stehen jetzt bei den
+  Formeln, die sie nutzen. Grist: Seite „Ausgabe“ ersetzt durch „Ausdruck“
+  (mit den JavaScript-Berechnungen beider Widgets), dazu Seiten für
+  Formularverwaltung, Reisekorrektur und Prüfliste
 - Repo aufgeräumt: `grist/ausgabe/` enthält nur noch die Widgets, die Grist
   per URL lädt; Tests nach `grist/tests/` mit Gesamtaufruf `alle.sh`,
   Abnahmetest nach `grist/tests/abnahme/`, S2-Generator nach `grist/`,
@@ -20,12 +27,19 @@ Alle nennenswerten Änderungen an diesem Projekt.
   - Uhrzeiten: Trennzeichen und Zusätze egal (`7.15`, `07:15 Uhr`, `7:15 UHR`)
   - S1 über mehrere Seiten: jede Folgeseite wiederholt den Spaltenkopf; Titel
     und Antragsteller nur auf Seite 1 (vorher hatten Folgeseiten gar keinen Kopf)
+- Grist S1: Spalte „Reiseweg“ zeigt die Zeitaufschlüsselung zur
+  Tagegeld-Prüfung (`Nr. 67 – (Ges.: … | DSt: … | DO: … | Rest: …)`) statt
+  des Reisewegs, der ohnehin im Fahrtenbuch steht. Dienstliche Kilometer
+  erscheinen auch als `0`, statt die Zelle leer zu lassen
+- Grist Routenlink: fehlt einem angefahrenen Stammziel die Anschrift, bleibt
+  der Link ganz leer — vorher fiel nur dieser Stopp still heraus, und die
+  Route war zu kurz
 - Grist S2: Unterstreichung und Fettdruck innerhalb von Zellen werden aus der
   Vorlage übernommen (Rich Text) — u. a. die Leerstelle nach „1. KK
-  anweisen,", Buchungsjahr, „z. d. A."; nur die Ziffern „1.–3." sind fett.
+  anweisen,“, Buchungsjahr, „z. d. A.“; nur die Ziffern „1.–3.“ sind fett.
   Abteilung, Buchungsstelle, Ort und Name der Behörde kommen aus neuen
   Feldern in `Einstellungen`, leer bleibt die Linie. Die drei gezeichneten
-  Unterschriftslinien über „(Datum)" / „(Unterschrift, Dienstbezeichnung)"
+  Unterschriftslinien über „(Datum)“ / „(Unterschrift, Dienstbezeichnung)“
   werden aus dem Zeichnungsteil der Vorlage übernommen
 - Grist Fahrtenbuch: Reiseweg zweizeilig in 7 pt, die Zeilenhöhe bleibt fest
   bei 6,35 mm. Vorher machte ein umbrechender Reiseweg die Zeile auf Seite 1
@@ -33,24 +47,25 @@ Alle nennenswerten Änderungen an diesem Projekt.
 - Grist Fahrtenbuch: Spalte 11 zeigt nur noch `DSt | DO`, einzeilig in 8 pt
   statt fünf Werten zweizeilig in 5,6 pt
 - Grist: Einzelziele vereinfacht — keine eigene Tabelle, kein Zerlegen, keine
-  ⚠️-Prüfung mehr. Der Freitext steht ungeprüft unter „Adresse" im
+  ⚠️-Prüfung mehr. Der Freitext steht ungeprüft unter „Adresse“ im
   Ortsverzeichnis, mit Kürzel und Datum; im Reiseweg (Fahrtenbuch,
   Prüfliste) steht nur das Kürzel `E26-07` — laufend je Jahr wie bei den
-  Vermerken, vergeben in der Rechenspalte `Reisen.Einzelziele`.
+  Vermerken, vergeben in der Rechenspalte `Reisen.Einzelziele`. Ältere
+  Dokumente verlieren beim nächsten Lauf Tabelle `Einzelziele`, die
+  `Ort_*_Sync`- und `Anschrift_*`-Spalten
 - Grist: keine Rangfolge mehr zwischen Auswahl und Freitext eines Ortsfelds —
   was eingetragen ist, wird gedruckt; beide gefüllt ergeben zwei Stopps.
   Vorher gewann die Auswahl, ein Freitext daneben verschwand ohne Spur
 - Grist: Tachofotos gestrichen (Formularfeld und Spalte `Tacho_Fotos`) —
   Handyfotos können GPS-Koordinaten in den EXIF-Daten tragen, Grist speichert
-  sie unverändert; der Kilometerstand steht ohnehin im Fahrtenbuch Ältere Dokumente verlieren beim nächsten
-  Lauf Tabelle `Einzelziele`, die `Ort_*_Sync`- und `Anschrift_*`-Spalten
-- Sheets S1: Spalte „Tagegeld Anteilig" entfernt (im Originalformular nicht
-  vorhanden) — anteiliges Tagegeld erscheint als `(X)` in „mehr als 8 Stunden",
+  sie unverändert; der Kilometerstand steht ohnehin im Fahrtenbuch
+- Sheets S1: Spalte „Tagegeld Anteilig“ entfernt (im Originalformular nicht
+  vorhanden) — anteiliges Tagegeld erscheint als `(X)` in „mehr als 8 Stunden“,
   S1 reicht jetzt von A bis M
 - Sheets Druck-Fahrtenbuch: Spalte K gibt die Zeitwerte der Reise aus
   (Ges, Rest, DSt, DO, Pr), zweizeilig mit ` | ` als Trenner
 - Grist: dieselben beiden Anpassungen — S1 im Ausdruck ohne Spalte „Tagegeld
-  Anteilig" (`(X)` in „mehr als 8 Stunden"), Fahrtenbuch-Schnittversion mit
+  Anteilig“ (`(X)` in „mehr als 8 Stunden“), Fahrtenbuch-Schnittversion mit
   den Zeitwerten in Spalte 11
 - Grist-Dokumentation vervollständigt, im Aufbau der Sheets-Doku: `grist/manual.md`
   (Handbuch) und `grist/formeln/` mit Erklärschema, Mustern A–E und je einem

@@ -1,24 +1,30 @@
-[← Formeln-Übersicht](README.md)
+[← Formeln](README.md)
 
 # Orte
 
-Stammdaten der Reiseziele, Daten beginnen ab Zeile 6. Keine Formeln — reine
-Nachschlagetabelle, die GoogleMapsExport!G3 pro Kürzel abfragt.
+## Zweck
+
+Das Blatt ordnet jedem Kürzel eine Adresse zu; Daten ab Zeile 6, keine Formeln.
+Es gibt das Blatt, damit GoogleMapsExport aus den Kürzeln Adressen für den Routenlink bildet.
+Es umfasst alle Reiseziele inklusive `WO` und `KV`.
+
+## Funktionsweise
+
+- `WO` (Wohnort) und `KV` (Kreisverwaltung) stehen als normale Zeilen darin.
+- Das Formular liefert bei Start und Ziel den Langtext „Wohnort"/
+  „Kreisverwaltung", bei Wegpunkten das Kürzel; GoogleMapsExport!G3 gleicht
+  beides an und schlägt es hier nach.
+- Die Adressen von Wohnort und Kreisverwaltung stehen zusätzlich in Setup
+  (C26–C32 bzw. C48–C54) und speisen S1 E3/J3. Bei einer Änderung beide
+  Stellen pflegen.
+
+## Formeln
+
+Keine. Spalten:
 
 | Spalte | Inhalt |
 |---|---|
 | A | Nr. |
-| B | Kürzel (= Formularwert, außer WO/KV — siehe unten) |
-| C:D | Vollständiger Name der Einrichtung |
-| E:M | Vollständige Adresse (Straße Hausnummer, PLZ Ort) |
-
-WO (Wohnort) und KV (Kreisverwaltung) stehen als normale Zeilen in diesem Blatt
-— Kürzel "WO"/"KV" in Spalte B, Adresse wie bei jedem anderen Ort in E:M. Das
-Formular liefert bei Start/Ziel den Langtext "Wohnort"/"Kreisverwaltung", bei
-Wegpunkten das Kürzel "WO"/"KV"; GoogleMapsExport!G3 gleicht das per SUBSTITUTE
-an, wie bereits BERECHNUNG!L3, und schlägt beides hier nach.
-
-Setup C26/C28/C30/C32 (Wohnort) bzw. C48/C50/C52/C54 (Kreisverwaltung) sind eine
-ZWEITE, unabhängige Pflegestelle derselben Adressen — sie speisen
-S1 E3/J3. GoogleMapsExport!G3 nutzt sie nicht mehr.
-Adressänderungen müssen daher an beiden Stellen gepflegt werden.
+| B | Kürzel (= Formularwert) |
+| C:D | Name der Einrichtung |
+| E:M | Adresse (Straße Hausnummer, PLZ Ort) |

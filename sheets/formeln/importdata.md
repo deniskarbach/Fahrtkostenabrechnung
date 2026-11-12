@@ -1,10 +1,23 @@
-[← Formeln-Übersicht](README.md)
+[← Formeln](README.md)
 
 # IMPORTDATA
 
-Rohübernahme der Formularantworten, unverändert, Spalten A–ZZ.
+## Zweck
 
-## Zelle A1
+Das Blatt übernimmt die Formularantworten unverändert aus der Formularantworten-Datei, Spalten A–ZZ.
+Es gibt das Blatt, damit BERECHNUNG nicht direkt auf die fremde Datei zugreift.
+Es umfasst eine Formel in A1 und die Spaltenbelegung des Formulars.
+
+## Funktionsweise
+
+- Eine einzige Formel in A1 holt alles per `IMPORTRANGE`.
+- Jede neue Formularfrage verschiebt alle folgenden Spalten. Danach die
+  IMPORTDATA-Bezüge in BERECHNUNG, Vermerke, Druck-Fahrtenbuch und
+  GoogleMapsExport prüfen.
+
+## Formeln
+
+### Zelle A1
 
 ```
 =IF(Setup!B74=""; "⚠️ Keine URL hinterlegt"; IFERROR(IMPORTRANGE(Setup!B74; "Formularantworten 1!A1:ZZ"); "❌ Fehler beim Import (Zugriff erlaubt?)"))
@@ -16,7 +29,7 @@ Rohübernahme der Formularantworten, unverändert, Spalten A–ZZ.
 | Zugriff schlägt fehl | „❌ Fehler beim Import (Zugriff erlaubt?)" |
 | sonst | vollständige Formulardaten |
 
-## Spaltenbelegung (finale Formularversion, A:AC)
+### Spaltenbelegung (finale Formularversion, A:AC)
 
 | Spalte | Feld |
 |---|---|

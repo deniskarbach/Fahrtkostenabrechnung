@@ -5,24 +5,15 @@
 <title>Prüfliste – Reisekostenabrechnung</title>
 <style>
 /* ---------------------------------------------------------------
-   Prüfblatt für die Zeiterfassungsstelle: alles, was sonst auf fünf
-   Blättern verteilt liegt (S1, Vermerke, Ortsverzeichnis, Fahrtenbuch,
-   Routenlinks), kompakt in EINER Zeile je Reise -- damit die Stelle,
-   die den Antrag final bearbeitet, nicht zwischen Blättern blättern
-   muss.
+   Prüfblatt für die Zeiterfassungsstelle: alles aus S1, Vermerken,
+   Ortsverzeichnis und Fahrtenbuch in EINER Zeile je Reise. Spaltenbegriffe
+   aus S1, Kopf und Orte-Legende aus dem Ortsverzeichnis -- die Stelle soll
+   die gewohnte Ansicht wiedererkennen.
 
-   Spaltenbegriffe absichtlich aus S1 übernommen (Tagegeld für /
-   Unentgeltliche Verpflegung / ÖPNV / Wegstrecke / Mitnahme von
-   Personen / Übernachtungskosten / Nebenkosten), Kopfblock und
-   Orte-Legende aus dem Ortsverzeichnis -- die Stelle soll die
-   gewohnte Ansicht wiedererkennen, nicht eine neue lernen.
-
-   A4 quer: 22 Spalten passen nicht auf Hochformat. Die Spaltenbreiten
-   summieren sich auf 266mm -- bewusst NICHT auf die theoretisch moeglichen
-   277mm (A4 quer minus 2x10mm @page-Rand). Greift die @page-Regel naemlich
-   nicht, gelten die Standardraender des Druckdialogs (~12,7mm je Seite),
-   und es bleiben nur 271,6mm. Mit 252mm passt es in beiden Faellen.
-   Gedruckt wird ueber ein eigenes Fenster, siehe drucken() weiter unten.
+   A4 quer, 22 Spalten, zusammen 266mm: nicht die möglichen 277mm (A4 quer
+   minus 2 x 10mm Rand), weil ohne greifende @page-Regel die Standardränder
+   des Dialogs gelten und nur 271,6mm bleiben. Gedruckt wird über ein
+   eigenes Fenster, siehe drucken().
    --------------------------------------------------------------- */
 @page { size: A4 landscape; margin: 10mm; }
 
@@ -275,10 +266,9 @@ const stunden = min => {
   return `${vz}${Math.trunc(min / 60)}:${String(min % 60).padStart(2, "0")}`;
 };
 
-/* Auch negative Beträge erscheinen -- mit Minus. Bis 16.10.2026 blieb die Zelle
-   leer, der Betrag ging aber in die Summe ein: der Übertrag stimmte dann nicht
-   mit den sichtbaren Zeilen überein. So fällt eine Fehleingabe beim
-   Unterschreiben auf. */
+/* Auch negative Beträge erscheinen -- mit Minus. Blieben sie leer, gingen sie
+   trotzdem in die Summe ein, und der Übertrag passte nicht zu den sichtbaren
+   Zeilen. So fällt eine Fehleingabe beim Unterschreiben auf. */
 const eur = n => n ? n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}) : "";
 const zahl = n => n ? String(n) : "";
 
@@ -343,19 +333,15 @@ function rendern(kopf, reisen, orte) {
   document.getElementById("daten-orte").innerHTML = orte.map(ortZeile).join("");
 }
 
-/* Gedruckt wird NICHT per window.print() aus dem Widget heraus: dabei oeffnete
-   der Dialog in Hochformat und schnitt die 22 Spalten ab. Im Grist-Iframe
-   greifen die @page-Regeln dieses Dokuments nicht zuverlaessig -- an der
-   iframe-Einbettung liegt es also doch. Hier stand frueher das Gegenteil, mit
-   ausdruck.html als Gegenbeispiel; das war ein Trugschluss aus einer reinen
-   macOS/Chrome-Probe. Unter Windows/Edge quetschte ausdruck.html sein
-   Fahrtenbuch aus demselben Iframe genauso auf Hochformat und druckt
-   inzwischen ueber denselben Weg wie hier.
+/* Gedruckt wird NICHT per window.print() aus dem Widget heraus: dabei öffnet
+   der Dialog in Hochformat und schneidet die 22 Spalten ab, weil im
+   Grist-Iframe die @page-Regeln dieses Dokuments nicht zuverlässig greifen.
    Das fertige Blatt wandert deshalb in ein eigenes Fenster, wo es
-   Top-Level-Dokument ist und @page in jedem Fall greift.
-   Die Breiten sind zusaetzlich so gewaehlt (252mm statt der moeglichen 277mm),
-   dass sie auch bei den groesseren Standardraendern des Dialogs passen --
-   falls jemand doch ueber Grists eigenes "Widget drucken" geht. */
+   Top-Level-Dokument ist und @page in jedem Fall greift -- wie in
+   ausdruck.html.
+   Die Breiten sind zusätzlich so gewählt (266mm statt der möglichen 277mm),
+   dass sie auch bei den größeren Standardrändern des Dialogs passen --
+   falls jemand doch über Grists eigenes "Widget drucken" geht. */
 function drucken() {
   const w = window.open("", "_blank");
   if (!w) {
@@ -378,7 +364,7 @@ document.getElementById("drucken").onclick = drucken;
 /* ---------------------------------------------------------- Grist-Anbindung */
 
 /* Meldungen gehen in die Leiste, nicht in den <body>: ein ersetzter Body
-   nimmt die Tabellen mit, und der naechste onRecords-Lauf findet seine Zellen
+   nimmt die Tabellen mit, und der nächste onRecords-Lauf findet seine Zellen
    dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
 const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
 const hinweis = t => { document.getElementById("hinweis").textContent = t; };
@@ -407,17 +393,17 @@ async function ausGrist() {
   const orteNachId = Object.fromEntries(
     zeilen(await grist.docApi.fetchTable("Stammziele")).map(o => [o.id, o]));
 
-  /* Gefiltert wird ueber den Reisebeginn -- siehe ausdruck.html: eine Reise,
-     die vor `von` beginnt, gehoert in die vorige Abrechnung. */
+  /* Gefiltert wird über den Reisebeginn -- siehe ausdruck.html: eine Reise,
+     die vor `von` beginnt, gehört in die vorige Abrechnung. */
   const reisen = zeilen(await grist.docApi.fetchTable("Reisen"))
     .filter(r => imZeitraum(r.Datum))
     .sort((a, b) => a.Datum - b.Datum);
 
   /* Orte-Legende: identische Reihenfolge wie im Ortsverzeichnis von
-     ausdruck.html -- Wohnung und Dienststaette fest vorn, dann die uebrigen
+     ausdruck.html -- Wohnung und Dienststätte fest vorn, dann die übrigen
      Stammziele nach erstem Vorkommen, dann die Einzelziele nach Datum.
-     Gegen ein Auseinanderlaufen der beiden Kopien prueft
-     test_pruefliste.mjs beide Blaetter auf dieselbe Liste. */
+     Gegen ein Auseinanderlaufen der beiden Kopien prüft
+     test_pruefliste.mjs beide Blätter auf dieselbe Liste. */
   const orteListe = Object.values(orteNachId);
   const stammIds = ["WO", "KV"]
     .map(k => orteListe.find(o => o.Kuerzel === k))
@@ -474,13 +460,10 @@ async function ausGrist() {
 if (window.self === window.top) {
   rendern(beispielKopf, beispielReisen, beispielOrte);
 } else {
-  /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
-     Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
-     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy loescht
-     document.referrer, und ein fest verdrahtetes docs.getgrist.com waere dann
-     doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
-     Host bekaeme einen Request aus dem Dokument. Lieber nichts laden und es
-     sagen. */
+  /* Plugin-API von der einbettenden Grist-Instanz laden (referrer, sonst
+     ancestorOrigins), nicht von einer festen Adresse: kein Hostname im
+     öffentlichen Repo, keine Anfrage an fremde Hosts. Ohne Quelle lieber
+     nichts laden und es sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
                 : window.location.ancestorOrigins?.[0] || "";
   if (!quelle) {
@@ -492,7 +475,7 @@ if (window.self === window.top) {
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
     grist.ready({ requiredAccess: "full" });   // liest vier Tabellen
-    /* onRecords feuert nur bei Aenderungen an 'Einstellungen' -- eine neu
+    /* onRecords feuert nur bei Änderungen an 'Einstellungen' -- eine neu
        erfasste oder korrigierte Reise erreicht das Widget NICHT von selbst. */
     grist.onRecords(ausGrist);
     const knopf = document.getElementById("neu-laden");

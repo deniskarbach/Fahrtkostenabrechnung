@@ -1,11 +1,23 @@
-[← Formeln-Übersicht](README.md)
+[← Formeln](README.md)
 
 # Druck-Fahrtenbuch
 
-Druckansicht des Fahrtenbuchs, Daten ab Zeile 4. Jede Spalte ein Zeitraum-Auszug
-aus BERECHNUNG (Muster B).
+## Zweck
 
-## A4, D4:J4 - Zeitraum-Auszüge
+Das Blatt druckt die Reisen als Zeilen für das amtliche Fahrtenbuch; Daten ab Zeile 4.
+Es gibt das Blatt, damit nichts abgeschrieben werden muss: ausschneiden, einkleben, unterschreiben.
+Es umfasst je Reise eine Zeile mit Zeiten, Kilometern, Reiseweg und Vermerk-Kennung.
+
+## Funktionsweise
+
+- Jede Spalte ist ein Zeitraum-Auszug aus BERECHNUNG: `FILTER` behält nur
+  Reisen im Abrechnungszeitraum (Setup C8–C10); `IFERROR(…;"")` macht Fehler
+  zur leeren Zelle.
+- Spalten L:N sind von Hand auszufüllen (keine Formel).
+
+## Formeln
+
+### A4, D4:J4 - Zeitraum-Auszüge
 
 ```
 =ARRAYFORMULA(IFERROR(FILTER(BERECHNUNG!<Spalte>3:<Spalte>; BERECHNUNG!C3:C<>""; BERECHNUNG!C3:C>=Setup!$C$8; BERECHNUNG!C3:C<=Setup!$C$10);""))
@@ -23,7 +35,7 @@ aus BERECHNUNG (Muster B).
 | J4 | I | Kilometer privat (Umweg) |
 
 
-## B4 / C4 - Monat / Tag
+### B4 / C4 - Monat / Tag
 
 ```
 =ARRAYFORMULA(IFERROR(FILTER(
@@ -34,14 +46,14 @@ aus BERECHNUNG (Muster B).
 );""))
 ```
 
-**Statement:** wie oben, aber `MONTH(…)` (B4) bzw. `DAY(…)` (C4) auf das Datum
+**Aufbau:** wie oben, aber `MONTH(…)` (B4) bzw. `DAY(…)` (C4) auf das Datum
 angewendet; `IF(C="";"";…)` verhindert, dass eine leere Zelle als Monat/Tag der
 Serienzahl 0 (30.12.1899) erscheint.
 
 **Ergebnis:** Monat bzw. Tag des Reisedatums als Zahl.
 
 
-## K4 - Zeitwerte
+### K4 - Zeitwerte
 
 ```
 =ARRAYFORMULA(IFERROR(FILTER(
@@ -57,20 +69,16 @@ Serienzahl 0 (30.12.1899) erscheint.
 );""))
 ```
 
-**Statement:** wie S1!D7, aber ohne laufende Nummer (steht in Spalte A);
+**Aufbau:** wie S1!D7, aber ohne laufende Nummer (steht in Spalte A);
 `CHAR(10)` setzt den Zeilenumbruch fest hinter Gesamt und Rest, ` | ` trennt die
 Blöcke.
 
 **Ergebnis:** Zwei Zeilen je Reise, z. B. `Ges 9:15 | Rest 3:15` über
 `DSt 1:00 | DO 4:30 | Pr 0:30`.
 **Sonderfall:** Anders als in S1 erscheint der private Abzug (Pr) immer, auch mit 0:00.
-**Muster:** Zeitraum-Auszug (B).
 
 
-## L4:N4 - händische Eintragung (keine Formel)
-
-
-## O4 - Vermerk (Label)
+### O4 - Vermerk (Label)
 
 Baut das Label selbst aus BERECHNUNG/IMPORTDATA (identische Logik wie
 Vermerke!A6/B6), statt es aus Vermerke nachzuschlagen — Vermerke ist gefiltert
@@ -91,4 +99,3 @@ und daher nicht mehr zeilengleich zu BERECHNUNG.
 ```
 
 **Ergebnis:** Das Vermerk-Label `V25-03` je Reise, leer wenn kein Vermerk.
-**Muster:** Zeitraum-Auszug (B) + Zeilengrenzen (D).

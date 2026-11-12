@@ -5,20 +5,15 @@
 <title>Reisekostenabrechnung – Ausdruck</title>
 <style>
 /* ---------------------------------------------------------------
-   Zusammenführung von S1/S2, Vermerke und Ortsverzeichnis in
-   EIN Custom-Widget -- vorher separate Widgets auf der Ausdruck-
-   Seite (je eigene Grist-Fetches und iframes). Jedes Dokument bleibt
-   inhaltlich exakt wie in seiner eigenständigen Datei, nur unter einem
-   Namensraum .dok-XXX gekapselt, damit gleichnamige Klassen (.kopf,
-   .raster, .titel …) und CSS-Variablen (--schrift, --rahmen …) sich
-   zwischen den Dokumenten nicht überschreiben.
+   S1/S2, Vermerke und Ortsverzeichnis in EINEM Custom-Widget -- ein
+   Grist-Fetch und ein iframe statt je eines pro Dokument. Jedes Dokument
+   ist unter einem Namensraum .dok-XXX gekapselt, damit gleichnamige
+   Klassen (.kopf, .raster, .titel …) und CSS-Variablen (--schrift,
+   --rahmen …) sich zwischen den Dokumenten nicht überschreiben.
 
    Unterschiedliche Seitenränder je Blatt gehen in einem einzigen Druckjob
    nur über benannte @page-Regeln -- die "page"-Eigenschaft weist jedem
    Blatt seine Seite zu.
-
-   Das Fahrtenbuch (quer) ist nicht mehr Teil dieses Ausdrucks: es steht in
-   fahrtenbuch-preview.html, die Schnittversion in fahrtenbuch.html.
    --------------------------------------------------------------- */
 @page            { size: A4 portrait;  margin: 15mm; }              /* S1 */
 @page s2         { size: A4 portrait;  margin: 10mm 17.78mm 0; }
@@ -208,19 +203,12 @@ body {
 
 @media print {
   body { background: #fff; }
-  /* Umbruch VOR jedem Blatt, nicht dahinter. Beides trennt die
-     Dokumente gleich gut, aber die Richtung entscheidet, welche @page-Regel
-     für die erzeugte Seite gilt: ein Umbruch gilt der Seite, auf der das
-     nächste Blatt beginnt, und dieses Blatt bringt sein "page: …" mit.
-     Hinter dem letzten Blatt (damals das Fahrtenbuch, quer) kam keines mehr -- die
-     Seite, die "break-after" dort erzwang, fiel deshalb auf die namenlose
-     Standardregel zurück und damit auf A4 HOCH. Chrome unterschlug diese
-     leere Schlussseite, Edge druckte sie: dasselbe Dokument sah je nach
-     Browser anders aus. "break-before" erzeugt am Anfang keine Seite --
-     ein erzwungener Umbruch vor dem ersten Blatt wird verworfen --, also
-     bleibt kein Blatt ohne @page-Regel. Kein :last-child über Namensräume
-     nötig. !important nötig, da die Bildschirm-Regeln oben je Dokument
-     spezifischer sind (zwei Klassen statt einer). */
+  /* Umbruch VOR jedem Blatt, nicht dahinter: der Umbruch gehört zur Seite,
+     auf der das nächste Blatt beginnt, und dieses bringt sein "page: …" mit.
+     break-after hinter dem letzten Blatt erzeugt eine leere Seite ohne
+     @page-Regel (Edge druckt sie, Chrome nicht); break-before vor dem ersten
+     Blatt wird verworfen. !important, weil die Bildschirm-Regeln oben je
+     Dokument spezifischer sind. */
   .blatt { width: auto !important; margin: 0 !important; padding: 0 !important;
            box-shadow: none !important; break-before: page; }
   thead { display: table-header-group; }
@@ -766,24 +754,20 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g,
 const html = (t, ...v) => t.reduce((a, s, i) => a + esc(v[i - 1]) + s);
 
 /* Meldungen gehen in die Druckleiste, nicht in den <body>: ein ersetzter Body
-   nimmt die Tabellen mit, und der naechste onRecords-Lauf findet seine Zellen
+   nimmt die Tabellen mit, und der nächste onRecords-Lauf findet seine Zellen
    dann nicht mehr wieder -- das Widget bliebe bis zum Reload tot. */
 const HINWEIS_STANDARD = document.getElementById("hinweis").textContent;
 const hinweis = t => { document.getElementById("hinweis").textContent = t; };
 
 /* Gedruckt wird NICHT per window.print() aus dem Widget heraus. Im Grist-
-   Iframe greifen die @page-Regeln dieses Dokuments nicht zuverlaessig: unter
-   Windows/Edge fiel der ganze Druckjob auf A4 hoch zurueck und quetschte das
-   damals enthaltene, 297mm breite Fahrtenbuch auf Hochformat. Unter macOS/Chrome passierte das
-   nicht -- dieselbe Datei sah je nach Arbeitsplatz anders aus.
+   Iframe greifen die @page-Regeln dieses Dokuments nicht zuverlässig: unter
+   Windows/Edge fällt der Druckjob auf die Standardseite zurück, unter
+   macOS/Chrome nicht -- dieselbe Datei sähe je nach Arbeitsplatz anders aus.
+   Die fertigen Blätter wandern deshalb in ein eigenes Fenster, wo sie
+   Top-Level-Dokument sind und @page in jedem Fall gilt. pruefliste.html
+   druckt auf demselben Weg.
 
-   Die Pruefliste hatte genau denselben Fehler ("oeffnete in Hochformat und
-   schnitt rechts ab") und ist so geloest worden; der Kommentar dort nahm
-   ausdruck.html noch als Gegenbeispiel an, weil hier auf dem Mac nichts
-   auffiel. Der Weg ist derselbe: die fertigen Blaetter wandern in ein eigenes
-   Fenster, wo sie Top-Level-Dokument sind und @page in jedem Fall gilt.
-
-   Mitgenommen werden alle .dok-*-Huellen, nicht nur die .blatt darin --
+   Mitgenommen werden alle .dok-*-Hüllen, nicht nur die .blatt darin --
    das CSS ist je Dokument unter .dok-XXX gekapselt und griffe sonst nicht. */
 function drucken() {
   const w = window.open("", "_blank");
@@ -816,10 +800,9 @@ const zeilen = t => t.id.map((_, i) =>
 const anschrift = (strasse, plz, ort) =>
   [strasse, [plz, ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
 
-/* Auch negative Beträge erscheinen -- mit Minus. Bis 16.10.2026 blieb die Zelle
-   leer, der Betrag ging aber in die Summe ein: der Übertrag stimmte dann nicht
-   mit den sichtbaren Zeilen überein. So fällt eine Fehleingabe beim
-   Unterschreiben auf. */
+/* Auch negative Beträge erscheinen -- mit Minus. Blieben sie leer, gingen sie
+   trotzdem in die Summe ein, und der Übertrag passte nicht zu den sichtbaren
+   Zeilen. So fällt eine Fehleingabe beim Unterschreiben auf. */
 const eur = n => n ? n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}) : "";
 const zahl = n => n ? String(n) : "";
 const kreuz = (stufe, s) => stufe === s ? "X" : "";
@@ -837,12 +820,9 @@ const stunden = min => {
   return `${vz}${Math.trunc(min / 60)}:${String(min % 60).padStart(2, "0")}`;
 };
 
-/* Spalte "Reiseweg" auf S1: der amtliche Vordruck verlangt dort nur die
-   laufende Nummer, wenn ein Fahrtenbuch geführt wird (steht so im
-   Spaltenkopf) -- der Weg selbst steht bereits im Fahrtenbuch. Statt der
-   Nummer allein zeigt diese Zeile zusätzlich die Zeiten, aus denen sich die
-   Tagegeld-Stufe ergibt, zur Prüfung beim Unterschreiben. Format identisch
-   zur Sheets-Version. */
+/* Spalte "Reiseweg" auf S1: die laufende Nummer, die der Vordruck bei
+   Fahrtenbuch verlangt, plus die Zeiten, aus denen sich die Tagegeld-Stufe
+   ergibt. Der Reiseweg selbst steht im Fahrtenbuch. */
 const s1Zeile = r => {
   if (!r.Lfd_Nr) return "";
   const priv = r.Min_privat_Abzug > 0 ? ` | Priv: ${stunden(r.Min_privat_Abzug)}` : "";
@@ -943,9 +923,9 @@ async function ausGrist() {
   }
   hinweis(HINWEIS_STANDARD);
   const von = e.Zeitraum_von, bis = e.Zeitraum_bis;
-  /* Massgeblich ist der BEGINN der Reise, nicht ihr Ende: eine mehrtaegige
+  /* Maßgeblich ist der BEGINN der Reise, nicht ihr Ende: eine mehrtägige
      Reise, die vor `von` beginnt und in den Zeitraum hineinreicht, wurde mit
-     der frueheren Abrechnung bereits erledigt. Sie hier noch einmal zu zeigen
+     der früheren Abrechnung bereits erledigt. Sie hier noch einmal zu zeigen
      hiesse, sie ein zweites Mal abzurechnen -- das ist Absicht, kein Fehler. */
   const imZeitraum = d => d != null && (von == null || d >= von) && (bis == null || d <= bis);
 
@@ -999,12 +979,9 @@ async function ausGrist() {
       datum: tag(r.Datum),
     })));
 
-  /* Das Ortsverzeichnis ist die Legende zum Reiseweg, kein Fahrtenprotokoll.
-     Stammziele stehen deshalb höchstens einmal darin -- sonst erscheint die
-     Wohnung bei zwei Reisen viermal, je einmal als Start und als Ziel.
-     Wohnung und Dienststätte führen die Liste fest an: sie erklären die
-     beiden Kürzel, die in fast jedem Reiseweg vorkommen. Danach die übrigen
-     Stammziele in der Reihenfolge ihres ersten Vorkommens im Zeitraum. */
+  /* Legende zum Reiseweg, kein Fahrtenprotokoll: jedes Stammziel höchstens
+     einmal, WO und KV zuerst, dann die übrigen in der Reihenfolge ihres
+     ersten Vorkommens im Zeitraum. */
   const orteListe = Object.values(orteNachId);
   const stammIds = ["WO", "KV"]
     .map(k => orteListe.find(o => o.Kuerzel === k))
@@ -1040,13 +1017,10 @@ if (window.self === window.top) {
   renderVermerke(beispielKopfVermerke, beispielVermerke);
   renderOrtsverzeichnis(beispielKopfOrtsverzeichnis, beispielOrtsverzeichnis);
 } else {
-  /* Plugin-API von der einbettenden Grist-Instanz laden, nicht von einer festen
-     Adresse -- so steht der Hostname der Instanz nicht in diesem offenen Repo.
-     ancestorOrigins als zweite Quelle: eine strenge Referrer-Policy loescht
-     document.referrer, und ein fest verdrahtetes docs.getgrist.com waere dann
-     doppelt falsch -- die eigene Instanz bliebe unerreichbar, und ein fremder
-     Host bekaeme einen Request aus dem Dokument. Lieber nichts laden und es
-     sagen. */
+  /* Plugin-API von der einbettenden Grist-Instanz laden (referrer, sonst
+     ancestorOrigins), nicht von einer festen Adresse: kein Hostname im
+     öffentlichen Repo, keine Anfrage an fremde Hosts. Ohne Quelle lieber
+     nichts laden und es sagen. */
   const quelle = document.referrer ? new URL(document.referrer).origin
                 : window.location.ancestorOrigins?.[0] || "";
   if (!quelle) {
@@ -1058,13 +1032,10 @@ if (window.self === window.top) {
   s.src = quelle + "/grist-plugin-api.js";
   s.onload = () => {
     grist.ready({ requiredAccess: "full" });   // liest Einstellungen, Stammziele, Reisen
-    /* onRecords feuert beim Aufbau und danach nur bei Aenderungen an der
-       Tabelle, an der das Widget haengt -- das ist 'Einstellungen', also
-       praktisch nur der Abrechnungszeitraum. Eine neu erfasste oder
-       korrigierte Reise erreicht das Widget NICHT.
-       ponytail: sichtbarer Knopf statt Polling -- die Plugin-API kennt
-       keinen Haken auf fremde Tabellen, und still veraltet drucken ist der
-       teurere Fehler. */
+    /* onRecords feuert nur bei Änderungen an 'Einstellungen' (praktisch am
+       Zeitraum), nicht an Reisen -- dafür der Knopf "Aktualisieren".
+       ponytail: sichtbarer Knopf statt Polling; die Plugin-API kennt keinen
+       Haken auf fremde Tabellen. */
     grist.onRecords(ausGrist);
     const knopf = document.getElementById("neu-laden");
     knopf.hidden = false;

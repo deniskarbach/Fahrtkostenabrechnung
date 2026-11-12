@@ -1,22 +1,25 @@
-[← Formeln-Übersicht](README.md)
+[← Formeln](README.md)
 
 # GoogleMapsExport
 
-Daten ab Zeile 3, wie BERECHNUNG. Fasst Lfd. Nummer, Datum, Reiseweg, Zeiten,
-dienstliche Kilometer und einen fertigen Google-Maps-Routenlink pro Reise im
-Abrechnungszeitraum zusammen — ersetzt das manuelle Eintippen jedes Ortes in
-Maps durch einen Klick.
+## Zweck
 
-WICHTIG (gilt für jedes FILTER im Dokument): Datenbereich und Bedingung müssen
-exakt gleich viele Zeilen haben, sonst liefert FILTER einen Fehler und die
-umschließende IFERROR macht daraus eine leere Zelle — die Spalte bleibt still
-leer statt sichtbar kaputt. Offenes `A3:A` reicht bis Blattende (998 Zeilen),
-`C3:C999` hat 997. Offene Bereiche daher nur mit offenen Bedingungen kombinieren
-(A3:A ↔ C3:C), begrenzte nur mit begrenzten. A3–F3 filtern offene
-BERECHNUNG-Spalten und nutzen daher C3:C; G3 baut sein Array aus
-IMPORTDATA!J2:P998 (997 Zeilen) und braucht dort C3:C999.
+Das Blatt erzeugt je Reise im Abrechnungszeitraum einen Google-Maps-Routenlink; Daten ab Zeile 3.
+Es gibt das Blatt, damit die gefahrene Strecke ohne Abtippen der Orte geprüft werden kann.
+Es umfasst Nummer, Datum, Reiseweg, Zeiten, dienstliche Kilometer und den Link.
 
-## J1 - Abrechnungszeitraum
+## Funktionsweise
+
+- A3–F3 sind Zeitraum-Auszüge aus BERECHNUNG, G3 baut den Routenlink aus den
+  Ortsfeldern in IMPORTDATA und der Tabelle [Orte](orte.md).
+- Bei jedem `FILTER` müssen Datenbereich und Bedingung gleich viele Zeilen
+  haben, sonst bleibt die Spalte still leer. Offene Bereiche (`A3:A`) nur mit
+  offenen kombinieren, begrenzte (`C3:C999`) nur mit begrenzten. A3–F3 nutzen
+  `C3:C`; G3 nutzt `IMPORTDATA!J2:P998` (997 Zeilen) und `C3:C999`.
+
+## Formeln
+
+### J1 - Abrechnungszeitraum
 
 ```
 =TEXTJOIN(" - ";TRUE;TEXT(Setup!$C$8;"DD.MM.YYYY");TEXT(Setup!$C$10;"DD.MM.YYYY"))
@@ -25,7 +28,7 @@ IMPORTDATA!J2:P998 (997 Zeilen) und braucht dort C3:C999.
 **Ergebnis:** Abrechnungszeitraum als Text „von - bis" (wie Vermerke E1).
 
 
-## A3:F3 - Zeitraum-Auszüge
+### A3:F3 - Zeitraum-Auszüge
 
 ```
 =ARRAYFORMULA(IFERROR(FILTER(<Quelle>; BERECHNUNG!C3:C<>""; BERECHNUNG!C3:C>=Setup!$C$8; BERECHNUNG!C3:C<=Setup!$C$10);""))
@@ -41,7 +44,7 @@ IMPORTDATA!J2:P998 (997 Zeilen) und braucht dort C3:C999.
 | F3 | K | Kilometer dienstlich (bereinigt) |
 
 
-## G3 - Routenlink
+### G3 - Routenlink
 
 Löst Formular-Kürzel gegen Orte!B (auch WO/KV) zu vollständigen Adressen auf
 und baut daraus einen anklickbaren Google-Maps-Link. Nicht gefundene Kürzel
@@ -77,32 +80,15 @@ Prüfzelle unten).
 );""))
 ```
 
-**Statement:**
-- `CHOOSECOLS(IMPORTDATA!J2:P998; 1;3;4;5;6;7;2)` – Spalten in Reisereihenfolge umsortieren (Start, Wegpunkte, Ziel)
-- `BYROW(…; LAMBDA(zeile; …))` – jede Reise einzeln verarbeiten
-- `codes; IFERROR(FILTER(zeile; zeile<>""); {""})` – leere Ortsfelder verwerfen
-- `MAP(codes; LAMBDA(k; …))` – jedes Kürzel einzeln auflösen
-- `TRIM(SUBSTITUTE(SUBSTITUTE(k;…)))` – Langtext auf Kürzel normalisieren (Formular liefert bei Start/Ziel „Wohnort"/„Kreisverwaltung", bei Wegpunkten das Kürzel „WO"/„KV" — beides wird auf den Orte-Schlüssel gebracht)
-- `XMATCH(kk; Orte!$B$6:$B$200)` – Zeile im Orte-Blatt suchen; `ISNA` → Kürzel bleibt Rohtext
-- `CHOOSEROWS(Orte!$E$6:$M$200; z)` + `TEXTJOIN(" ";TRUE;…)` – Adresszellen dieser Zeile zu einer Adresse verbinden
-- `n; COUNTA(adr)` – Anzahl aufgelöster Orte; unter zwei Orten keine Route
-- `ENCODEURL(…)` – Adressen URL-sicher kodieren
-- `FILTER(adr; (SEQUENCE(1;n)>1)*(SEQUENCE(1;n)<n))` – alles zwischen Erstem und Letztem = Wegpunkte
-- `HYPERLINK(url; "Route")` – klickbarer Link mit fester Beschriftung
-- `- 0*COUNTA(Orte!$B$6:$M$200)` – ändert den Vergleichswert nicht, sorgt aber dafür, dass Sheets `Orte` als Abhängigkeit dieser Zelle erkennt (in der `LAMBDA`-Closure von `BYROW`/`MAP` sonst nicht sichtbar)
-
-WO und KV sind normale Zeilen in Orte (Kürzel „WO"/„KV" in Spalte B, Adresse in E:M),
-nicht mehr per Sonderfall gegen Setup aufgelöst.
-
-ACHTUNG: Der No-op darf NICHT an das `BYROW`-Ergebnis gehängt werden
-(`BYROW(...) & IF(...;"";"")`). Jede Verkettung mit `&` wandelt einen
-`HYPERLINK`-Wert in seinen reinen Label-Text um — die Zelle zeigt dann „Route"
-ohne Link. Deshalb steht die Referenz in der Bedingung, nicht in den Daten.
+**Aufbau:**
+- `CHOOSECOLS(…; 1;3;4;5;6;7;2)` bringt die Ortsfelder in Reisereihenfolge, `BYROW` verarbeitet jede Reise einzeln, leere Felder fallen weg.
+- Je Kürzel: „Wohnort"/„Kreisverwaltung" werden zu „WO"/„KV" normalisiert, `XMATCH` sucht die Zeile in `Orte`, `CHOOSEROWS` + `TEXTJOIN` bilden die Adresse. Nicht gefundene Kürzel bleiben Rohtext.
+- Erster Ort = Start, letzter = Ziel, die dazwischen = Wegpunkte; `ENCODEURL` kodiert die Adressen, `HYPERLINK` macht den Link „Route".
+- `- 0*COUNTA(Orte!…)` in der Datumsbedingung ändert nichts am Wert, lässt Sheets aber `Orte` als Abhängigkeit erkennen. Nicht an das `BYROW`-Ergebnis anhängen: `&` macht aus dem Link reinen Text.
 
 **Ergebnis:** Ein anklickbarer „Route"-Link, der die Reise direkt in Google Maps öffnet.
 **Sonderfall:** Weniger als zwei Orte → kein Link; ein nicht gefundenes Kürzel bleibt als
 Rohtext im Link stehen.
-**Muster:** Zeitraum-Auszug (B) + Zeilengrenzen (D).
 
 Prüfzelle bei rohem Kürzel im Link statt Adresse:
 

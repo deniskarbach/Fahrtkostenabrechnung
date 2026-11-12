@@ -10,13 +10,16 @@ Alternativ ohne Datei, direkt in der Shell:
     export GRIST_API_KEY="..."
     export GRIST_DOC_ID="..."
 
-Laeuft vollstaendig lokal, nur Standardbibliothek. Bestehende Spalten werden
-uebersprungen, das Skript kann also gefahrlos erneut laufen.
+Läuft vollständig lokal, nur Standardbibliothek. Das Skript ist wiederholbar:
+Fehlendes wird ergänzt, Eingabespalten und Daten bleiben unangetastet,
+Rechenformeln werden auf den Stand dieser Datei zurückgesetzt.
+
+    python3 grist/setup.py --selbsttest   # prüft die Formeln ohne Grist
 """
 import json, os, sys, urllib.request, urllib.error, urllib.parse, pathlib
 
 # Zugangsdaten kommen NIE in diese Datei. Entweder aus der Umgebung oder aus
-# grist/.env — beides liegt ausserhalb der Versionierung (siehe .gitignore).
+# grist/.env — beides liegt außerhalb der Versionierung (siehe .gitignore).
 _env = pathlib.Path(__file__).with_name(".env")
 if _env.exists():
     for zeile in _env.read_text(encoding="utf-8").splitlines():
@@ -78,7 +81,7 @@ def spalte(sid, label, typ="Any", formel=None, optionen=None):
 # ----------------------------------------------------------- Konfiguration
 
 # Zahl der Zwischenziele je Reise. Spalten und Formeln richten sich danach.
-# Aendern und setup.py erneut laufen lassen ergaenzt die fehlenden Spalten.
+# Ändern und setup.py erneut laufen lassen ergänzt die fehlenden Spalten.
 ZWISCHENZIELE = 5
 
 ORT_SLOTS = ["Ort_Beginn"] + [f"Ort_{i}" for i in range(1, ZWISCHENZIELE + 1)] + ["Ort_Ende"]
@@ -142,12 +145,9 @@ alle.sort(key=lambda r: (r.Datum, r.id))
 return [r.id for r in alle].index($id) + 1
 '''.strip()
 
-# Einzelziele der Reise, je Zeile "E26-07: Freitext". Gezählt wird wie bei
-# VERMERK_LABEL: laufend über das Kalenderjahr, sortiert nach (Datum, Zeilen-Id)
-# wie LFD_NR -- das Kürzel ist damit für sich allein eindeutig. Preis: eine
-# nachträglich erfasste oder umdatierte Reise verschiebt die späteren Nummern
-# des Jahres, wie bei Lfd_Nr und Vermerk_Label auch.
-# Einzige Quelle der Nummern: REISEWEG und das Ortsverzeichnis lesen sie hier.
+# Einzelziele der Reise, je Zeile "E26-07: Freitext", gezählt wie LFD_NR
+# laufend über das Kalenderjahr. Einzige Quelle der Kürzel: REISEWEG und das
+# Ortsverzeichnis lesen sie hier.
 EINZELZIELE = f'''
 def frei(r):
   return [{EINZEILIG} for t in [{", ".join(f"r.{s}_Text" for s in ORT_SLOTS)}]]
@@ -209,15 +209,9 @@ JA_NEIN = {"choices": ["Ja", "Nein"]}
 
 # ---------------------------------------------------------------- Tabellen
 
-# Reiseziele mit vollständiger Adresse -- gepflegt wird ausschließlich hier,
-# für jeden Ort gleich, auch für WO (Wohnung) und KV (Dienststelle). Keine
-# Formel, kein Verweis auf 'Einstellungen': jeder Versuch, diese beiden Zeilen
-# automatisch aus 'Einstellungen' zu befüllen, hat mehr Verwirrung erzeugt als
-# die Dopplung, die er vermeiden sollte -- Ref-Spalten mit leerem Datenfeld,
-# eine Formel, die Strasse/PLZ/Ort editierbar aussehen aber wirkungslos bleiben
-# ließ. Bewusst zurückgebaut: bei einem Umzug ändert sich die Adresse an zwei
-# Stellen (hier und in 'Einstellungen'); vergisst man eine, ist der Ausdruck
-# einmal falsch -- ein Anruf bei der Abrechnungsstelle klärt das.
+# Reiseziele mit Adresse, gepflegt nur hier -- auch WO und KV. Bewusst nicht
+# aus 'Einstellungen' befüllt: das ergab Felder, die bearbeitbar aussahen und
+# wirkungslos blieben. Bei einem Umzug ändert sich die Adresse an zwei Stellen.
 STAMMZIELE = [
     spalte("Kuerzel",  "Kürzel", "Text"),
     spalte("Name",     "Name der Einrichtung", "Text"),
@@ -226,8 +220,8 @@ STAMMZIELE = [
     spalte("Ort",      "Ort", "Text"),
     spalte("Adresse",  "Vollständige Adresse", "Text",
            # "or ''": ein nie befülltes Feld ist None, nicht "" -- so bei WO/KV,
-           # die setup.py nur mit Kürzel und Name anlegt. Ohne das stand im
-           # Ortsverzeichnis "E,TypeError" (Abnahmetest 16.10.2026).
+           # die setup.py nur mit Kürzel und Name anlegt. Ohne das stünde im
+           # Ortsverzeichnis "E,TypeError".
            formel='", ".join(x for x in [$Strasse, (($PLZ or "") + " " + ($Ort or "")).strip()] if x)'),
 ]
 
@@ -525,7 +519,7 @@ def layouts_aufraeumen():
     """Nimmt aus jedem Seitenlayout die Blätter heraus, die auf eine Section
     zeigen, die es nicht (mehr) gibt oder die inzwischen zu einer anderen
     Seite gehört. Solche Karteileichen entstanden, solange das Entfernen eines
-    Widgets sein Blatt stehen liess -- die Reisen-Seite verwies dadurch auf die
+    Widgets sein Blatt stehen ließ -- die Reisen-Seite verwies dadurch auf die
     Einstellungs-Karte. Idempotent: ohne Fund passiert nichts."""
     aktionen = []
     for v in sql("select id, name, layoutSpec from _grist_Views"):
@@ -548,11 +542,11 @@ def seiten_kinder(vid, ohne=()):
     """Kind-Knoten des Seitenlayouts, ohne die Knoten der genannten Sections.
     Verschachtelte Knoten (nebeneinander angeordnete Widgets) tragen keinen
     eigenen 'leaf' und bleiben unangetastet stehen -- ein neues Widget wird
-    davor gehaengt, nie an ihre Stelle gesetzt. Eine frisch angelegte Seite
+    davor gehängt, nie an ihre Stelle gesetzt. Eine frisch angelegte Seite
     hat noch gar keine layoutSpec, daher das `or`.
     ponytail: ein Container, der nur entfernte Sections enthielt, bleibt als
     leerer Knoten stehen -- Grist blendet ihn aus; erst aufraeumen, wenn das
-    im Editor jemals stoert."""
+    im Editor jemals stört."""
     roh = sql(f"select layoutSpec from _grist_Views where id = {vid}")[0]["layoutSpec"]
     return ohne_blaetter(json.loads(roh or "{}").get("children") or [], set(ohne))
 
@@ -578,13 +572,9 @@ def zeitraum_widget():
         sec = api("POST", "/apply", [["CreateViewSection", et, vid, "single", None, None]]
                   )["retValues"][0]["sectionRef"]
     else:
-        # Ein frisch angelegtes Dokument hat die Seite noch nicht. Ohne sie
-        # blieb die komplette Ausgabeseite ungebaut -- Zeitraum-Karte, beide
-        # Druck-Widgets, Anordnung: alles übersprungen, kommentarlos. Beim
-        # Lauf gegen ein leeres Testdokument aufgefallen, nicht im Betrieb,
-        # weil dort immer ein Vorlagendokument kopiert wird.
-        # parentId 0 legt Seite und Section zusammen an; die Seite trägt
-        # danach den Tabellennamen und wird umbenannt.
+        # Ein frisch angelegtes Dokument hat die Seite noch nicht (im Betrieb
+        # wird immer die Vorlage kopiert). parentId 0 legt Seite und Section
+        # zusammen an; die Seite trägt danach den Tabellennamen und wird umbenannt.
         neu = api("POST", "/apply",
                   [["CreateViewSection", et, 0, "single", None, None]])["retValues"][0]
         vid, sec = neu["viewRef"], neu["sectionRef"]
@@ -603,13 +593,9 @@ def zeitraum_widget():
     print(f"  Zeitraum-Widget: angelegt (Section {sec})")
 
 
-# Reihenfolge = Reihenfolge auf der Ausdruck-Seite. S1/S2, Vermerke und
-# Ortsverzeichnis stecken zusammen in einer Datei (ausdruck.html) -- ein
-# Widget statt drei, ein Grist-Fetch statt drei. Das Fahrtenbuch steht in
-# fahrtenbuch-preview.html (Vorbereitung, noch kein Widget). Die Schnittversion
-# bleibt eigenständig, sie ist kein Bestandteil der Standardausgabe.
-# Routenlinks gibt es nur noch in der Prüfliste -- ein früheres Widget hier
-# entfernt ausgabe_widgets() beim nächsten Lauf.
+# Reihenfolge = Reihenfolge auf der Ausdruck-Seite; ausdruck.html enthält
+# S1/S2, Vermerke und Ortsverzeichnis in einem Widget. Widgets mit einer URL,
+# die hier fehlt, entfernt ausgabe_widgets().
 AUSGABE_WIDGETS = [
     ("Reisekostenabrechnung",        "ausdruck.html"),
     ("Fahrtenbuch",                  "fahrtenbuch.html"),
@@ -710,9 +696,9 @@ def ausgabe_widgets():
 
     veraltet = [sec for url, sec in vorhanden.items() if url not in ziel_urls]
     if veraltet:
-        # Blätter mitnehmen: eine entfernte Section liess ihren Knoten sonst in
+        # Blätter mitnehmen: eine entfernte Section ließ ihren Knoten sonst in
         # der layoutSpec stehen, und die Seite verwies auf eine Section, die es
-        # nicht mehr gibt (oder inzwischen zu einer anderen Seite gehoert).
+        # nicht mehr gibt (oder inzwischen zu einer anderen Seite gehört).
         api("POST", "/apply",
             [["RemoveRecord", "_grist_Views_section", sec] for sec in veraltet]
             + [["UpdateRecord", "_grist_Views", vid,
@@ -733,13 +719,13 @@ def ausgabe_widgets():
 def ausdruck_layout():
     """Bringt die Ausdruck-Seite in die Anordnung des eingerichteten Dokuments:
     der Abrechnungszeitraum als schmale Zeile oben, darunter die Widgets aus
-    AUSGABE_WIDGETS nebeneinander. Die Groessen sind die dort abgelesenen
-    Verhaeltniswerte -- Grist rechnet sie relativ, die absolute Zahl ist egal.
+    AUSGABE_WIDGETS nebeneinander. Die Größen sind die dort abgelesenen
+    Verhältniswerte -- Grist rechnet sie relativ, die absolute Zahl ist egal.
 
     Fasst eine Seite nicht an, auf der bereits alle Widgets im Layout stehen:
-    wer sie von Hand umsortiert hat, behaelt seine Anordnung. Greift also
+    wer sie von Hand umsortiert hat, behält seine Anordnung. Greift also
     im Normalfall genau einmal, beim Einrichten eines frischen Dokuments --
-    ein neu ergaenztes AUSGABE_WIDGETS-Widget zieht aber automatisch nach,
+    ein neu ergänztes AUSGABE_WIDGETS-Widget zieht aber automatisch nach,
     weil dann noch nicht 'alle' im Layout stehen."""
     seite = seite_suchen("Ausdruck")
     if not seite:
@@ -798,20 +784,20 @@ def feste_orte_anlegen():
         print(f"  Stammziele: {len(fehlend)} Pflichtzeile(n) angelegt "
               f"({', '.join(k for k, _ in fehlend)}) -- Adresse dort nachtragen")
 
-    # Ein Ort ohne Anschrift laesst 'Maps_Link' jeder Reise leer, die ihn
-    # anfaehrt -- das war lange nur am fehlenden Routenlink zu merken.
+    # Ein Ort ohne Anschrift lässt 'Maps_Link' jeder Reise leer, die ihn
+    # anfährt -- das war lange nur am fehlenden Routenlink zu merken.
     ohne = sorted(r["fields"].get("Kuerzel") or f"Zeile {r['id']}" for r in zeilen
                   if not (r["fields"].get("Adresse") or "").strip())
     if ohne:
-        print(f"  Stammziele: OHNE ADRESSE ({', '.join(ohne)}) -- Reisen ueber diese "
+        print(f"  Stammziele: OHNE ADRESSE ({', '.join(ohne)}) -- Reisen über diese "
               f"Orte bekommen keinen Routenlink, Strasse/PLZ/Ort nachtragen")
 
 
 def formelfehler_melden():
     """Nennt jede Formelspalte, deren Zellen einen Fehler tragen.
 
-    Noetig, weil der Fehler sonst niemandem auffaellt: der REST-Endpunkt
-    /tables/X/records liefert fuer eine Fehlerzelle schlicht null, und die
+    Nötig, weil der Fehler sonst niemandem auffällt: der REST-Endpunkt
+    /tables/X/records liefert für eine Fehlerzelle schlicht null, und die
     Ausgabe-Widgets zeigen dann eine leere Spalte. So blieben die sieben
     Sync-Spalten lange kaputt. /tables/X/data reicht den Rohwert
     ["E", "SyntaxError"] durch -- daher dieser Endpunkt."""
@@ -1189,9 +1175,9 @@ def einstellungen_karte():
 
     sec = karte_anlegen(vid, "Einstellungen", EINSTELLUNGEN_KARTE)
     # Nur die ersetzten Tabellen-Sections fallen aus dem Layout; alles andere
-    # auf der Seite bleibt stehen. Vorher wurde die layoutSpec plattgemacht --
-    # ein zweites Widget auf der Seite war danach unsichtbar (die Section blieb
-    # als Karteileiche im Dokument zurueck).
+    # auf der Seite bleibt stehen. Eine plattgemachte layoutSpec machte ein
+    # zweites Widget auf der Seite unsichtbar; seine Section bliebe als
+    # Karteileiche im Dokument zurück.
     api("POST", "/apply", [
         ["UpdateRecord", "_grist_Views", vid,
          {"layoutSpec": json.dumps({"children": [{"leaf": sec}] + seiten_kinder(vid, alt),
@@ -1272,7 +1258,7 @@ def selbsttest():
     assert rechnen(neujahr).Einzelziele == "E27-01: Bauhof", neujahr.Einzelziele
     alle.clear()
 
-    # Stammziel ohne Adresse (WO/KV frisch angelegt): frueher fiel der Stopp
+    # Stammziel ohne Adresse (WO/KV frisch angelegt): früher fiel der Stopp
     # still aus dem Link und die Route war zu kurz -- jetzt gar kein Link.
     r = leer()
     r.Ort_Beginn = Ort("WO", "Beispielweg 7, Musterstadt")
@@ -1287,7 +1273,7 @@ def selbsttest():
     r.Ort_Beginn = Ort("WO", "Beispielweg 7, Musterstadt")
     assert lauf(MAPS, r) == ""
 
-    # Tagegeldstaffel: die vier Grenzen und der Fall, in dem Dienststaette und
+    # Tagegeldstaffel: die vier Grenzen und der Fall, in dem Dienststätte und
     # Dienstort die Abwesenheit ganz aufbrauchen -- Rest <= 0 ergab vorher die
     # kleinste Stufe statt gar keiner.
     REST = next(x["fields"]["formula"] for x in REISEN if x["id"] == "Rest_min")
@@ -1328,14 +1314,14 @@ def selbsttest():
     assert adresse("Amtsstr. 1", "00000", "Musterstadt") == "Amtsstr. 1, 00000 Musterstadt"
 
     # Layout-Knoten: verschachtelte Seiten (zwei Widgets nebeneinander) tragen
-    # kein eigenes 'leaf'. Beide Funktionen muessen da hineinsteigen, sonst
-    # bleibt beim Aufraeumen ein Blatt einer geloeschten Section stehen.
+    # kein eigenes 'leaf'. Beide Funktionen müssen da hineinsteigen, sonst
+    # bleibt beim Aufräumen ein Blatt einer gelöschten Section stehen.
     baum = [{"size": 16, "leaf": 15},
             {"size": 118, "children": [{"leaf": 23}, {"leaf": 22}]}]
     assert sorted(blaetter(baum)) == [15, 22, 23], list(blaetter(baum))
     assert ohne_blaetter(baum, {22}) == [{"size": 16, "leaf": 15},
                                          {"size": 118, "children": [{"leaf": 23}]}]
-    assert ohne_blaetter(baum, {22, 23}) == [{"size": 16, "leaf": 15}]   # leerer Ast faellt weg
+    assert ohne_blaetter(baum, {22, 23}) == [{"size": 16, "leaf": 15}]   # leerer Ast fällt weg
     assert ohne_blaetter(baum, set()) == baum
 
     # Reisekorrektur-Filter: Jahr leer = laufendes Jahr, Monat leer = ganzes Jahr.
@@ -1376,16 +1362,10 @@ def tabellen_umbenennen():
     print(f"  Tabellen: {len(aktionen)} umbenannt")
 
 
-# Frühere Fassung: eigene Tabelle je Freitext-Ziel, die den Freitext in
-# Straße/PLZ/Ort zerlegte und unvollständige Anschriften mit ⚠️ meldete.
-# Zurückgebaut -- der Freitext geht unverändert ins Ortsverzeichnis, geprüft
-# wird beim Unterschreiben. Alles darin war Formel, verloren geht nichts.
-# Ref-Spalten vor ihrer Zieltabelle entfernen.
-#
-# Tacho_Fotos: am 14.10.2026 gestrichen -- Handyfotos tragen je nach Gerät
-# GPS-Koordinaten in den EXIF-Daten (oft Wohnung oder Klientenadresse), Grist
-# speichert sie unverändert, und der Kilometerstand steht ohnehin im
-# Fahrtenbuch. Datenminimierung. ACHTUNG: entfernt vorhandene Fotos mit.
+# Altlasten älterer Dokumente: die frühere Einzelziel-Tabelle samt Hilfsspalten
+# (nur Formeln, verloren geht nichts) und Tacho_Fotos (gestrichen: Handyfotos
+# tragen GPS-Koordinaten in den EXIF-Daten). ACHTUNG: entfernt vorhandene Fotos
+# mit. Ref-Spalten vor ihrer Zieltabelle entfernen.
 ALTE_SPALTEN = ([f"{s}_Sync" for s in ORT_SLOTS] + ["Anschrift_Warnung", "Anschrift_Hinweis"]
                 + ["Tacho_Fotos"])
 ALTE_TABELLEN_WEG = ["Einzelziele", "Adressen"]

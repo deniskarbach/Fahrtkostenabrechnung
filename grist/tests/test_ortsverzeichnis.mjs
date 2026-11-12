@@ -42,7 +42,7 @@ const TABELLEN = {
       Einzelziele: "E24-01: Beispieldorf, Dorfstr. 2, Beispieldorf" },
     { id: 2, Datum: d(20020), Ort_Beginn: 1, Ort_1: 2, Ort_2: 3, Ort_Ende: 1, Lfd_Nr: 2,
       Einzelziele: "E24-02: Beispieldorf, Dorfstr. 2, Beispieldorf\nE24-03: Hof Lindenau" },
-    { id: 3, Datum: d(20500), Ort_Beginn: 1, Ort_Ende: 1,    // ausserhalb des Zeitraums
+    { id: 3, Datum: d(20500), Ort_Beginn: 1, Ort_Ende: 1,    // außerhalb des Zeitraums
       Einzelziele: "E25-01: Ausserhalb" },
   ],
 };
@@ -82,7 +82,7 @@ assert.equal(spalte(1).filter(k => k === "KV").length, 1, "Dienststaette mehrfac
 assert.deepEqual(spalte(1).slice(0, 3), ["WO", "KV", "KITA"], "Reihenfolge der Stammziele");
 assert.equal(spalte(2)[0], "Wohnung");
 // Beide Beispieldorf-Zeilen bleiben stehen, mit Datum und Nummer; die Reise
-// ausserhalb des Zeitraums fehlt. Der Freitext steht ganz unter Adresse.
+// außerhalb des Zeitraums fehlt. Der Freitext steht ganz unter Adresse.
 // Kürzel oben, Datum darunter (zweizeilig per pre-line).
 const [t1, t2] = spalte(1).slice(3, 5).map(k => k.split("\n")[1]);
 assert.ok(t1?.includes(".") && t1 !== t2, "Einzelziel ohne Datum: " + t1);

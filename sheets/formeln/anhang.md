@@ -17,11 +17,3 @@ Rest-Zeit `S−T−Q−R`:
 
 In S1 hat die Stufe „anteilig" keine eigene Spalte: M erscheint dort als `(X)`
 in der Spalte „mehr als 8 Stunden", N als `X`.
-
-## Wartung bei Formularänderung
-
-Jede neue Formularfrage verschiebt alle folgenden Spalten. Danach die
-IMPORTDATA-Bezüge in BERECHNUNG, Vermerke, Druck-Fahrtenbuch und
-GoogleMapsExport prüfen. Zeilengrenzen (Muster D) einheitlich bei 999/998
-halten; wird mehr Platz gebraucht, alle drei Blätter per Rechtsklick verlängern
-und die Grenzen um denselben Betrag erhöhen.

@@ -1,91 +1,36 @@
-[← Formeln-Übersicht](README.md)
+[← Formeln](README.md)
 
 # Einstellungen
 
-Genau eine Zeile, im Editor als Karte dargestellt. Keine Formeln — reine
-Eingabetabelle. Sie speist die Kopfzeile jedes Ausdrucks und bestimmt über den
-Abrechnungszeitraum, welche Reisen ausgegeben werden.
+## Zweck
 
-Dies ist die **einzige** Stelle, an der persönliche Daten erfasst werden.
+Hier stehen die eigenen Stammdaten und der Abrechnungszeitraum, genau eine Zeile.
+Die Ansicht gibt es, damit persönliche Daten an einer einzigen Stelle liegen und jeder Ausdruck daraus seinen Kopf bekommt.
+Sie umfasst Name, Anschriften, die S2-Angaben und den Zeitraum.
 
-| Spalte | Beschriftung | Typ | Wofür |
-|---|---|---|---|
-| `Vorname` | Vorname | Text | Kopfzeile, zusammen mit `Name` und `Organisationseinheit` |
-| `Name` | Name | Text | " |
-| `Organisationseinheit` | Organisationseinheit | Text | " |
-| `Wohnort_Strasse` | Wohnort – Straße und Nr. | Text | Kopffeld „Wohnort" |
-| `Wohnort_PLZ` | Wohnort – PLZ | Text | " |
-| `Wohnort_Ort` | Wohnort – Ort | Text | " |
-| `Dienstort_Strasse` | Dienstort – Straße und Nr. | Text | Kopffeld „Dienstort" |
-| `Dienstort_PLZ` | Dienstort – PLZ | Text | " |
-| `Dienstort_Ort` | Dienstort – Ort | Text | " |
-| `Abteilung` | Abteilung (S2) | Text | S2, Verfügungsteil „Abteilung:" — leer bleibt die Linie |
-| `Buchungsstelle` | Buchungsstelle (S2, nach „€ bei:") | Text | S2, Zeile „1. KK anweisen, … € bei:" — leer bleibt die Linie |
-| `Behoerde_Ort` | Behörde – Ort (S2, vor dem Datum) | Text | S2, „Ort, Datum" im Verfügungsteil — leer bleibt die Linie |
-| `Behoerde` | Behörde – Name (S2, unter „3. z. d. A.") | Text | S2, Zeile unter „3. z. d. A." — leer bleibt die Linie |
-| `Zeitraum_von` | Abrechnungszeitraum von | Date | Filter aller Ausgabeblätter |
-| `Zeitraum_bis` | Abrechnungszeitraum bis | Date | " |
+## Funktionsweise
 
-## Kopfzeile des Ausdrucks
+- Die Zeile liefert den Kopf jedes Ausdrucks: `Name Vorname, Organisationseinheit`
+  und Anschriften als `Straße, PLZ Ort`. Leere Felder fallen samt Trennzeichen
+  weg.
+- Leere S2-Felder bleiben als Linie zum Ausfüllen von Hand.
+- Der Abrechnungszeitraum wird auf der Seite `Ausdruck` gesetzt. Eine Reise
+  erscheint, wenn ihr Reisedatum (`Datum`) zwischen `Zeitraum_von` und
+  `Zeitraum_bis` liegt, beide Tage eingeschlossen. Eine leere Grenze begrenzt
+  nicht; ohne Zeitraum erscheinen alle Reisen. Reisen ohne Datum erscheinen
+  nie. Eine mehrtägige Reise, die vor `Zeitraum_von` beginnt, gehört zur
+  früheren Abrechnung.
+- `Korrektur_Jahr` und `Korrektur_Monat` gehören zur Seite
+  [Reisekorrektur](reisekorrektur.md).
 
-Die Zusammensetzung passiert nicht in einer Formelspalte, sondern im
-Ausgabe-Widget:
+| Spalte | Typ | Wofür |
+|---|---|---|
+| `Vorname`, `Name`, `Organisationseinheit` | Text | Kopf: Antragsteller/in |
+| `Wohnort_Strasse`, `_PLZ`, `_Ort` | Text | Kopf: Wohnort |
+| `Dienstort_Strasse`, `_PLZ`, `_Ort` | Text | Kopf: Dienstort |
+| `Abteilung`, `Buchungsstelle`, `Behoerde_Ort`, `Behoerde` | Text | S2 |
+| `Zeitraum_von`, `Zeitraum_bis` | Date | Abrechnungszeitraum |
 
-```js
-antragsteller: [[e.Name, e.Vorname].filter(Boolean).join(" "),
-                e.Organisationseinheit].filter(Boolean).join(", ")
-```
+## Formeln
 
-**Statement:**
-- `[e.Name, e.Vorname]` – Nachname zuerst, dann Vorname
-- `.filter(Boolean)` – leere Felder fallen heraus, statt doppelte Trenner zu erzeugen
-- `.join(" ")` / `.join(", ")` – Name mit Leerzeichen, Organisationseinheit mit Komma
-
-**Ergebnis:** `Musterfrau Erika, Referat 42`
-**Sonderfall:** Fehlt die Organisationseinheit, endet die Zeile nach dem Namen —
-ohne hängendes Komma.
-
-Wohn- und Dienstanschrift werden nach demselben Schema gesetzt:
-
-```js
-const anschrift = (strasse, plz, ort) =>
-  [strasse, [plz, ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
-```
-
-**Ergebnis:** `Beispielweg 7, 00000 Musterstadt`
-**Sonderfall:** Fehlt die PLZ, steht nur der Ort; fehlt die Straße, entfällt
-auch das Komma.
-
-## Abrechnungszeitraum
-
-`Zeitraum_von` und `Zeitraum_bis` sind die einzigen Felder, die **pro
-Abrechnung** angefasst werden. Sie stehen deshalb nur als Karte oben auf der
-Seite `Ausdruck` — dort, wo gedruckt wird — und nicht in der Karte auf
-`Einstellungen`.
-
-Die Filterung selbst steht im Widget:
-
-```js
-const imZeitraum = d => d != null
-  && (von == null || d >= von) && (bis == null || d <= bis);
-```
-
-**Statement:**
-- `d != null` – Zeilen ohne Datum fallen immer heraus
-- `von == null || …` – ein nicht gesetztes Zeitraumende begrenzt nicht
-
-**Ergebnis:** Wahr, wenn das Datum im Zeitraum liegt.
-**Sonderfall:** Eine offene Grenze begrenzt nicht. Ist der Zeitraum gar nicht
-gesetzt, erscheinen **alle** Reisen — vor dem Drucken also prüfen, dass beide
-Felder gefüllt sind.
-
-> **Mehrtägige Reisen:** Maßgeblich ist der **Reisebeginn** (`Datum`), nicht das
-> Ende. Eine Reise, die vor `Zeitraum_von` beginnt und hineinreicht, wurde mit
-> der früheren Abrechnung bereits erledigt; sie erneut auszugeben hieße, sie ein
-> zweites Mal abzurechnen.
-
-## Keine Kontoverbindung
-
-IBAN und BIC werden bewusst **nicht** erfasst. Die Kontoverbindung liegt
-bereits in der Bezügeabrechnung. Im S2-Vordruck bleiben beide Kästen als
-Vordruck stehen und werden bei Bedarf von Hand ausgefüllt.
+Keine.

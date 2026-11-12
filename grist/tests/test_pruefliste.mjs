@@ -55,7 +55,7 @@ const TABELLEN = {
       OePNV: 0, Mitnahme_Personen: 0, Uebernachtung: 0, Nebenkosten: 0,
       Vermerk_Label: "V24-01", Ort_Beginn: 1, Ort_1: 2, Ort_Ende: 1,
       Maps_Link: "https://www.google.com/maps/dir/?api=1&origin=A&destination=A" },
-    // Mehrtaegig -> Datumsspanne; ausserdem KITA als drittes Stammziel.
+    // Mehrtägig -> Datumsspanne; außerdem KITA als drittes Stammziel.
     { id: 2, Datum: d(20020), Datum_bis: d(20021), Lfd_Nr: 2,
       Beginn: "06:30", Ende: "18:05", Reiseweg: "WO > KITA > WO",
       Abwesenheit_min: 2135, Min_Dienststaette: 0, Min_Dienstort: 0,
@@ -85,10 +85,10 @@ const unesc = s => s.replace(/&amp;/g, "&").replace(/&lt;/g, "<")
 function sandboxFuer(datei, tbodyIds) {
   const zellen = {};
   const tbodies = {};
-  /* Die Widgets fuellen ihre tbodys unterschiedlich: pruefliste.html
-     setzt innerHTML in einem Rutsch, ausdruck.html haengt
-     Zeile fuer Zeile per insertAdjacentHTML an. Das Fake-DOM muss beides
-     koennen, sonst prueft der Drift-Waechter nur eine der beiden Dateien. */
+  /* Die Widgets füllen ihre tbodys unterschiedlich: pruefliste.html
+     setzt innerHTML in einem Rutsch, ausdruck.html hängt
+     Zeile für Zeile per insertAdjacentHTML an. Das Fake-DOM muss beides
+     können, sonst prüft der Drift-Wächter nur eine der beiden Dateien. */
   const knoten = id => {
     if (tbodyIds.includes(id)) {
       return tbodies[id] ??= {
@@ -170,7 +170,7 @@ assert.equal(r1[S.vermerk].text, "V24-01");
 assert.equal(r1[S.route].children[0].attrs.text, "Route", "Route als <a>, nicht als Text");
 
 const r2 = zeilen[1];
-// 3. Mehrtaegige Reise als Spanne, wie auf S1.
+// 3. Mehrtägige Reise als Spanne, wie auf S1.
 assert.ok(r2[S.datum].text.includes(" - "), "mehrtägig muss Spanne sein: " + r2[S.datum].text);
 assert.equal(r2[S.priv].text, "0:45", "privater Zeitabzug eigene Spalte");
 assert.equal(r2[S.oepnv].text, "42,80", "EUR deutsch formatiert");
@@ -205,9 +205,9 @@ const datei = readFileSync("grist/ausgabe/pruefliste.html", "utf8");
 
 /* A4 quer ist 297mm breit. Greift die @page-Regel, bleiben bei 10mm Rand
    277mm; greift sie nicht (Grists eigenes "Widget drucken", fremder Browser),
-   gelten die Standardraender des Dialogs -- rund 12,7mm je Seite, also nur
+   gelten die Standardränder des Dialogs -- rund 12,7mm je Seite, also nur
    271,6mm. Die Tabelle muss unter das KLEINERE Mass passen, sonst wird rechts
-   abgeschnitten. Genau das war der Fehler: 275mm bei 271,6mm verfuegbar. */
+   abgeschnitten. Genau das war der Fehler: 275mm bei 271,6mm verfügbar. */
 const A4_QUER_STANDARDRAND = 271.6;
 for (const [name, start, ende] of [
   ["Kopf",    '<table class="kopf">',    '<table class="raster">'],
@@ -222,8 +222,8 @@ for (const [name, start, ende] of [
     + `nur ${A4_QUER_STANDARDRAND}mm -- rechte Spalten würden abgeschnitten`);
 }
 
-/* Gedruckt werden muss aus einem eigenen Fenster: im iframe uebernimmt der
-   Dialog die @page-Regel nicht und oeffnet in Hochformat. */
+/* Gedruckt werden muss aus einem eigenen Fenster: im iframe übernimmt der
+   Dialog die @page-Regel nicht und öffnet in Hochformat. */
 {
   const css = datei.slice(datei.indexOf("<style>") + 7, datei.indexOf("</style>"));
   const zellen2 = {};
