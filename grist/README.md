@@ -3,23 +3,9 @@
 Dienstreise am Handy über ein Formular erfassen, in Grist berechnen, als
 S1/S2, Vermerke, Ortsverzeichnis und Fahrtenbuch drucken.
 
-- **[Handbuch](manual.md)** — für die Fachkraft: einrichten, erfassen, drucken
+- **[Anleitung](manual.md)** — für die Fachkraft: einrichten, erfassen, drucken
 - **[Formeln](formeln/README.md)** — Nachweis der Berechnung, für die Prüfstelle
 - **[Einrichtung und Technik](formeln/setup.md)** — für die Betreuung
-
-## Warum Grist
-
-Der Engpass war nie die Tabelle, sondern die Erfassung am Handy: Sie muss
-**ohne Konto** funktionieren, direkt nach der Fahrt. Ein veröffentlichter
-Grist-Formularlink leistet das. Rechnen, Filtern und Drucken stecken im selben
-Dokument.
-
-| | Google Sheets (früher) | Grist |
-|---|---|---|
-| Konto zum Erfassen | Google-Konto nötig | **keines** — der Formularlink genügt |
-| Korrektur einer Reise | nur in der Formularantworten-Datei | auf der Seite `Reisekorrektur` |
-| Neue Formularfrage | verschiebt alle folgenden Spalten | nichts verschiebt sich |
-| Ausgabe | eigene Blätter mit Formeln | Widgets, die die Tabellen lesen |
 
 ## Aufbau
 

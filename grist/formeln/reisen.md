@@ -2,12 +2,26 @@
 
 # Reisen
 
-Eine Zeile je Dienstreise. Die Eingabespalten füllt das Formular, die
-Rechenspalten stehen unten einzeln. Wird eine Reise korrigiert, rechnen alle
-Rechenspalten sofort neu. Die Zwischenwerte `KM_gesamt`, `Rest_min` und
-`Einzelziele` sind in der Tabellenansicht ausgeblendet.
+## Zweck
 
-## Eingabespalten
+Die Tabelle hält je Dienstreise eine Zeile: die Eingaben aus dem Formular und alle daraus berechneten Werte.
+Sie ist die Grundlage für jede Ausgabe; Kilometer, Tagegeld-Stufe, Nummern und Reiseweg entstehen hier.
+Sie umfasst die Eingabespalten und die Rechenspalten mit ihren Formeln.
+
+## Funktionsweise
+
+- Das Formular füllt die Eingabespalten; die Rechenspalten rechnen sofort mit
+  und bei jeder Korrektur neu.
+- `KM_gesamt`, `Rest_min` und `Einzelziele` sind in der Tabellenansicht
+  ausgeblendet.
+- Laufende Nummern, Einzelziel- und Vermerk-Kennungen zählen je
+  **Kalenderjahr**. Eine nachgetragene ältere Reise verschiebt die späteren
+  Nummern.
+- Ortsfelder: Jedes ist ein Paar aus Auswahl (Stammziel) und Freitext
+  (Einzelziel). Sind beide gefüllt, sind es zwei Stopps: erst die Auswahl,
+  dann der Freitext. Das gilt in `Einzelziele`, `Reiseweg` und `Maps_Link`.
+
+### Eingabespalten
 
 | Spalte | Beschriftung | Typ |
 |---|---|---|
@@ -28,19 +42,20 @@ Rechenspalten sofort neu. Die Zwischenwerte `KM_gesamt`, `Rest_min` und
 | `Vermerk` | Sonstige Informationen | Text |
 | `Belege` | Belege | Attachments |
 
-Die Uhrzeiten sind Text, so wie sie eingetippt wurden; gelesen werden sie erst
-in `Abwesenheit_min`.
+Die Uhrzeiten sind Text; gelesen werden sie erst in `Abwesenheit_min`.
 
-## Datum_bis — Reisedatum bis
+## Formeln
+
+### Datum_bis — Reisedatum bis
 
 ```python
 $Datum_Ende or $Datum
 ```
 
-Das Enddatum der Reise, ohne Enddatum das Reisedatum. Im Ausdruck erscheint
-eine mehrtägige Reise als Spanne (`03.02.2026 - 04.02.2026`).
+- **Ergebnis:** das Enddatum, ohne Enddatum das Reisedatum. Mehrtägige Reisen
+  erscheinen im Ausdruck als Spanne (`03.02.2026 - 04.02.2026`).
 
-## Lfd_Nr — Laufende Nummer
+### Lfd_Nr — Laufende Nummer
 
 ```python
 if not $Datum:
@@ -50,24 +65,23 @@ alle.sort(key=lambda r: (r.Datum, r.id))
 return [r.id for r in alle].index($id) + 1
 ```
 
-Fortlaufende Nummer je Kalenderjahr, nach Datum sortiert, bei gleichem Datum
-in der Reihenfolge der Erfassung ([Rang im Kalenderjahr](README.md#muster-rang-im-kalenderjahr)).
-Ohne Datum gibt es keine Nummer. Wird eine ältere Reise nachgetragen,
-verschieben sich die Nummern danach — die Nummer ist eine Position, keine
-Belegnummer. Steht auf S1 (Spalte „Reiseweg“) und im Fahrtenbuch (Spalte 1).
+- **Ergebnis:** Position der Reise unter allen Reisen des Kalenderjahres, nach
+  Datum sortiert, bei gleichem Datum in der Reihenfolge der Erfassung. Steht auf
+  S1 (Spalte „Reiseweg“) und im Fahrtenbuch (Spalte 1).
+- **Sonderfall:** Ohne Datum keine Nummer.
 
-## KM_gesamt / KM_dienstlich — Kilometer
+### KM_gesamt / KM_dienstlich — Kilometer
 
 ```python
 KM_gesamt:     max(0, ($KM_Ende or 0) - ($KM_Beginn or 0))
 KM_dienstlich: max(0, $KM_gesamt - ($Umweg_privat or 0))
 ```
 
-Endstand minus Anfangsstand, davon der private Umweg. Leere Felder zählen als
-0. Ein negatives Ergebnis, etwa durch einen Zahlendreher, wird 0.
-`KM_dienstlich` steht auf S1 (Spalte km) und im Fahrtenbuch (Spalte 9).
+- **Ergebnis:** Endstand minus Anfangsstand, davon der private Umweg.
+  `KM_dienstlich` steht auf S1 (Spalte km) und im Fahrtenbuch (Spalte 9).
+- **Sonderfall:** Leere Felder zählen als 0, ein negatives Ergebnis wird 0.
 
-## Abwesenheit_min — Abwesenheit (Minuten)
+### Abwesenheit_min — Abwesenheit (Minuten)
 
 ```python
 import re
@@ -86,31 +100,30 @@ if total < 0:
 return total
 ```
 
-Die Dauer der Abwesenheit, Grundlage des Tagegelds: je zusätzlichem
-Kalendertag 1440 Minuten, dazu die Differenz der Uhrzeiten.
-
+- **Ergebnis:** die Dauer der Abwesenheit, Grundlage des Tagegelds: je
+  zusätzlichem Kalendertag 1440 Minuten, dazu die Differenz der Uhrzeiten.
 - **Uhrzeiten:** Die ersten beiden Zahlen gelten als Stunden und Minuten, die
   Schreibweise ist egal (`7:15`, `7.15`, `07:15 Uhr`). Eine einzelne Zahl
   (`715`) ist mehrdeutig und gilt als fehlend.
-- **Fehlende Angaben:** Fehlt eine Uhrzeit oder das Datum, oder liegt das
+- **Sonderfall fehlende Angaben:** Fehlt eine Uhrzeit oder das Datum, oder liegt das
   Enddatum vor dem Reisedatum, ist das Ergebnis 0. Auf S1 fällt das als
   „Ges.: 0:00“ auf.
-- **Über Mitternacht** ohne Enddatum wird ein Tag addiert (22:00 → 06:00 =
+- **Sonderfall über Mitternacht:** ohne Enddatum wird ein Tag addiert (22:00 → 06:00 =
   8 h). Für mehrere Nächte ist das Enddatum nötig.
 
-## Rest_min — Rest-Zeit (Minuten)
+### Rest_min — Rest-Zeit (Minuten)
 
 ```python
 $Abwesenheit_min - max(0, $Min_privat_Abzug or 0)
                  - max(0, $Min_Dienststaette or 0) - max(0, $Min_Dienstort or 0)
 ```
 
-Die Abwesenheit abzüglich privatem Zeitabzug und der Aufenthalte an
-Dienststätte und Dienstort. Negative Eingaben zählen als 0, damit ein Minus
-keine Zeit hinzufügt. Das Ergebnis kann negativ werden; `Tagegeld_Stufe`
-vergibt dann keine Stufe.
+- **Ergebnis:** die Abwesenheit abzüglich privatem Zeitabzug und der Aufenthalte
+  an Dienststätte und Dienstort.
+- **Sonderfall:** Negative Eingaben zählen als 0. Das Ergebnis kann negativ
+  werden; `Tagegeld_Stufe` vergibt dann keine Stufe.
 
-## Tagegeld_Stufe — Tagegeld-Stufe
+### Tagegeld_Stufe — Tagegeld-Stufe
 
 ```python
 if not $Tagegeld_beantragt:
@@ -125,18 +138,14 @@ if r < 1440: return ">=14h"
 return "24h"
 ```
 
-Drei Prüfungen nacheinander:
+- **Ergebnis:** die Stufe nach drei Prüfungen nacheinander:
+  1. Tagegeld beantragt? Sonst leer.
+  2. Abwesenheit minus privater Abzug mindestens 481 Minuten (8:01 h)? Sonst leer.
+  3. Stufe nach `Rest_min`: 0 oder weniger leer, unter 481 `anteilig`, unter
+     840 `>8h`, unter 1440 `>=14h`, sonst `24h`.
+- S1 kreuzt die passende Spalte an. Die Staffel als Tabelle: [Anhang](anhang.md).
 
-1. Tagegeld beantragt? Sonst bleibt die Zelle leer.
-2. **Anspruch dem Grunde nach:** Abwesenheit minus privater Abzug mindestens
-   481 Minuten (8:01 h). Sonst leer.
-3. **Stufe** nach `Rest_min`: 0 oder weniger leer, unter 481 `anteilig`,
-   unter 840 `>8h`, unter 1440 `>=14h`, sonst `24h`.
-
-S1 kreuzt die passende Spalte an; `anteilig` erscheint als `(X)` unter „mehr
-als 8 Stunden“. Die Staffel als Tabelle steht im [Anhang](anhang.md).
-
-## Einzelziele — Einzelziele (Ortsverzeichnis)
+### Einzelziele — Einzelziele (Ortsverzeichnis)
 
 ```python
 def frei(r):
@@ -155,25 +164,14 @@ for t in frei(rec):
 return "\n".join(zeilen)
 ```
 
-Je Freitext-Ziel der Reise eine Zeile aus Kürzel und Text:
+- **Ergebnis:** je Freitext-Ziel eine Zeile aus Kürzel und Text, z. B.
+  `E26-07: Café Mokka, Bahnhofstr. 7, 12345 Musterstadt`. Das Kürzel zählt
+  laufend über alle Einzelziele des Kalenderjahres; `Reiseweg` und
+  Ortsverzeichnis verwenden es.
+- **Sonderfall:** Zeilenumbrüche werden zu Kommas; ein Feld nur mit
+  Leerzeichen zählt nicht. Der Text wird nicht geprüft.
 
-```
-E26-07: Café Mokka, Bahnhofstr. 7, 12345 Musterstadt
-```
-
-Das Kürzel zählt laufend über alle Einzelziele des Kalenderjahres
-([Rang im Kalenderjahr](README.md#muster-rang-im-kalenderjahr)). Ein Freitext zählt
-auch dann, wenn im selben Ortsfeld eine Auswahl steht
-([was eingetragen ist, zählt](README.md#muster-was-eingetragen-ist-zählt)). Zeilenumbrüche
-werden zu Kommas, ein Feld nur mit Leerzeichen zählt nicht. Der Text wird
-nicht geprüft: Ob die Anschrift vollständig ist, sieht die Person im
-Ortsverzeichnis.
-
-Hier entstehen die Kürzel, die `Reiseweg` und Ortsverzeichnis verwenden. Wie
-bei `Lfd_Nr` verschiebt eine nachgetragene Reise die späteren Kürzel des
-Jahres.
-
-## Reiseweg
+### Reiseweg
 
 ```python
 e = iter(z.split(":")[0] for z in $Einzelziele.splitlines())
@@ -186,14 +184,14 @@ for o, t in [($Ort_Beginn, $Ort_Beginn_Text), … , ($Ort_Ende, $Ort_Ende_Text)]
 return " > ".join(x for x in teile if x)
 ```
 
-Die angefahrenen Orte als Kette, z. B. `WO > KV > E26-07 > WO`: für eine
-Auswahl das Kürzel des Stammziels, für einen Freitext das Kürzel aus
-`Einzelziele`. Sind beide Felder eines Orts gefüllt, sind es zwei Stopps
-([was eingetragen ist, zählt](README.md#muster-was-eingetragen-ist-zählt)); leere Felder
-fallen heraus. Steht im Fahrtenbuch (Spalte 6) und in der Prüfliste,
-aufgelöst werden die Kürzel im Ortsverzeichnis.
+- **Ergebnis:** die angefahrenen Orte als Kette, z. B. `WO > KV > E26-07 > WO`:
+  für eine Auswahl das Kürzel des Stammziels, für einen Freitext das Kürzel aus
+  `Einzelziele`. Steht im Fahrtenbuch (Spalte 6) und in der Prüfliste; das
+  Ortsverzeichnis löst die Kürzel auf.
+- **Sonderfall:** Sind beide Felder eines Orts gefüllt, sind es zwei Stopps.
+  Leere Felder fallen heraus.
 
-## Maps_Link — Routenlink
+### Maps_Link — Routenlink
 
 ```python
 import urllib.parse as u
@@ -215,16 +213,13 @@ if len(adr) > 2:
 return link
 ```
 
-Ein Google-Maps-Link über alle Stationen: die erste als Start, die letzte als
-Ziel, dazwischen die Zwischenhalte. Für eine Auswahl wird die Adresse des
-Stammziels genommen, für einen Freitext der Text selbst. Unter zwei Stationen
-gibt es keinen Link.
+- **Ergebnis:** ein Google-Maps-Link über alle Stationen: erste Station als
+  Start, letzte als Ziel, dazwischen die Zwischenhalte. Adresse des Stammziels
+  bzw. der Freitext selbst. Steht in der Prüfliste.
+- **Sonderfall:** Unter zwei Stationen gibt es keinen Link. Fehlt einem
+  Stammziel die Anschrift, bleibt der Link ganz leer.
 
-Fehlt einem angefahrenen Stammziel die Anschrift, bleibt der Link **ganz**
-leer: Eine Route ohne diesen Halt sähe vollständig aus und wäre doch zu kurz.
-Der Link dient der Prüfung der Strecke und steht nur in der Prüfliste.
-
-## Vermerk_Label — Vermerk-Kennung
+### Vermerk_Label — Vermerk-Kennung
 
 ```python
 if not $Vermerk or not $Datum:
@@ -235,7 +230,7 @@ n = [r.id for r in mit].index($id) + 1
 return "V%s-%02d" % ($Datum.strftime("%y"), n)
 ```
 
-Die Kennung `V26-01` für jede Reise mit Vermerk, laufend je Kalenderjahr und
-nur über Reisen mit Vermerk gezählt
-([Rang im Kalenderjahr](README.md#muster-rang-im-kalenderjahr)). Ohne Vermerk bleibt
-die Zelle leer. Steht auf dem Vermerke-Blatt und im Fahrtenbuch (Spalte 15).
+- **Ergebnis:** die Kennung `V26-01` für jede Reise mit Vermerk, laufend je
+  Kalenderjahr, gezählt nur über Reisen mit Vermerk. Steht auf dem
+  Vermerke-Blatt und im Fahrtenbuch (Spalte 15).
+- **Sonderfall:** Ohne Vermerk oder Datum leer.

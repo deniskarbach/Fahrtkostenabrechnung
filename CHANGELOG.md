@@ -3,6 +3,13 @@
 Alle nennenswerten Änderungen an diesem Projekt.
 
 ## [Unreleased]
+- Doku neu gegliedert: Grist und Sheets haben dieselbe Struktur. Jede Ansicht
+  bzw. jedes Blatt hat eine eigene Formelseite (Zweck, Funktionsweise,
+  Formeln), das Handbuch heißt „Anleitung“. Begründungen und der Vergleich
+  mit der Handarbeit sind entfernt; die Muster-Kapitel stehen jetzt bei den
+  Formeln, die sie nutzen. Grist: Seite „Ausgabe“ ersetzt durch „Ausdruck“
+  (mit den JavaScript-Berechnungen beider Widgets), dazu Seiten für
+  Formularverwaltung, Reisekorrektur und Prüfliste
 - Repo aufgeräumt: `grist/ausgabe/` enthält nur noch die Widgets, die Grist
   per URL lädt; Tests nach `grist/tests/` mit Gesamtaufruf `alle.sh`,
   Abnahmetest nach `grist/tests/abnahme/`, S2-Generator nach `grist/`,

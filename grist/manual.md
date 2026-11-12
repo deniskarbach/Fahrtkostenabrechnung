@@ -1,4 +1,4 @@
-# Handbuch
+# Anleitung
 
 Für die Fachkraft: einrichten, erfassen, abrechnen. Kilometer, Tagegeld-Stufe,
 laufende Nummern, Reiseweg und Routenlink rechnet die Tabelle selbst — wie,
@@ -30,25 +30,29 @@ steht in den [Formeln](formeln/README.md).
 
 ## Reise erfassen
 
-Formularlink öffnen, ausfüllen, absenden. Eine Absendung ist eine Reise; ein
-Konto ist nicht nötig.
-
-- **Uhrzeiten** wie `7:15`. Bei mehrtägigen Reisen das Enddatum eintragen.
-- **Minuten und Beträge** immer positiv eintragen.
-- **Orte:** je Ort **entweder** aus der Liste wählen **oder** darunter in den
-  Freitext schreiben: `Bezeichnung, Straße Hausnummer, PLZ Ort`, z. B.
-  `Café Mokka, Bahnhofstr. 7, 12345 Musterstadt`. Sind beide Felder gefüllt,
-  zählen sie als zwei Stopps.
-- **Unbekannte Orte** in den Freitext, nicht über „+ neu“ in der Auswahlliste —
-  sonst steht der Ort danach dauerhaft in den Stammzielen.
-- **Sonstige Informationen** erscheinen auf dem Blatt Vermerke.
+1. Formularlink auf dem Handy öffnen (kein Konto nötig).
+2. **Datum und Uhrzeiten** eintragen, z. B. `7:15`. Bei mehrtägigen Reisen das
+   Enddatum angeben.
+3. **Kilometerstand** bei Beginn und Ende, bei privatem Umweg dessen Kilometer.
+4. **Orte:** je Ort **entweder** aus der Liste wählen **oder** in den Freitext
+   schreiben: `Bezeichnung, Straße Hausnummer, PLZ Ort`, z. B.
+   `Café Mokka, Bahnhofstr. 7, 12345 Musterstadt`. Sind beide Felder gefüllt,
+   zählen sie als zwei Stopps. Unbekannte Orte immer in den Freitext, nicht
+   über „+ neu“ — sonst stehen sie dauerhaft in den Stammzielen.
+5. **Tagegeld, Kosten, Sonstige Informationen** nach Bedarf; Minuten und
+   Beträge immer positiv. Sonstige Informationen erscheinen auf dem Blatt
+   Vermerke.
+6. Absenden. Eine Absendung ist eine Reise.
 
 ## Reise korrigieren
 
-Seite `Reisekorrektur`: oben Jahr eintragen (mit **Enter** bestätigen) und
-Monat wählen, links die Reise anklicken, rechts ändern. Ohne Jahr gilt das
-laufende, ohne Monat das ganze Jahr. Alles Berechnete zieht sofort nach; ein
-geändertes Datum verschiebt die laufenden Nummern des Jahres.
+1. Seite `Reisekorrektur` öffnen.
+2. Oben das Jahr eintragen (mit **Enter** bestätigen) und den Monat wählen.
+   Ohne Jahr gilt das laufende, ohne Monat das ganze Jahr.
+3. Links die Reise anklicken, rechts ändern.
+
+Alles Berechnete zieht sofort nach; ein geändertes Datum verschiebt die
+laufenden Nummern des Jahres.
 
 ## Stammziele pflegen
 

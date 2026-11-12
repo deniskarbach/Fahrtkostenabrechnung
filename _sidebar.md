@@ -2,17 +2,20 @@
 
 - **Grist**
   - [Überblick](/grist/README.md)
-  - [Handbuch](/grist/manual.md)
+  - [Anleitung](/grist/manual.md)
   - [Formeln – Überblick](/grist/formeln/README.md)
+    - [Formularverwaltung](/grist/formeln/formularverwaltung.md)
     - [Einstellungen](/grist/formeln/einstellungen.md)
+    - [Reisekorrektur](/grist/formeln/reisekorrektur.md)
     - [Stammziele](/grist/formeln/stammziele.md)
     - [Reisen](/grist/formeln/reisen.md)
-    - [Ausgabe](/grist/formeln/ausgabe.md)
+    - [Ausdruck](/grist/formeln/ausdruck.md)
+    - [Prüfliste](/grist/formeln/pruefliste.md)
     - [Einrichtung und Technik](/grist/formeln/setup.md)
     - [Anhang](/grist/formeln/anhang.md)
 
 - **Google Sheets** (frühere Umsetzung)
-  - [Handbuch](/sheets/manual.md)
+  - [Anleitung](/sheets/manual.md)
   - [Formeln – Überblick](/sheets/formeln/README.md)
     - [Setup](/sheets/formeln/setup.md)
     - [IMPORTDATA](/sheets/formeln/importdata.md)

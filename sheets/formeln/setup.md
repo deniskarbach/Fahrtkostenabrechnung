@@ -1,31 +1,39 @@
-[← Formeln-Übersicht](README.md)
+[← Formeln](README.md)
 
 # Setup
 
-Import Formularantworten Google Sheets Datei "[Formularantworten-Datei]"
+## Zweck
+
+Das Blatt nimmt die Stammdaten, die Freigabe, den Link zur Formularantworten-Datei und den Abrechnungszeitraum (C8–C10) auf.
+Es gibt das Blatt, damit alle Eingaben außer dem Formular an einer Stelle liegen.
+Es umfasst den Import der Antworten und die Datumsprüfung.
+
+## Funktionsweise
+
+- Nur Setup (und bei neuen Zielen das Blatt [Orte](orte.md)) wird von Hand
+  gepflegt.
+- Der erste Import muss einmalig in Google Sheets bestätigt werden.
+
+## Formeln
+
+### Import der Formularantworten
 
 ```
 =IF(B80="Ja"; IMPORTRANGE(B74; "Formularantworten 1!A1"); "🔒 Bitte legitimieren")
 ```
 
-**Statement:**
-- `IF(B80="Ja"; …; …)` – Freigabe-Schalter, prüft eine Ja/Nein-Zelle
-- `IMPORTRANGE(B74; "Formularantworten 1!A1")` – lädt einen Bereich aus einer fremden Tabellendatei über deren URL
+**Aufbau:**
+- `IF(B80="Ja"; …; …)` – Freigabe-Schalter
+- `IMPORTRANGE(B74; "Formularantworten 1!A1")` – lädt einen Bereich aus der Datei, deren URL in B74 steht
 
-**Ergebnis:** Holt die Formulardaten erst, wenn die Freigabe (B80) auf „Ja" steht.
-**Rechenweg:** Ohne Freigabe erscheint ein Schloss-Hinweis; mit Freigabe wird die
-verknüpfte Tabelle über ihre in B74 hinterlegte URL geladen.
-**Sonderfall:** Der erste Import muss einmalig in Google Sheets bestätigt werden.
+**Ergebnis:** Die Formulardaten erscheinen erst, wenn die Freigabe (B80) auf „Ja" steht.
+**Sonderfall:** Ohne Freigabe erscheint ein Schloss-Hinweis.
 
-Bedingte Formatierung - Datumsangabe
+### Bedingte Formatierung – Datumsangabe
 
 ```
 =TAGTRUNC(C5)<TAGTRUNC(C3)
 ```
 
-**Statement:**
-- `TAGTRUNC(…)` – schneidet die Uhrzeit ab, übrig bleibt der reine Tag
-- `<` – liefert WAHR/FALSCH; WAHR löst die Formatierung aus
-
 **Ergebnis:** Färbt das Feld, wenn das Enddatum vor dem Startdatum liegt.
-**Rechenweg:** Beide Datumswerte werden auf ganze Tage gekürzt und verglichen.
+**Aufbau:** `TAGTRUNC` schneidet die Uhrzeit ab; `<` liefert WAHR/FALSCH, WAHR löst die Formatierung aus.
