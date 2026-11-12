@@ -5,12 +5,12 @@
 ## Zweck
 
 Die Seite ist der Ort, an dem abgerechnet wird: Hier wird der Abrechnungszeitraum gesetzt und gedruckt.
-Sie gibt es, damit Zeitraum und Ausgabe an einer Stelle liegen und der Zeitraum nicht in den Einstellungen gesucht werden muss.
-Sie umfasst zwei Custom Widgets: „Reisekostenabrechnung“ mit S1, S2, Vermerke und Ortsverzeichnis sowie „Fahrtenbuch“.
+Sie gibt es, damit Zeitraum und Ausgabe an einer Stelle liegen.
+Sie umfasst das Widget „Abrechnungszeitraum“ und zwei Custom Widgets: „Reisekostenabrechnung“ mit S1, S2, Vermerke und Ortsverzeichnis sowie „Fahrtenbuch“.
 
 ## Funktionsweise
 
-- Der Zeitraum steht in [Einstellungen](einstellungen.md) (`Zeitraum_von`, `Zeitraum_bis`); eine Reise erscheint, wenn ihr Reisedatum darin liegt.
+- Der Abrechnungszeitraum wird nur hier gesetzt, im Widget „Abrechnungszeitraum“ oben auf der Seite (`Zeitraum_von`, `Zeitraum_bis`). Die Werte liegen in der Tabelle `Einstellungen`, erscheinen aber nicht auf der Seite Einstellungen. Eine Reise erscheint, wenn ihr Reisedatum darin liegt.
 - **Aktualisieren** liest neu erfasste oder korrigierte Reisen ein.
 - Die Widgets rechnen nichts Eigenes außer Summen und Formatierung; alle Werte kommen aus [Reisen](reisen.md).
 
