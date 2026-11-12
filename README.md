@@ -9,7 +9,7 @@ Dienstreisen erfassen, berechnen und standardisiert ausgeben.
 
 ## Idee
 
-Eine Dienstreise wird einmal erfasst — am Handy, direkt nach der Fahrt. Alles
+Eine Dienstreise wird einmal erfasst — am Handy direkt nach der Fahrt oder kurze Zeit später am PC. Alles
 Weitere läuft automatisch: Kilometer werden um private Umwege bereinigt, die
 Tagegeld-Staffel aus den Abwesenheitszeiten ermittelt, die laufende Nummer je
 Kalenderjahr vergeben, der Reiseweg als Text gesetzt und ein Routenlink

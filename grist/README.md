@@ -1,7 +1,7 @@
 # Grist — Überblick
 
-Dienstreise am Handy über ein Formular erfassen, in Grist berechnen, als
-S1/S2, Vermerke, Ortsverzeichnis und Fahrtenbuch drucken.
+Dienstreisen werden via Handy oder PC über ein Formular erfasst, in Grist automatisch berechnet, und entsprechend einer Vorgabe als
+S1/S2, Vermerke, Ortsverzeichnis und Fahrtenbuch gedruckt.
 
 - **[Anleitung](manual.md)** — für die Fachkraft: einrichten, erfassen, drucken
 - **[Formeln](formeln/README.md)** — Nachweis der Berechnung, für die Prüfstelle
@@ -10,22 +10,15 @@ S1/S2, Vermerke, Ortsverzeichnis und Fahrtenbuch drucken.
 ## Aufbau
 
 ```
-Einstellungen  (genau 1 Zeile)                    Stammziele  (selten gepflegt)
-  Vorname, Name, Organisationseinheit                WO   Wohnung          Beispielweg 7 …
-  Wohnort-/Dienstort-Adresse                         KV   Dienststelle     Verwaltungsstr. 1 …
-  S2-Angaben                                         KITA Kita Sonnensch.  Lindenweg 3 …
-         │                                                  │
-         │ Kopf jedes Ausdrucks                             │ Auswahlliste im Formular
-         ▼                                                  ▼
-     ┌─────────────────────────────────────────────────────┐
-     │  Reisen — eine Zeile je Dienstreise                 │ ◀── Handy-Formular
-     │  Eingaben + Rechenspalten (Kilometer, Tagegeld,     │
-     │  Reiseweg, laufende Nummer …)                       │
-     └─────────────────────────────────────────────────────┘
-                              │
-                              ▼
-        Widgets: Reisekostenabrechnung · Fahrtenbuch · Prüfliste
+Formular (Handy)  →  Reisen  →  Ausdruck, Prüfliste
+Stammziele        →  Auswahlliste im Formular
+Einstellungen     →  Kopf des Ausdrucks
 ```
+
+- **Reisen:** eine Zeile je Dienstreise, Eingaben und Rechenspalten.
+- **Stammziele:** wiederkehrende Ziele, z. B. `WO`, `KV`, `KITA`.
+- **Einstellungen:** eine Zeile mit Name, Anschriften und S2-Angaben.
+- **Ausdruck:** Widgets Reisekostenabrechnung und Fahrtenbuch.
 
 Jeder angefahrene Ort ist ein Paar aus Auswahl (Stammziel) und Freitext
 (Einzelziel). Einzelziele sind der Normalfall; im Reiseweg stehen sie als
