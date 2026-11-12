@@ -37,7 +37,14 @@ steht in den [Formeln](formeln/README.md).
 4. **Orte:** je Ort **entweder** aus der Liste wählen **oder** in den Freitext
    schreiben: `Bezeichnung, Straße Hausnummer, PLZ Ort`, z. B.
    `Café Mokka, Bahnhofstr. 7, 12345 Musterstadt`. Sind beide Felder gefüllt,
-   zählen sie als zwei Stopps. Unbekannte bzw. einmalige Orte immer in den Freitext. Tipp 1: Sollten einmal 5 bekannte Zwischenziele nicht ausreichend sein, lassen sich durch zusätzliches befüllen der Freitextfelder  maximal 10 Zwischenziele mit ein wenig Mehraufwand erzeugen. Tipp 2: Sollten perspektivisch einmalige Ziele in Stammziele angelegt werden, müssen diese über die Ansicht `Stammziele` angelegt werden. Bereits erfasste einmalige Reiseziele werden dadurch nicht verändert.
+   zählen sie als zwei Stopps. Unbekannte bzw. einmalige Orte immer in den
+   Freitext.
+   - **Mehr als 5 Zwischenziele:** Durch zusätzliches Befüllen der
+     Freitextfelder sind maximal 10 Zwischenziele möglich, mit etwas
+     Mehraufwand.
+   - **Dauerhaftes Ziel:** Neue Ziele für die Auswahlliste über die Ansicht
+     `Stammziele` anlegen. Bereits erfasste einmalige Ziele ändern sich
+     dadurch nicht.
 5. **Tagegeld, Kosten, Sonstige Informationen** nach Bedarf; Minuten und
    Beträge immer positiv. Sonstige Informationen erscheinen auf dem Blatt
    Vermerke.
