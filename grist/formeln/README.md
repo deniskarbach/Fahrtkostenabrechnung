@@ -19,15 +19,16 @@ Reisen           Eingabespalten + Rechenspalten
                  (Kilometer, Abwesenheit, Tagegeld-Stufe, Reiseweg,
                   laufende Nummer, Routenlink, Vermerk-Kennung, Einzelziele)
 
-Einstellungen    Stammdaten + Abrechnungszeitraum  ──┐
+Einstellungen    Stammdaten                        ──┐
 Stammziele       Stammziele mit Adresse            ──┤
+Ausdruck         Abrechnungszeitraum               ──┤
                                                      ▼
                                    Ausgabe-Widgets, gefiltert auf den Zeitraum
                                    S1/S2 · Vermerke · Ortsverzeichnis ·
                                    Fahrtenbuch · Prüfliste
 ```
 
-Eingetragen wird nur im Formular, in `Einstellungen` und in `Stammziele`. Alles
+Eingetragen wird nur im Formular, in `Einstellungen`, in `Stammziele` und mit dem Zeitraum auf `Ausdruck`. Alles
 andere ist Formelergebnis.
 
 ## Seiten
@@ -37,11 +38,11 @@ Jede Seite hat dieselbe Gliederung: Zweck, Funktionsweise, Formeln.
 | Seite | Inhalt |
 |---|---|
 | [Formularverwaltung](formularverwaltung.md) | Formular zur Erfassung |
-| [Einstellungen](einstellungen.md) | Stammdaten, Abrechnungszeitraum |
+| [Einstellungen](einstellungen.md) | Stammdaten, Kopf des Ausdrucks |
 | [Reisekorrektur](reisekorrektur.md) | Reisen ändern |
 | [Stammziele](stammziele.md) | wiederkehrende Ziele mit Adresse |
 | [Reisen](reisen.md) | alle Rechenspalten |
-| [Ausdruck](ausdruck.md) | Zeitraum, S1, S2, Vermerke, Ortsverzeichnis, Fahrtenbuch |
+| [Ausdruck](ausdruck.md) | Abrechnungszeitraum, S1, S2, Vermerke, Ortsverzeichnis, Fahrtenbuch |
 | [Prüfliste](pruefliste.md) | eine Zeile je Reise |
 | [Anhang](anhang.md) | Tagegeld-Staffel |
 
