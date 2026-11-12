@@ -24,21 +24,20 @@ steht in den [Formeln](formeln/README.md).
 3. **Stammziele:** die Adressen von `WO` (Wohnung) und `KV` (Dienststelle)
    eintragen, weitere regelmäßige Ziele ergänzen. Ohne Adresse gibt es für
    Reisen über dieses Ziel keinen Routenlink.
-4. **Formularverwaltung:** Formular veröffentlichen und den Link auf dem Handy
+4. **Formularverwaltung:** Formular veröffentlichen und den Link auf dem Handy oder PC als Favorit
    ablegen. Das muss in der eigenen Kopie geschehen — der Link der Vorlage
    schreibt nicht in die eigene Tabelle.
 
 ## Reise erfassen
 
-1. Formularlink auf dem Handy öffnen (kein Konto nötig).
-2. **Datum und Uhrzeiten** eintragen, z. B. `7:15`. Bei mehrtägigen Reisen das
+1. Formularlink auf dem Handy öffnen (für das Schreiben ist keine Anmeldung im eigenen Konto nötig).
+2. **Datum und Uhrzeiten** eintragen, z. B. `07:15`. Bei mehrtägigen Reisen das
    Enddatum angeben.
 3. **Kilometerstand** bei Beginn und Ende, bei privatem Umweg dessen Kilometer.
 4. **Orte:** je Ort **entweder** aus der Liste wählen **oder** in den Freitext
    schreiben: `Bezeichnung, Straße Hausnummer, PLZ Ort`, z. B.
    `Café Mokka, Bahnhofstr. 7, 12345 Musterstadt`. Sind beide Felder gefüllt,
-   zählen sie als zwei Stopps. Unbekannte Orte immer in den Freitext, nicht
-   über „+ neu“ — sonst stehen sie dauerhaft in den Stammzielen.
+   zählen sie als zwei Stopps. Unbekannte bzw. einmalige Orte immer in den Freitext. Tipp 1: Sollten einmal 5 bekannte Zwischenziele nicht ausreichend sein, lassen sich durch zusätzliches befüllen der Freitextfelder  maximal 10 Zwischenziele mit ein wenig Mehraufwand erzeugen. Tipp 2: Sollten perspektivisch einmalige Ziele in Stammziele angelegt werden, müssen diese über die Ansicht `Stammziele` angelegt werden. Bereits erfasste einmalige Reiseziele werden dadurch nicht verändert.
 5. **Tagegeld, Kosten, Sonstige Informationen** nach Bedarf; Minuten und
    Beträge immer positiv. Sonstige Informationen erscheinen auf dem Blatt
    Vermerke.
@@ -62,7 +61,7 @@ rechts Name, Straße, PLZ und Ort. Das Kürzel steht im Reiseweg
 
 Ziele, die nur einmal vorkommen, gehören nicht hierher, sondern in den
 Freitext des Formulars. Bei einem Umzug die Anschrift an **zwei** Stellen
-ändern: in `Einstellungen` und in der Zeile `WO`.
+ändern: in `Einstellungen` und in der Zeile `WO`. Hinweis: Sollten nach dieser Änderung frühere Abrechnungen erneut ausgedruckt werden, erfasst der Spaltenkopf sowie das Ortsverzeichnis die neue Adresse.
 
 ## Abrechnen
 
